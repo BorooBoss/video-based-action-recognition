@@ -13,7 +13,7 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 login(token=HF_TOKEN)
 
 #Model ID + device
-MODEL_ID = "google/paligemma2-3b-pt-224"
+MODEL_ID = "google/paligemma2-3b-mix-224"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
 print("🚀 Loading Paligemma 2 model using device: {device}")
@@ -32,7 +32,7 @@ print(f"🖼️ Loading image from: {image_path}")
 image = Image.open(image_path)
 
 #DEFINE PROMPT
-prompt = "detect objects"
+prompt = "detect elephant\n"
 
 
 
@@ -50,8 +50,12 @@ print("Generating response...")
 with torch.no_grad():
     outputs = model.generate(
         **inputs,
-        max_new_tokens=128,
-        do_sample=False
+        max_new_tokens=64,
+        do_sample=True,
+        temperature=0.6,         # nižšia hodnota = menej halucinácií
+        top_p=0.9, 
+        repetition_penalty=1.2,
+        no_repeat_ngram_size=8
     )
 
 result = processor.batch_decode(outputs, skip_special_tokens=True)[0]

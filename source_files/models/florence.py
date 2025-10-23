@@ -19,12 +19,12 @@ model = AutoModelForCausalLM.from_pretrained(
 processor = AutoProcessor.from_pretrained(MODEL_ID, trust_remote_code=True)
 
 #Load image from path
-image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/frames/frame_0012.jpg"  
+image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"  
 print(f"🖼️ Loading image from: {image_path}")
 image = Image.open(image_path)
 
 #DEFINE PROMPT
-prompt = "<MORE_DETAILED_CAPTION>"
+prompt = "<OD>"
 
 
 #Preprocess inputs
@@ -41,7 +41,7 @@ generated_text = processor.batch_decode(generated_ids, skip_special_tokens=False
 
 parsed_answer = processor.post_process_generation(
     generated_text,
-    task="<MORE_DETAILED_CAPTION>",
+    task=prompt,
     image_size=(image.width, image.height)
 )
 
@@ -53,6 +53,11 @@ print("=" * 60)
 
 
 """
+
+<MORE_DETAILED_CAPTION> → výstup = text s <locXXXX>
+<OD> → výstup = reálne [x1, y1, x2, y2] čísla
+
+
 EXAMPLES 
 
 Caption

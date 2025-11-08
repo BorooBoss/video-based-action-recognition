@@ -31,6 +31,8 @@ def recognize(request):
                 result = paligemma.predict(tmp_path, prompt, model_id=model_name)
             elif "florence" in model_name.lower():
                 result = florence.predict(tmp_path, prompt, model_id=model_name)
+                if isinstance(result, dict):
+                    result = result[prompt]
             else:
                 return JsonResponse({"error": "Unknown model type"}, status=400)
             print(model_name,"\n")

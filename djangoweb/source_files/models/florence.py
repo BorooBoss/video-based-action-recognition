@@ -22,6 +22,7 @@ def initialize_model(model_id):
     torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
     #Load model and processor
+    MODEL_ID = model_id
     model = AutoModelForCausalLM.from_pretrained(
         MODEL_ID,
         torch_dtype=torch_dtype, #torch_dtype
@@ -42,8 +43,6 @@ def predict(image_path, prompt="describe", model_id=None):
     print(f"LOADING IMAGE FROM: {image_path}")
     image = Image.open(image_path)
 
-    #DEFINE PROMPT
-    # prompt = "<OD>"
 
 
     #Preprocess inputs

@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Recognizer</title>
+</head>
+<body>
+  <h1>Image Recognizer</h1>
+
+  <form id="recognize-form" enctype="multipart/form-data">
+    <label>Choose model:</label>
+    <select name="model">
+      <option value="paligemma">Paligemma</option>
+      <option value="florence">Florence</option>
+      <option value="qwen">Qwen</option>
+    </select>
+
+    <br><br>
+
+    <label>Prompt:</label>
+    <input type="text" name="prompt" placeholder="describe the image">
+
+    <br><br>
+
+    <label>Image:</label>
+    <input type="file" name="image" required>
+
+    <br><br>
+
+    <button type="submit">Recognize</button>
+  </form>
+
+  <hr>
+
+  <h3>Result:</h3>
+  <pre id="result-box">No result yet.</pre>
+
+  <script>
+    const form = document.getElementById('recognize-form');
+    const resultBox = document.getElementById('result-box');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData(form);
+      resultBox.textContent = "Processing...";
+
+      try {
+        const response = await fetch('/recognizer/recognize/', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.result) {
+          resultBox.textContent = `Model: ${data.model}\nPrompt: ${data.prompt}\nResult: ${data.result}`;
+        } else {
+          resultBox.textContent = `Error: ${data.error || 'Unknown error'}`;
+        }
+
+      } catch (err) {
+        resultBox.textContent = `Request failed: ${err}`;
+      }
+    });
+  </script>
+</body>
+</html>

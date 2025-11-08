@@ -20,12 +20,12 @@ processor = AutoProcessor.from_pretrained(MODEL_ID, trust_remote_code=True)
 
 def predict(image_path, prompt="<OD>"):
     #Load image from path
-    image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"  
+    # image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"  
     print(f"🖼️ Loading image from: {image_path}")
     image = Image.open(image_path)
 
     #DEFINE PROMPT
-    prompt = "<OD>"
+    # prompt = "<OD>"
 
 
     #Preprocess inputs

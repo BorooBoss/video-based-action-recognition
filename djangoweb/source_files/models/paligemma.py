@@ -13,7 +13,7 @@ HF_TOKEN = os.getenv("HF_TOKEN")
 login(token=HF_TOKEN)
 
 #Model ID + device
-MODEL_ID = "google/paligemma2-3b-mix-224"
+MODEL_ID = "google/paligemma2-3b-pt-224"
 device = "cuda" if torch.cuda.is_available() else "cpu"
 dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
 print("🚀 Loading Paligemma 2 model using device: {device}")
@@ -28,12 +28,12 @@ processor = AutoProcessor.from_pretrained(MODEL_ID)
 
 def predict(image_path, prompt="describe\n"):
     #Load image from path
-    image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"
+    # image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"
     print(f"🖼️ Loading image from: {image_path}")
     image = Image.open(image_path)
 
     #DEFINE PROMPT
-    prompt = "detect elephant\n"
+    # prompt = "detect elephant\n"
 
 
 

@@ -3,25 +3,43 @@ import torch
 from PIL import Image
 from transformers import AutoProcessor, AutoModelForCausalLM
 
-#Model ID + device
-MODEL_ID = "microsoft/Florence-2-base"
-device = "cuda:0" if torch.cuda.is_available() else "cpu"
-torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
+MODEL_ID = None
+model = None
+processor = None
+torch_dtype = None
+device = None
+def initialize_model(model_id):
+    global MODEL_ID, model, processor, torch_dtype, device
 
+    if MODEL_ID == model_id and model is not None:
+        print(f"Working with already loaded {model_id}")
+        return
 
-#Load model and processor
-model = AutoModelForCausalLM.from_pretrained(
-    MODEL_ID,
-    torch_dtype=torch_dtype, #torch_dtype
-    trust_remote_code=True
-).to(device)
-processor = AutoProcessor.from_pretrained(MODEL_ID, trust_remote_code=True)
+    #Model ID + device
+    # MODEL_ID = "microsoft/Florence-2-base"
+    device = "cuda:0" if torch.cuda.is_available() else "cpu"
+    torch_dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
-def predict(image_path, prompt="<OD>"):
+    #Load model and processor
+    model = AutoModelForCausalLM.from_pretrained(
+        MODEL_ID,
+        torch_dtype=torch_dtype, #torch_dtype
+        trust_remote_code=True
+    ).to(device)
+    processor = AutoProcessor.from_pretrained(MODEL_ID, trust_remote_code=True)
+    print(f"MODEL {model_id} LOADED SUCCESSFULLY")
+
+def predict(image_path, prompt="describe", model_id=None):
+    if model_id:
+        initialize_model(model_id)
+    
+    if model is None:
+        raise ValueError("Model not initialized.")
+    
     #Load image from path
     # image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"  
-    print(f"🖼️ Loading image from: {image_path}")
+    print(f"LOADING IMAGE FROM: {image_path}")
     image = Image.open(image_path)
 
     #DEFINE PROMPT

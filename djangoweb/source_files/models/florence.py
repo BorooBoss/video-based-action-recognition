@@ -18,39 +18,40 @@ model = AutoModelForCausalLM.from_pretrained(
 ).to(device)
 processor = AutoProcessor.from_pretrained(MODEL_ID, trust_remote_code=True)
 
-#Load image from path
-image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"  
-print(f"🖼️ Loading image from: {image_path}")
-image = Image.open(image_path)
+def predict(image_path, prompt="<OD>"):
+    #Load image from path
+    image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"  
+    print(f"🖼️ Loading image from: {image_path}")
+    image = Image.open(image_path)
 
-#DEFINE PROMPT
-prompt = "<OD>"
+    #DEFINE PROMPT
+    prompt = "<OD>"
 
 
-#Preprocess inputs
-inputs = processor(text=prompt, images=image, return_tensors="pt").to(device, torch_dtype)
-generated_ids = model.generate(
-    input_ids=inputs["input_ids"],
-    pixel_values=inputs["pixel_values"],
-    max_new_tokens=256,
-    num_beams=3,
-)
+    #Preprocess inputs
+    inputs = processor(text=prompt, images=image, return_tensors="pt").to(device, torch_dtype)
+    generated_ids = model.generate(
+        input_ids=inputs["input_ids"],
+        pixel_values=inputs["pixel_values"],
+        max_new_tokens=256,
+        num_beams=3,
+    )
 
-#Generate response
-generated_text = processor.batch_decode(generated_ids, skip_special_tokens=False)[0]
+    #Generate response
+    generated_text = processor.batch_decode(generated_ids, skip_special_tokens=False)[0]
 
-parsed_answer = processor.post_process_generation(
-    generated_text,
-    task=prompt,
-    image_size=(image.width, image.height)
-)
+    result = processor.post_process_generation(
+        generated_text,
+        task=prompt,
+        image_size=(image.width, image.height)
+    )
 
-print("\n" + "=" * 60)
-print("FLORENCE 2 RESULT:")
-print("=" * 60)
-print(parsed_answer)
-print("=" * 60)
-
+    print("\n" + "=" * 60)
+    print("FLORENCE 2 RESULT:")
+    print("=" * 60)
+    print(result)
+    print("=" * 60)
+    return result
 
 """
 

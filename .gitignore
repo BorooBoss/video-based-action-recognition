@@ -1,6 +1,8 @@
 datasets/
 scvd/
-source_files/frames/
-source_files/video/
+djangoweb/source_files/frames/
+djangoweb/source_files/video/
 .env
-helper.docx/
+helper.docx
+db.sqlite3
+djangoweb/polls/

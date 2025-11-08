@@ -26,46 +26,47 @@ model = AutoModelForVision2Seq.from_pretrained(
 )
 processor = AutoProcessor.from_pretrained(MODEL_ID)
 
-#Load image from path
-image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"
-print(f"🖼️ Loading image from: {image_path}")
-image = Image.open(image_path)
+def predict(image_path, prompt="describe\n"):
+    #Load image from path
+    image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"
+    print(f"🖼️ Loading image from: {image_path}")
+    image = Image.open(image_path)
 
-#DEFINE PROMPT
-prompt = "detect elephant\n"
+    #DEFINE PROMPT
+    prompt = "detect elephant\n"
 
 
 
 
-#Preprocess inputs
-#print("Preparing inputs...")
-inputs = processor(
-    text=prompt,
-    images=image,
-    return_tensors="pt"
-).to(device, dtype=dtype)
+    #Preprocess inputs
+    #print("Preparing inputs...")
+    inputs = processor(
+        text=prompt,
+        images=image,
+        return_tensors="pt"
+    ).to(device, dtype=dtype)
 
-#Generate response
-print("Generating response...")
-with torch.no_grad():
-    outputs = model.generate(
-        **inputs,
-        max_new_tokens=64,
-        do_sample=True,
-        temperature=0.6,         # nižšia hodnota = menej halucinácií
-        top_p=0.9, 
-        repetition_penalty=1.2,
-        no_repeat_ngram_size=8
-    )
+    #Generate response
+    print("Generating response...")
+    with torch.no_grad():
+        outputs = model.generate(
+            **inputs,
+            max_new_tokens=64,
+            do_sample=True,
+            temperature=0.6,         # nižšia hodnota = menej halucinácií
+            top_p=0.9, 
+            repetition_penalty=1.2,
+            no_repeat_ngram_size=8
+        )
 
-result = processor.batch_decode(outputs, skip_special_tokens=True)[0]
+    result = processor.batch_decode(outputs, skip_special_tokens=True)[0]
 
-print("\n" + "=" * 60)
-print("PALIGEMMA 2 RESULT:")
-print("=" * 60)
-print(result)
-print("=" * 60)
-
+    print("\n" + "=" * 60)
+    print("PALIGEMMA 2 RESULT:")
+    print("=" * 60)
+    print(result)
+    print("=" * 60)
+    return result
 """
 ls ~/.cache/huggingface/hub/models--*
 

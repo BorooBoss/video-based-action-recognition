@@ -23,7 +23,10 @@
     <br><br>
 
     <label>Image:</label>
-    <input type="file" name="image" required>
+    <input type="file" name="image" id="image-input" required>
+
+    <br><br>
+    <img id="preview" width="500" height="300">
 
     <br><br>
 
@@ -38,6 +41,19 @@
   <script>
     const form = document.getElementById('recognize-form');
     const resultBox = document.getElementById('result-box');
+    const imageInput = document.getElementById('image-input');
+    const preview = document.getElementById('preview');
+
+    imageInput.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          preview.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    });
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();

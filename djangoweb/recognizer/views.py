@@ -5,12 +5,14 @@ from source_files.models import load_model
 from source_files.models import paligemma, florence
 import os
 
+
 def index(request):
     return render(request, 'index.html')
 
 
 @csrf_exempt
 def recognize(request):
+        
     if request.method == 'POST':
         image = request.FILES.get("image")
         model_name = request.POST.get("model")
@@ -49,7 +51,7 @@ def recognize(request):
             return JsonResponse({"error": str(e)}, status=500)
         
 
-    #     # Ulož dočasne uploadnutý obrázok
+    #     
     #     tmp_path = "/tmp/uploaded_image.jpg"
     #     with open(tmp_path, "wb") as f:
     #         for chunk in image.chunks():

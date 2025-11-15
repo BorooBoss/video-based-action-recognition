@@ -68,13 +68,19 @@
         });
 
         const data = await response.json();
+        console.log("Full response:", data);
+        console.log("Annotated image:", data.annotated_image);
 
         if (data.result) {
-          resultBox.textContent = `Model: ${data.model}\nPrompt: ${data.prompt}\nResult: ${data.result}`;
-        } else {
-          resultBox.textContent = `Error: ${data.error || 'Unknown error'}`;
-        }
+          resultBox.textContent = `Model: ${data.model}\nPrompt: ${data.prompt}\nResult: ${JSON.stringify(data.result)}`;
 
+          if (data.annotated_image) {
+            console.log("Setting preview to annotated image");
+            preview.src = data.annotated_image;
+          }
+        } else {
+          resultBox.textContent = `Error: ${data.error}`;
+        }
       } catch (err) {
         resultBox.textContent = `Request failed: ${err}`;
       }

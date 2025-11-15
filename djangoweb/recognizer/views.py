@@ -3,7 +3,9 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from source_files.models import load_model
 from source_files.models import paligemma, florence
+from source_files import draw_objects
 import os
+import base64
 
 
 def index(request):
@@ -12,53 +14,104 @@ def index(request):
 
 @csrf_exempt
 def recognize(request):
-        
     if request.method == 'POST':
         image = request.FILES.get("image")
         model_name = request.POST.get("model")
         prompt = request.POST.get("prompt", "describe the image")
-        print(model_name,"\n")
+        print(model_name, "\n")
 
         if not image or not model_name:
             return JsonResponse({"error": "Missing image or model name"}, status=400)
+
         # SAVE IMAGE
         tmp_path = "/tmp/uploaded_image.jpg"
         with open(tmp_path, "wb") as f:
             for chunk in image.chunks():
                 f.write(chunk)
-                
+
         try:
+            raw_result = None
+
             if "paligemma" in model_name.lower():
-                result = paligemma.predict(tmp_path, prompt, model_id=model_name)
+                raw_result = paligemma.predict(tmp_path, prompt, model_id=model_name)
+                result = raw_result
+
             elif "florence" in model_name.lower():
-                result = florence.predict(tmp_path, prompt, model_id=model_name)
-                if isinstance(result, dict):
-                    result = result[prompt]
+                raw_result = florence.predict(tmp_path, prompt, model_id=model_name)
+                if isinstance(raw_result, dict):
+                    result = raw_result.get(prompt, raw_result)
+                else:
+                    result = raw_result
             else:
                 return JsonResponse({"error": "Unknown model type"}, status=400)
-            print(model_name,"\n")
+
+            print(f"DEBUG: raw_result type = {type(raw_result)}")
+            print(f"DEBUG: raw_result = {raw_result}")
+            print(model_name, "\n")
+
+            # DETECTION HANDLING
+            detections_dict = None
+            annotated_image_base64 = None
+            output_image_path = None
+
+            if isinstance(raw_result, dict):
+                # Florence format
+                if "<OD>" in raw_result:
+                    detections_dict = raw_result["<OD>"]
+                    print("DEBUG: Found <OD> in raw_result")
+                elif prompt in raw_result and isinstance(raw_result[prompt], dict):
+                    detections_dict = raw_result[prompt]
+                    print(f"DEBUG: Found {prompt} in raw_result")
+
+            if detections_dict and "bboxes" in detections_dict:
+                output_image_path = "/tmp/out.jpg"
+                print("DEBUG: DETECTIONS:", detections_dict)
+
+                # Draw boxes
+                draw_objects.draw_boxes(tmp_path, detections_dict, output_image_path)
+                print(f"DEBUG: Bounding boxes drawn!")
+
+                # Check if output file exists
+                if os.path.exists(output_image_path):
+                    print(f"DEBUG: Output image exists at {output_image_path}")
+
+                    # Convert to base64
+                    with open(output_image_path, "rb") as img_file:
+                        annotated_image_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+
+                    print(f"DEBUG: Base64 created, length: {len(annotated_image_base64)}")
+                else:
+                    print(f"ERROR: Output image does NOT exist at {output_image_path}")
+
             # CLEAR TEMP
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
+                print(f"DEBUG: Removed temp input image: {tmp_path}")
 
-            return JsonResponse({
-                "model": model_name, 
-                "prompt": prompt, 
+            if output_image_path and os.path.exists(output_image_path):
+                os.remove(output_image_path)
+                print(f"DEBUG: Removed temp output image: {output_image_path}")
+
+            # Prepare response
+            response_data = {
+                "model": model_name,
+                "prompt": prompt,
                 "result": result
-            })
+            }
+
+            # Add annotated image
+            if annotated_image_base64:
+                print(f"DEBUG: Adding annotated_image to response")
+                response_data["annotated_image"] = f"data:image/jpeg;base64,{annotated_image_base64}"
+            else:
+                print("DEBUG: No annotated_image to add")
+
+            return JsonResponse(response_data)
+
         except Exception as e:
+            import traceback
+            print("ERROR occurred:")
+            traceback.print_exc()
             return JsonResponse({"error": str(e)}, status=500)
-        
-
-    #     
-    #     tmp_path = "/tmp/uploaded_image.jpg"
-    #     with open(tmp_path, "wb") as f:
-    #         for chunk in image.chunks():
-    #             f.write(chunk)
-
-    #     model = load_model(model_name)
-    #     result = model.predict(tmp_path, prompt)
-
-    #     return JsonResponse({"model": model_name, "prompt": prompt, "result": result})
 
     return JsonResponse({"error": "Invalid request"}, status=400)

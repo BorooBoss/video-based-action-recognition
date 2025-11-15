@@ -43,6 +43,5 @@ class ModelManager:
         self.device = device
         self.dtype = dtype
         #self.name = name
-        # print(f"✅ Registered model {model_id}")
 
 manager = ModelManager() # ONE AND ONLY instance of ModelManager

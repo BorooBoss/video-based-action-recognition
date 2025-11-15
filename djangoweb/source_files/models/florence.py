@@ -4,6 +4,8 @@ from PIL import Image
 from transformers import AutoProcessor, AutoModelForCausalLM
 import gc
 from source_files.model_manager import manager
+from source_files.vision_adapter import normalize_output
+
 
 def initialize_model(model_id):
     if manager.model_id == model_id and manager.model is not None:
@@ -48,11 +50,16 @@ def predict(image_path, prompt="describe", model_id=None):
     #Generate response
     generated_text = manager.processor.batch_decode(generated_ids, skip_special_tokens=False)[0]
 
-    result = manager.processor.post_process_generation(
+    raw_result = manager.processor.post_process_generation(
         generated_text,
         task=prompt,
         image_size=(image.width, image.height)
     )
+    if prompt == "<OD>":
+        result = normalize_output(raw_result, "florence")
+    else:
+        result = raw_result
+
 
     print("\n" + "=" * 60)
     print("FLORENCE 2 RESULT:")

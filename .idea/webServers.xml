@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="WebServers">
+    <option name="servers">
+      <webServer id="83fc084a-3fbf-44e1-87d3-2d3a7807d70f" name="WindowsToWSL">
+        <fileTransfer rootFolder="/mnt/c/Users/boris/Desktop/5.semester/bp/djangoweb" accessType="SFTP" sshConfigId="3f555731-137e-4b64-90b3-f41ea9fd6c32" sshConfig="WindowsToWSL">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
+        </fileTransfer>
+      </webServer>
+    </option>
+  </component>
+</project>

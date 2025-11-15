@@ -1,11 +1,14 @@
-import os
+import os, re
 from dotenv import load_dotenv
-import torch
 from PIL import Image
+from source_files.model_manager import manager
+import torch
 from transformers import AutoProcessor, AutoModelForVision2Seq
 from huggingface_hub import login
-from source_files.model_manager import manager
 import gc
+from source_files.models import profiles
+from source_files.vision_adapter import normalize_output
+
 
 def initialize_model(model_id):
     # LOAD MODEL ONLY ONCE
@@ -40,7 +43,14 @@ def initialize_model(model_id):
     print(f"MODEL {model_id} LOADED SUCCESSFULLY")
 
 
-def predict(image_path, prompt="describe\n", model_id=None):
+def prompt_manager(prompt):
+    prompt = prompt.lower()
+    if "detect" in prompt:
+        return "detect"
+    else:
+        return "text_generation"
+
+def predict(image_path, prompt="describe\n", model_id=None, task_type=None):
     #Load image from path
     # image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"
     if model_id:
@@ -49,11 +59,6 @@ def predict(image_path, prompt="describe\n", model_id=None):
     print(f"LOADING IMAGE FROM: {image_path}")
     image = Image.open(image_path).convert("RGB")
 
-    #DEFINE PROMPT
-    # prompt = "detect elephant\n"
-
-    #Preprocess inputs
-    #print("Preparing inputs...")
     inputs = manager.processor(
         text=prompt,
         images=image,
@@ -61,19 +66,22 @@ def predict(image_path, prompt="describe\n", model_id=None):
     ).to(manager.device, dtype=manager.dtype)
 
     #Generate response
-    print("Generating response...")
+    if task_type is None:
+        task_type = prompt_manager(prompt)
+    gen_config = profiles.GENERATION_CONFIGS.get(task_type, profiles.GENERATION_CONFIGS["text_generation"])
+
+    print(f"Generating response with {task_type} config...")
     with torch.no_grad():
         outputs = manager.model.generate(
             **inputs,
-            max_new_tokens=64,
-            do_sample=True,
-            temperature=0.6,         # nižšia hodnota = menej halucinácií
-            top_p=0.9, 
-            repetition_penalty=1.2,
-            no_repeat_ngram_size=8
+            **gen_config
         )
 
-    result = manager.processor.batch_decode(outputs, skip_special_tokens=True)[0]
+    raw_result = manager.processor.batch_decode(outputs, skip_special_tokens=True)[0]
+    if prompt == "detect":
+        result = normalize_output(raw_result, "paligemma")
+    else:
+        result = raw_result
 
     print("\n" + "=" * 60)
     print("PALIGEMMA 2 RESULT:")

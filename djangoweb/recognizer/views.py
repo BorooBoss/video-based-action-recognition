@@ -21,14 +21,13 @@ def recognize(request):
 
         if not image or not model_name:
             return JsonResponse({"error": "Missing image or model name"}, status=400)
-        # Ulož dočasne uploadnutý obrázok
+        # SAVE IMAGE
         tmp_path = "/tmp/uploaded_image.jpg"
         with open(tmp_path, "wb") as f:
             for chunk in image.chunks():
                 f.write(chunk)
                 
         try:
-            # Vyber správny model a zavolaj predict s model_id
             if "paligemma" in model_name.lower():
                 result = paligemma.predict(tmp_path, prompt, model_id=model_name)
             elif "florence" in model_name.lower():
@@ -38,7 +37,7 @@ def recognize(request):
             else:
                 return JsonResponse({"error": "Unknown model type"}, status=400)
             print(model_name,"\n")
-            # Vyčisti temporary file
+            # CLEAR TEMP
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
 

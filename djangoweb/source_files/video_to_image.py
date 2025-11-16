@@ -1,49 +1,92 @@
 import os
 import cv2 as OpenCV
 
+
 def video_to_frames(video_path, output_folder, every_n_seconds=1, by_seconds=True):
     video = OpenCV.VideoCapture(video_path)
     if not video.isOpened():
-        print("Failed to open video from path ", video_path)
+        print("Failed to open video:", video_path)
         return
-    
+
     os.makedirs(output_folder, exist_ok=True) #creates folder if does not exist
 
     fps = video.get(OpenCV.CAP_PROP_FPS)
     total_frames = int(video.get(OpenCV.CAP_PROP_FRAME_COUNT))
-    print(f"Video has {total_frames} total frames, {fps:.2f} FPS")
+    print(f"{os.path.basename(video_path)} → {total_frames} frames, {fps:.2f} FPS")
 
-    #how often save frames
-    if by_seconds:
-        frame_interval = int(fps * every_n_seconds)
-    else :
-        frame_interval = every_n_seconds
-    
+    # how often save frames
+    frame_interval = int(fps * every_n_seconds) if by_seconds else every_n_seconds
+
+    # video name without extension
+    video_name = os.path.splitext(os.path.basename(video_path))[0]
+
     frame_count, saved_count = 0, 0
     while True:
-        ret, frame = video.read() 
+        ret, frame = video.read()
         if not ret:
             break
 
-        #check if the frame is the one we want
+        # check if the frame is the one we want
         if frame_count % frame_interval == 0:
-            filename = os.path.join(output_folder, f"frame_{saved_count:04d}.jpg")
+            filename = os.path.join(output_folder, f"{video_name}_frame_{saved_count:05d}.jpg")
             OpenCV.imwrite(filename, frame)
             saved_count += 1
 
         frame_count += 1
 
     video.release()
-    print(f"Done. Saved {saved_count} images.")
+    print(f"Saved {saved_count} frames to {output_folder}\n")
+
+
+def process_videos(input_path, output_root, every_n_seconds=1, by_seconds=True):
+    """
+    input_path can be:
+        - path to one video
+        - path to folder with videos
+    """
+
+    # case for one video
+    if os.path.isfile(input_path):
+        print("▶️ Processing SINGLE VIDEO:", input_path)
+        os.makedirs(output_root, exist_ok=True)
+
+        video_to_frames(
+            video_path=input_path,
+            output_folder=output_root,
+            every_n_seconds=every_n_seconds,
+            by_seconds=by_seconds
+        )
+        return
+
+    # case for folder with videos
+    elif os.path.isdir(input_path):
+        print("📁 Input is a directory — scanning for videos...")
+        os.makedirs(output_root, exist_ok=True)
+
+        videos = [f for f in os.listdir(input_path)
+                  if f.lower().endswith((".mp4", ".avi", ".mov", ".mkv"))]
+
+        print(f"🔍 Found {len(videos)} videos")
+
+        for video_file in videos:
+            full_path = os.path.join(input_path, video_file)
+            print(f"▶️ Processing {video_file}...")
+
+            video_to_frames(
+                video_path=full_path,
+                output_folder=output_root,
+                every_n_seconds=every_n_seconds,
+                by_seconds=by_seconds
+            )
+    else:
+        print("ERROR: input_path is neither a file nor a folder")
 
 
 
+#call
+process_videos(
+    input_path=r"/mnt/c/Users/boris/Desktop/video01.avi",
+    output_root=r"/mnt/c/Users/boris/Desktop/frames_single",
+    every_n_seconds=1
+)
 
-#EXAMPLE
-
-video_to_frames(
-    video_path="/mnt/c/Users/boris/Desktop/5.semester/bp/crcv.ucf.crime/Anomaly-Videos-Part-1/Abuse/Abuse023_x264.mp4",
-    output_folder="/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/frames",
-    every_n_seconds=1,           
-    by_seconds=True              # true - by seconds, false - by frames
-)        

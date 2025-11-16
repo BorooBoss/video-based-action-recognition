@@ -8,7 +8,7 @@ def video_to_frames(video_path, output_folder, every_n_seconds=1, by_seconds=Tru
         print("Failed to open video:", video_path)
         return
 
-    os.makedirs(output_folder, exist_ok=True) #creates folder if does not exist
+    os.makedirs(output_folder, exist_ok=True) #creates folder if missing 
 
     fps = video.get(OpenCV.CAP_PROP_FPS)
     total_frames = int(video.get(OpenCV.CAP_PROP_FRAME_COUNT))
@@ -47,7 +47,7 @@ def process_videos(input_path, output_root, every_n_seconds=1, by_seconds=True):
 
     # case for one video
     if os.path.isfile(input_path):
-        print("▶️ Processing SINGLE VIDEO:", input_path)
+        print("Processing SINGLE VIDEO:", input_path)
         os.makedirs(output_root, exist_ok=True)
 
         video_to_frames(
@@ -60,17 +60,17 @@ def process_videos(input_path, output_root, every_n_seconds=1, by_seconds=True):
 
     # case for folder with videos
     elif os.path.isdir(input_path):
-        print("📁 Input is a directory — scanning for videos...")
+        print("Input is a directory — scanning for videos...")
         os.makedirs(output_root, exist_ok=True)
 
         videos = [f for f in os.listdir(input_path)
                   if f.lower().endswith((".mp4", ".avi", ".mov", ".mkv"))]
 
-        print(f"🔍 Found {len(videos)} videos")
+        print(f"Found {len(videos)} videos")
 
         for video_file in videos:
             full_path = os.path.join(input_path, video_file)
-            print(f"▶️ Processing {video_file}...")
+            print(f"Processing {video_file}...")
 
             video_to_frames(
                 video_path=full_path,

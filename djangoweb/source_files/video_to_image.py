@@ -8,7 +8,7 @@ def video_to_frames(video_path, output_folder, every_n_seconds=1, by_seconds=Tru
         print("Failed to open video:", video_path)
         return
 
-    os.makedirs(output_folder, exist_ok=True) #creates folder if missing 
+    os.makedirs(output_folder, exist_ok=True) #creates folder if missing
 
     fps = video.get(OpenCV.CAP_PROP_FPS)
     total_frames = int(video.get(OpenCV.CAP_PROP_FRAME_COUNT))

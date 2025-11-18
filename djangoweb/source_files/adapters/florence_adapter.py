@@ -1,4 +1,4 @@
-def convert(result):
+def convert(result, image_size=None):
     if "<OD>" in result:
         return {
             "<OD>": {

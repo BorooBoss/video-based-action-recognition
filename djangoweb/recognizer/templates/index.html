@@ -13,12 +13,25 @@
       <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224</option>
       <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224</option>
       <option value="microsoft/Florence-2-base">florence-2-base</option>
+      <option value="florence-2vqa-tresting">florence-2vqa-tresting</option>
+      <option value="qwen-testing">qwen-testing</option>
     </select>
 
     <br><br>
 
-    <label>Prompt:</label>
-    <input type="text" name="prompt" placeholder="describe the image">
+    <!-- Prompt type dropdown (user-friendly) -->
+    <label>Prompt Type:</label>
+    <select name="prompt_type" id="prompt-type-select" style="text-transform: uppercase;">
+      <option value="DETECT">DETECT</option>
+      <option value="CAPTION">CAPTION</option>
+      <option value="DESCRIBE">DESCRIBE</option>
+      <option value="ANSWER">ANSWER</option>
+    </select>
+
+    <br><br>
+
+    <label>Addition:</label>
+    <input type="text" name="addition" placeholder="some extra input">
 
     <br><br>
 

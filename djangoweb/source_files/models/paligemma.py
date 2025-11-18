@@ -8,6 +8,7 @@ from huggingface_hub import login
 import gc
 from source_files.models import profiles
 from source_files.vision_adapter import normalize_output
+from source_files import user_input
 
 
 def initialize_model(model_id):
@@ -50,7 +51,7 @@ def prompt_manager(prompt):
     else:
         return "text_generation"
 
-def predict(image_path, prompt="describe\n", model_id=None, task_type=None):
+def predict(image_path, prompt="describe\n", model_id=None, task_type=None, base_prompt=None):
     #Load image from path
     # image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"
     if model_id:
@@ -58,6 +59,7 @@ def predict(image_path, prompt="describe\n", model_id=None, task_type=None):
 
     print(f"LOADING IMAGE FROM: {image_path}")
     image = Image.open(image_path).convert("RGB")
+    image_size = image.size  # (width, height)
 
     inputs = manager.processor(
         text=prompt,
@@ -78,8 +80,9 @@ def predict(image_path, prompt="describe\n", model_id=None, task_type=None):
         )
 
     raw_result = manager.processor.batch_decode(outputs, skip_special_tokens=True)[0]
-    if prompt == "detect":
-        result = normalize_output(raw_result, "paligemma")
+    if base_prompt == "detect":
+        print("skusam ", image_size)
+        result = normalize_output(raw_result, "paligemma", image_size=image_size)
     else:
         result = raw_result
 

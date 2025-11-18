@@ -5,6 +5,7 @@ from transformers import AutoProcessor, AutoModelForCausalLM
 import gc
 from source_files.model_manager import manager
 from source_files.vision_adapter import normalize_output
+from source_files import user_input
 
 
 def initialize_model(model_id):
@@ -30,7 +31,7 @@ def initialize_model(model_id):
     manager.switch_model(model_id, model, processor, device, dtype)
     print(f"MODEL {model_id} LOADED SUCCESSFULLY")
 
-def predict(image_path, prompt="describe", model_id=None):
+def predict(image_path, prompt="describe", model_id=None, base_prompt=None):
     if model_id:
         initialize_model(model_id)
     
@@ -55,7 +56,7 @@ def predict(image_path, prompt="describe", model_id=None):
         task=prompt,
         image_size=(image.width, image.height)
     )
-    if prompt == "<OD>":
+    if base_prompt == "<OD>":
         result = normalize_output(raw_result, "florence")
     else:
         result = raw_result

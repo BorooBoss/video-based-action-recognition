@@ -138,6 +138,6 @@ initialize_model("Qwen/Qwen2-VL-2B-Instruct")
 # Analyze image
 response = predict(
     image_path="/mnt/c/Users/boris/Desktop/5.semester/bp/djangoweb/source_files/samples/test2.jpg",
-    prompt="detect giraffe",
+    prompt="how many apples are there in the image?",
     max_new_tokens=256
 )

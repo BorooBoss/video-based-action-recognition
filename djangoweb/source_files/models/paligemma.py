@@ -10,6 +10,31 @@ from source_files.models import profiles
 from source_files.vision_adapter import normalize_output
 from source_files import user_input
 
+def run_object_detection(image_path, objects, model_id):
+    """
+    Použitie:
+    run_object_detection("img.jpg", ["person", "car"], "google/paligemma-2-3b-mix-448")
+    """
+
+    # priprav prompt pre Paligemma 2
+    if isinstance(objects, list):
+        object_str = " ; ".join(objects)
+    else:
+        object_str = str(objects)
+
+    prompt = f"detect {object_str}\n"
+
+    # zavolá existujúci pipeline
+    result = predict(
+        image_path=image_path,
+        prompt=prompt,
+        model_id=model_id,
+        task_type="detect",
+        base_prompt="detect"
+    )
+
+    # vráti čistý text
+    return str(result)
 
 def initialize_model(model_id):
     # LOAD MODEL ONLY ONCE
@@ -80,6 +105,10 @@ def predict(image_path, prompt="describe\n", model_id=None, task_type=None, base
         )
 
     raw_result = manager.processor.batch_decode(outputs, skip_special_tokens=True)[0]
+
+    # DEBUG: Vypíš raw output PRED konverziou
+    print(f"DEBUG RAW OUTPUT: {raw_result}")
+    print(f"DEBUG IMAGE SIZE: {image_size}")
     if base_prompt == "detect":
         print("skusam ", image_size)
         result = normalize_output(raw_result, "paligemma", image_size=image_size)

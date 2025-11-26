@@ -65,7 +65,7 @@ def recognize(request):
                 if "<OD>" in raw_result:
                     detections_dict = raw_result["<OD>"]
                     print("DEBUG: Found <OD> in raw_result")
-                elif ui.prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
+                elif ui.base_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
                     detections_dict = raw_result[ui.full_prompt]
                     print(f"DEBUG: Found {ui.full_prompt} in raw_result")
 
@@ -110,6 +110,7 @@ def recognize(request):
                 print(f"DEBUG: Adding annotated_image to response")
                 response_data["annotated_image"] = f"data:image/jpeg;base64,{annotated_image_base64}"
             else:
+                #TU SOM
                 print("DEBUG: No annotated_image to add")
 
             return JsonResponse(response_data)

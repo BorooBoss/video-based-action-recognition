@@ -3,50 +3,35 @@ from dotenv import load_dotenv
 from PIL import Image
 from source_files.model_manager import manager
 import torch
-from transformers import AutoProcessor, AutoModelForVision2Seq
+from transformers import AutoProcessor, PaliGemmaForConditionalGeneration
 from huggingface_hub import login
 import gc
 from source_files.models import profiles
 from source_files.vision_adapter import normalize_output
 from source_files import user_input
 
-def run_object_detection(image_path, objects, model_id):
-    """
-    Použitie:
-    run_object_detection("img.jpg", ["person", "car"], "google/paligemma-2-3b-mix-448")
-    """
+import os, re
+from dotenv import load_dotenv
+from PIL import Image
+from source_files.model_manager import manager
+import torch
+from transformers import AutoProcessor, PaliGemmaForConditionalGeneration
+from huggingface_hub import login
+import gc
+from source_files.models import profiles
+from source_files.vision_adapter import normalize_output
+from source_files import user_input
 
-    # priprav prompt pre Paligemma 2
-    if isinstance(objects, list):
-        object_str = " ; ".join(objects)
-    else:
-        object_str = str(objects)
-
-    prompt = f"detect {object_str}\n"
-
-    # zavolá existujúci pipeline
-    result = predict(
-        image_path=image_path,
-        prompt=prompt,
-        model_id=model_id,
-        task_type="detect",
-        base_prompt="detect"
-    )
-
-    # vráti čistý text
-    return str(result)
 
 def initialize_model(model_id):
     # LOAD MODEL ONLY ONCE
     if manager.model_id == model_id and manager.model is not None:
-        print("Working with already loaded {model_id}")
+        print(f"Working with already loaded {model_id}")
         return
-
     if manager.model is not None and manager.model_id != model_id:
         manager.unload_model()
 
-    # HUGGING FACE LOGIN
-    if not os.getenv("HF_TOKEN_LOADED"):
+    if not os.getenv("HF_TOKEN_LOADED"):  # HUGGING FACE LOGIN
         load_dotenv()
         HF_TOKEN = os.getenv("HF_TOKEN")
         login(token=HF_TOKEN)
@@ -56,17 +41,20 @@ def initialize_model(model_id):
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.bfloat16 if torch.cuda.is_available() else torch.float32
 
-    # LOAD MODEL & PROCESSOR
-    model = AutoModelForVision2Seq.from_pretrained(
+    print(f"Loading model on device: {device} with dtype: {dtype}")
+
+    # Načítaj model a PRESUŇ ho na GPU/CPU
+    mix_model = PaliGemmaForConditionalGeneration.from_pretrained(
         model_id,
-        torch_dtype=dtype,
-        device_map="auto" if device == "cuda" else None
-    )
+        torch_dtype=dtype
+    ).to(device)
 
+    # Načítaj processor
     processor = AutoProcessor.from_pretrained(model_id)
-    manager.switch_model(model_id, model, processor, device, dtype)
 
-    print(f"MODEL {model_id} LOADED SUCCESSFULLY")
+    manager.switch_model(model_id, mix_model, processor, device, dtype)
+
+    print(f"MODEL {model_id} LOADED SUCCESSFULLY on {device}")
 
 
 def prompt_manager(prompt):
@@ -76,9 +64,8 @@ def prompt_manager(prompt):
     else:
         return "text_generation"
 
+
 def predict(image_path, prompt="describe\n", model_id=None, task_type=None, base_prompt=None):
-    #Load image from path
-    # image_path = "/mnt/c/Users/boris/Desktop/5.semester/bp/source_files/samples/test2.jpg"
     if model_id:
         initialize_model(model_id)
 
@@ -86,13 +73,28 @@ def predict(image_path, prompt="describe\n", model_id=None, task_type=None, base
     image = Image.open(image_path).convert("RGB")
     image_size = image.size  # (width, height)
 
+    # Spracuj vstup
     inputs = manager.processor(
         text=prompt,
         images=image,
         return_tensors="pt"
-    ).to(manager.device, dtype=manager.dtype)
+    )
 
-    #Generate response
+    # KRITICKÉ: presuň VŠETKY tensory na správne zariadenie A správny dtype
+    for k, v in inputs.items():
+        if not isinstance(v, torch.Tensor):
+            continue
+
+        if k in ["input_ids", "attention_mask"]:
+            # These must stay integer
+            inputs[k] = v.to(manager.device)
+        else:
+            # Everything else can use dtype
+            inputs[k] = v.to(manager.device, dtype=manager.dtype)
+
+    print(f"Inputs moved to device: {manager.device}, dtype: {manager.dtype}")
+
+    # Generate response
     if task_type is None:
         task_type = prompt_manager(prompt)
     gen_config = profiles.GENERATION_CONFIGS.get(task_type, profiles.GENERATION_CONFIGS["text_generation"])
@@ -106,11 +108,8 @@ def predict(image_path, prompt="describe\n", model_id=None, task_type=None, base
 
     raw_result = manager.processor.batch_decode(outputs, skip_special_tokens=True)[0]
 
-    # DEBUG: Vypíš raw output PRED konverziou
-    print(f"DEBUG RAW OUTPUT: {raw_result}")
-    print(f"DEBUG IMAGE SIZE: {image_size}")
     if base_prompt == "detect":
-        print("skusam ", image_size)
+        print(f"Normalizing output with image_size: {image_size}")
         result = normalize_output(raw_result, "paligemma", image_size=image_size)
     else:
         result = raw_result
@@ -120,6 +119,7 @@ def predict(image_path, prompt="describe\n", model_id=None, task_type=None, base
     print("=" * 60)
     print(result)
     print("=" * 60)
+
     return result
 """
 ls ~/.cache/huggingface/hub/models--*

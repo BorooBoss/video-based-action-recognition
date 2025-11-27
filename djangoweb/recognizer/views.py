@@ -60,23 +60,33 @@ def recognize(request):
             annotated_image_base64 = None
             output_image_path = None
 
-            if isinstance(raw_result, dict):
+            if isinstance(raw_result, list) and len(raw_result) > 0:
+                # PaliGemma format - list of dicts with 'label' and 'bbox'
+                print("DEBUG: Processing PaliGemma list format")
+                # Konvertuj do formátu kompatibilného s draw_boxes_paligemma
+                detections_dict = raw_result  # alebo si môžeš vytvoriť wrapper dict ak chceš
+
+            elif isinstance(raw_result, dict):
+                print("DEBUG: Processing Florence dict format")
                 # Florence format
                 if "<OD>" in raw_result:
                     detections_dict = raw_result["<OD>"]
                     print("DEBUG: Found <OD> in raw_result")
-                elif ui.base_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
+                elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
                     detections_dict = raw_result[ui.full_prompt]
                     print(f"DEBUG: Found {ui.full_prompt} in raw_result")
 
-            if detections_dict and "bboxes" in detections_dict:
+            if detections_dict:
                 output_image_path = "/tmp/out.jpg"
                 print("DEBUG: DETECTIONS:", detections_dict)
+                #print("JE TO PALIGEMMA ALE SOM TU AJ TAK")
+                if "florence" in ui.model_name.lower():
+                    # Draw boxes
+                    draw_objects.draw_boxes_florence(tmp_path, detections_dict, output_image_path)
+                    print(f"DEBUG: Bounding boxes drawn!")
 
-                # Draw boxes
-                draw_objects.draw_boxes(tmp_path, detections_dict, output_image_path)
-                print(f"DEBUG: Bounding boxes drawn!")
-
+                if "paligemma" in ui.model_name.lower():
+                    draw_objects.draw_boxes_paligemma(tmp_path, result, output_image_path) #image and coords
                 # Check if output file exists
                 if os.path.exists(output_image_path):
                     print(f"DEBUG: Output image exists at {output_image_path}")
@@ -110,7 +120,6 @@ def recognize(request):
                 print(f"DEBUG: Adding annotated_image to response")
                 response_data["annotated_image"] = f"data:image/jpeg;base64,{annotated_image_base64}"
             else:
-                #TU SOM
                 print("DEBUG: No annotated_image to add")
 
             return JsonResponse(response_data)

@@ -10,9 +10,7 @@
 GENERATION_CONFIGS = {
     "detect": {
         "max_new_tokens": 64,
-        "do_sample": True,
-        "temperature": 0.3,           
-        "top_p": 0.85,
+        "do_sample": False,
         "repetition_penalty": 1.1,
         "no_repeat_ngram_size": 3
     },

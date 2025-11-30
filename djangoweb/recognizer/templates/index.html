@@ -1,226 +1,257 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Image Recognizer — Blue Bulma Design</title>
-  <!-- Bulma CSS -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
-  <!-- Optional: Font Awesome for icons -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Image Recognizer — Blue Bulma Design</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-  <style>
-    /* Blue theme tweaks */
-    :root {
-      --brand-blue: #0a6cff; /* primary brand blue */
-      --brand-dark: #053b8a;
-    }
+    <style>
+        :root {
+            --brand-blue: #0a6cff;
+            --brand-dark: #053b8a;
+        }
 
-    .hero.is-brand {
-      background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-dark) 100%);
-      color: white;
-    }
+        .hero.is-brand {
+            background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-dark) 100%);
+            color: white;
+        }
 
-    .card {
-      border-radius: 12px;
-      box-shadow: 0 10px 30px rgba(9,30,66,0.08);
-    }
+        .card {
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(9, 30, 66, 0.08);
+        }
 
-    .file.is-info .file-cta {
-      background-color: var(--brand-blue);
-      color: white;
-    }
+        .file.is-info .file-cta {
+            background-color: var(--brand-blue);
+            color: white;
+        }
 
-    .button.is-primary {
-      background-color: var(--brand-blue);
-      border-color: transparent;
-      color: white;
-    }
+        .button.is-primary {
+            background-color: var(--brand-blue);
+            border-color: transparent;
+            color: white;
+        }
 
-    .preview-image {
-      width: 100%;
-      max-height: 420px;
-      object-fit: contain;
-      border-radius: 8px;
-      border: 1px solid rgba(10, 108, 255, 0.12);
-      background: linear-gradient(180deg, rgba(10,108,255,0.03), rgba(10,108,255,0.01));
-    }
+        .preview-image {
+            width: 100%;
+            max-height: 420px;
+            object-fit: contain;
+            border-radius: 8px;
+            border: 1px solid rgba(10, 108, 255, 0.12);
+            background: linear-gradient(180deg, rgba(10, 108, 255, 0.03), rgba(10, 108, 255, 0.01));
+        }
 
-    pre#result-box {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-      max-height: 260px;
-      overflow: auto;
-      background: #f5f9ff;
-      border-left: 4px solid var(--brand-blue);
-      padding: 1rem;
-      border-radius: 6px;
-    }
-    .title {
-      color: var(--brand-white);
-    }
+        pre#result-box {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            max-height: 260px;
+            overflow: auto;
+            background: #f5f9ff;
+            border-left: 4px solid var(--brand-blue);
+            padding: 1rem;
+            border-radius: 6px;
+        }
 
-    .subtitle {
-        color: var(--brand-white);
-    }
+        .title {
+            color: var(--brand-white);
+        }
 
-    .has-divider::after {
-      content: "";
-      display:block;
-      height:1px;
-      width:100%;
-      background: linear-gradient(90deg, rgba(10,108,255,0.12), rgba(10,108,255,0.02));
-      margin-top:1rem;
-    }
+        .subtitle {
+            color: var(--brand-white);
+        }
 
-    footer.footer {
-      background: #f7fbff;
-      border-top: 1px solid rgba(10,108,255,0.04);
-    }
+        .has-divider::after {
+            content: "";
+            display: block;
+            height: 1px;
+            width: 100%;
+            background: linear-gradient(90deg, rgba(10, 108, 255, 0.12), rgba(10, 108, 255, 0.02));
+            margin-top: 1rem;
+        }
 
-    @media (min-width: 769px) {
-      .left-col { border-right: 1px dashed rgba(10,108,255,0.06); }
-    }
-  </style>
+        footer.footer {
+            background: #f7fbff;
+            border-top: 1px solid rgba(10, 108, 255, 0.04);
+        }
+
+        @media (min-width: 769px) {
+            .left-col {
+                border-right: 1px dashed rgba(10, 108, 255, 0.06);
+            }
+        }
+    </style>
 </head>
 <body>
 
-  <section class="hero is-brand">
+<section class="hero is-brand">
     <div class="hero-body">
-      <div class="container">
-        <div class="columns is-vcentered">
-          <div class="column is-8">
-            <h1 class="title is-2">Image Recognizer</h1>
-            <h2 class="subtitle is-5">Rýchle a pekné rozpoznanie obrázkov — používame Bulma s modrým dizajnom</h2>
-          </div>
-          <div class="column is-4 has-text-right">
-            <a class="button is-light is-rounded" href="#form">Začni rozpoznávať</a>
-          </div>
+        <div class="container">
+            <div class="columns is-vcentered">
+                <div class="column is-8">
+                    <h1 class="title is-2">Image Recognizer</h1>
+                    <h2 class="subtitle is-5">Rýchle a pekné rozpoznanie obrázkov — používame Bulma s modrým
+                        dizajnom</h2>
+                </div>
+                <div class="column is-4 has-text-right">
+                    <a class="button is-light is-rounded" href="#form">Začni rozpoznávať</a>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
-  </section>
+</section>
 
-  <main class="section">
+<main class="section">
     <div class="container">
-      <div class="columns">
-        <!-- Left: Form -->
-        <div class="column is-6 left-col">
-          <div class="card">
-            <div class="card-content">
-              <h3 class="title is-5">Nastavenia rozpoznávania</h3>
+        <div class="columns">
+            <div class="column is-6 left-col">
+                <div class="card">
+                    <div class="card-content">
+                        <h3 class="title is-5">Nastavenia rozpoznávania</h3>
 
-              <form id="recognize-form" enctype="multipart/form-data">
-                <div class="field">
-                  <label class="label">Model</label>
-                  <div class="control">
-                    <div class="select is-fullwidth">
-                      <select name="model">
-                        <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224</option>
-                        <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224</option>
-                        <option value="microsoft/Florence-2-base">florence-2-base</option>
-                        <option value="florence-2vqa-tresting">florence-2vqa-tresting</option>
-                        <option value="qwen-testing">qwen-testing</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
+                        <form id="recognize-form" enctype="multipart/form-data">
+                            <div class="field">
+                                <label class="label">Model</label>
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        <select name="model" id="model-select">
+                                            <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224</option>
+                                            <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224</option>
+                                            <option value="microsoft/Florence-2-base">florence-2-base</option>
+                                            <option value="microsoft/Florence-2-base-ft">microsoft/Florence-2-base-ft</option>
+                                            <option value="qwen-testing">qwen-testing</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
 
-                <div class="field">
-                  <label class="label">Typ promptu</label>
-                  <div class="control">
-                    <div class="select is-fullwidth">
-                      <select name="prompt_type" id="prompt-type-select">
-                        <option value="DETECT">DETECT</option>
-                        <option value="CAPTION">CAPTION</option>
-                        <option value="DESCRIBE">DESCRIBE</option>
-                        <option value="ANSWER">ANSWER</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
+                            <div class="field">
+                                <label class="label">Typ promptu</label>
+                                <div class="control">
+                                    <div class="select is-fullwidth">
+                                        <select name="prompt_type" id="prompt-type-select">
+                                            <!-- Dynamicky naplnené JavaScript-om -->
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
 
-                <div class="field">
-                  <label class="label">Doplnok</label>
-                  <div class="control">
-                    <input class="input" type="text" name="addition" placeholder="niečo extra...">
-                  </div>
-                </div>
+                            <div class="field">
+                                <label class="label">Doplnok</label>
+                                <div class="control">
+                                    <input class="input" type="text" name="addition" placeholder="niečo extra...">
+                                </div>
+                            </div>
 
-                <div class="field">
-                  <label class="label">Vyber obrázok</label>
-                  <div class="file file-is-info">
-                    <label class="file-label">
-                      <input class="file-input" type="file" name="image" id="image-input" required>
-                      <span class="file-cta">
+                            <div class="field">
+                                <label class="label">Vyber obrázok</label>
+                                <div class="file file-is-info">
+                                    <label class="file-label">
+                                        <input class="file-input" type="file" name="image" id="image-input" required>
+                                        <span class="file-cta">
                         <span class="file-icon">
                           <i class="fas fa-upload"></i>
                         </span>
                         <span class="file-label">Vybrať súbor…</span>
                       </span>
-                      <span class="file-name" id="file-name">Žiadny súbor</span>
-                    </label>
-                  </div>
+                                        <span class="file-name" id="file-name">Žiadny súbor</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="field is-grouped">
+                                <div class="control">
+                                    <button class="button is-primary" type="submit">Rozpoznať</button>
+                                </div>
+                                <div class="control">
+                                    <button class="button is-light" type="button" id="reset-btn">Vymazať</button>
+                                </div>
+                            </div>
+
+                            <p class="is-size-7 has-text-grey">Poznámka: serverová cesta musí byť <code>/recognizer/recognize/</code>
+                                (POST) aby formulár fungoval.</p>
+                        </form>
+                    </div>
                 </div>
 
-                <div class="field is-grouped">
-                  <div class="control">
-                    <button class="button is-primary" type="submit">Rozpoznať</button>
-                  </div>
-                  <div class="control">
-                    <button class="button is-light" type="button" id="reset-btn">Vymazať</button>
-                  </div>
+                <div class="has-divider mt-4"></div>
+
+                <div class="card mt-4">
+                    <div class="card-content">
+                        <h4 class="title is-6">Výstup</h4>
+                        <pre id="result-box">Žiadny výsledok.</pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="column is-6">
+                <div class="card">
+                    <div class="card-content">
+                        <h3 class="title is-5">Náhľad obrázka</h3>
+                        <figure class="image is-16by9">
+                            <img id="preview" class="preview-image" alt="Preview image"
+                                 src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>Žiadny obrázok</text></svg>">
+                        </figure>
+
+                        <div class="content mt-4">
+                            <p class="is-size-7 has-text-grey">Ak server vráti <code>annotated_image</code>, objekt bude
+                                zobrazený ako obrázok v náhľade.</p>
+                            <progress id="progress" class="progress is-primary" value="0" max="100"
+                                      style="display:none"></progress>
+                        </div>
+                    </div>
                 </div>
 
-                <p class="is-size-7 has-text-grey">Poznámka: serverová cesta musí byť <code>/recognizer/recognize/</code> (POST) aby formulár fungoval.</p>
-              </form>
+                <div class="card mt-4">
+                    <div class="card-content">
+                        <h4 class="title is-6">Log konzoly</h4>
+                        <pre id="console-log"
+                             style="max-height:160px; overflow:auto; background:#fff; padding:0.75rem; border-radius:6px; border:1px solid rgba(10,108,255,0.05);">Pripravené.</pre>
+                    </div>
+                </div>
             </div>
-          </div>
-
-          <div class="has-divider mt-4"></div>
-
-          <div class="card mt-4">
-            <div class="card-content">
-              <h4 class="title is-6">Výstup</h4>
-              <pre id="result-box">Žiadny výsledok.</pre>
-            </div>
-          </div>
         </div>
-
-        <!-- Right: Preview + annotated image -->
-        <div class="column is-6">
-          <div class="card">
-            <div class="card-content">
-              <h3 class="title is-5">Náhľad obrázka</h3>
-              <figure class="image is-16by9">
-                <img id="preview" class="preview-image" alt="Preview image" src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>Žiadny obrázok</text></svg>">
-              </figure>
-
-              <div class="content mt-4">
-                <p class="is-size-7 has-text-grey">Ak server vráti <code>annotated_image</code>, objekt bude zobrazený ako obrázok v náhľade.</p>
-                <progress id="progress" class="progress is-primary" value="0" max="100" style="display:none"></progress>
-              </div>
-            </div>
-          </div>
-
-          <div class="card mt-4">
-            <div class="card-content">
-              <h4 class="title is-6">Log konzoly</h4>
-              <pre id="console-log" style="max-height:160px; overflow:auto; background:#fff; padding:0.75rem; border-radius:6px; border:1px solid rgba(10,108,255,0.05);">Pripravené.</pre>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>
-  </main>
+</main>
 
-  <footer class="footer">
+<footer class="footer">
     <div class="content has-text-centered">
-      <p class="is-size-7">© 2025 Recognizer • Design v Bulma (modrá téma)</p>
+        <p class="is-size-7">© 2025 Recognizer • Design v Bulma (modrá téma)</p>
     </div>
-  </footer>
+</footer>
 
-  <script>
+<script>
+    // === DYNAMICKÉ PROMPTY ===
+    const promptOptions = {
+        "google/paligemma2-3b-pt-224": ["DETECT","CAP", "CAPTION", "DESCRIBE", "VQA"],
+        "google/paligemma2-3b-mix-224": ["DETECT","CAP", "CAPTION", "DESCRIBE", "VQA"],
+        "microsoft/Florence-2-base": ["DETECT","CAP", "CAPTION", "DESCRIBE"],
+        "microsoft/Florence-2-base-ft": ["DETECT","CAP", "CAPTION", "DESCRIBE", "VQA"],
+        "qwen-testing": ["VQA"]
+    };
+
+    const modelSelect = document.getElementById('model-select');
+    const promptSelect = document.getElementById('prompt-type-select');
+
+    function updatePromptOptions() {
+        const selectedModel = modelSelect.value;
+        const availablePrompts = promptOptions[selectedModel] || ["DETECT"];
+
+        promptSelect.innerHTML = '';
+
+        availablePrompts.forEach(promptType => {
+            const option = document.createElement('option');
+            option.value = promptType;
+            option.textContent = promptType;
+            promptSelect.appendChild(option);
+        });
+    }
+
+    modelSelect.addEventListener('change', updatePromptOptions);
+    updatePromptOptions();
+
+    // === PÔVODNÝ FUNGUJÚCI KÓD ===
     const form = document.getElementById('recognize-form');
     const resultBox = document.getElementById('result-box');
     const imageInput = document.getElementById('image-input');
@@ -231,74 +262,75 @@
     const resetBtn = document.getElementById('reset-btn');
 
     function log(msg) {
-      const time = new Date().toLocaleTimeString();
-      consoleLog.textContent = `[${time}] ${msg}\n` + consoleLog.textContent;
+        const time = new Date().toLocaleTimeString();
+        consoleLog.textContent = `[${time}] ${msg}\n` + consoleLog.textContent;
     }
 
     imageInput.addEventListener('change', (e) => {
-      const file = e.target.files[0];
-      if (file) {
-        fileName.textContent = file.name;
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          preview.src = event.target.result;
-          log('Nahraný lokálny náhľad obrázku.');
-        };
-        reader.readAsDataURL(file);
-      } else {
-        fileName.textContent = 'Žiadny súbor';
-      }
+        const file = e.target.files[0];
+        if (file) {
+            fileName.textContent = file.name;
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                preview.src = event.target.result;
+                log('Nahraný lokálny náhľad obrázku.');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            fileName.textContent = 'Žiadny súbor';
+        }
     });
 
     resetBtn.addEventListener('click', () => {
-      form.reset();
-      preview.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>Žiadny obrázok</text></svg>";
-      fileName.textContent = 'Žiadny súbor';
-      resultBox.textContent = 'Žiadny výsledok.';
-      consoleLog.textContent = 'Vymazané.';
+        form.reset();
+        preview.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>Žiadny obrázok</text></svg>";
+        fileName.textContent = 'Žiadny súbor';
+        resultBox.textContent = 'Žiadny výsledok.';
+        consoleLog.textContent = 'Vymazané.';
+        updatePromptOptions();
     });
 
     form.addEventListener('submit', async (e) => {
-      e.preventDefault();
+        e.preventDefault();
 
-      const formData = new FormData(form);
-      resultBox.textContent = 'Spracovávam...';
-      progress.style.display = 'block';
-      progress.value = 10;
+        const formData = new FormData(form);
+        resultBox.textContent = 'Spracovávam...';
+        progress.style.display = 'block';
+        progress.value = 10;
 
-      try {
-        log('Odosielam požiadavku na /recognizer/recognize/');
-        const response = await fetch('/recognizer/recognize/', {
-          method: 'POST',
-          body: formData
-        });
+        try {
+            log('Odosielam požiadavku na /recognizer/recognize/');
+            const response = await fetch('/recognizer/recognize/', {
+                method: 'POST',
+                body: formData
+            });
 
-        progress.value = 50;
-        const data = await response.json();
-        log('Prijatá odpoveď zo servera.');
-        console.log('Full response:', data);
+            progress.value = 50;
+            const data = await response.json();
+            log('Prijatá odpoveď zo servera.');
+            console.log('Full response:', data);
 
-        if (data.result) {
-          resultBox.textContent = `Model: ${data.model}\nPrompt: ${data.prompt}\nResult:\n${JSON.stringify(data.result, null, 2)}`;
+            if (data.result) {
+                resultBox.textContent = `Model: ${data.model}\nPrompt: ${data.prompt}\nResult:\n${JSON.stringify(data.result, null, 2)}`;
 
-          if (data.annotated_image) {
-            log('Zobrazený anotovaný obrázok.');
-            preview.src = data.annotated_image;
-          }
-        } else {
-          resultBox.textContent = `Chyba: ${data.error || 'neznáma chyba'}`;
-          log('Server vrátil chybu.');
+                if (data.annotated_image) {
+                    log('Zobrazený anotovaný obrázok.');
+                    preview.src = data.annotated_image;
+                }
+            } else {
+                resultBox.textContent = `Chyba: ${data.error || 'neznáma chyba'}`;
+                log('Server vrátil chybu.');
+            }
+
+            progress.value = 100;
+            setTimeout(() => progress.style.display = 'none', 600);
+
+        } catch (err) {
+            resultBox.textContent = `Request failed: ${err}`;
+            log('Požiadavka zlyhala: ' + err);
+            progress.style.display = 'none';
         }
-
-        progress.value = 100;
-        setTimeout(() => progress.style.display = 'none', 600);
-
-      } catch (err) {
-        resultBox.textContent = `Request failed: ${err}`;
-        log('Požiadavka zlyhala: ' + err);
-        progress.style.display = 'none';
-      }
     });
-  </script>
+</script>
 </body>
 </html>

@@ -107,6 +107,8 @@ def predict(image_path, prompt="describe\n", model_id=None, task_type=None, base
         )
 
     raw_result = manager.processor.batch_decode(outputs, skip_special_tokens=True)[0]
+    if raw_result.lower().startswith(prompt.lower()):
+        raw_result = raw_result[len(prompt):].strip()
 
     if base_prompt == "detect":
         print(f"Normalizing output with image_size: {image_size}")

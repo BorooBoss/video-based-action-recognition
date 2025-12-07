@@ -120,7 +120,8 @@
                                             <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224</option>
                                             <option value="microsoft/Florence-2-base">florence-2-base</option>
                                             <option value="microsoft/Florence-2-base-ft">microsoft/Florence-2-base-ft</option>
-                                            <option value="qwen-testing">qwen-testing</option>
+                                            <option value="Qwen/Qwen3-VL-2B-Instruct">Qwen/Qwen3-VL-2B-Instruct</option>
+                                            <option value="OpenGVLab/InternVL3_5-2B">OpenGVLab/InternVL3_5-2B</option>
                                         </select>
                                     </div>
                                 </div>
@@ -228,7 +229,8 @@
         "google/paligemma2-3b-mix-224": ["DETECT","CAP", "CAPTION", "DESCRIBE", "VQA"],
         "microsoft/Florence-2-base": ["DETECT","CAP", "CAPTION", "DESCRIBE"],
         "microsoft/Florence-2-base-ft": ["DETECT","CAP", "CAPTION", "DESCRIBE", "VQA"],
-        "qwen-testing": ["VQA"]
+        "Qwen/Qwen3-VL-2B-Instruct": ["answer"],
+        "OpenGVLab/InternVL3_5-2B": ["answer"]
     };
 
     const modelSelect = document.getElementById('model-select');

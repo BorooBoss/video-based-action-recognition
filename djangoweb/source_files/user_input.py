@@ -36,8 +36,11 @@ class UserInput:
             "DESCRIBE": "<MORE_DETAILED_CAPTION>",
             "VQA": "<VQA>"
         },
-        "qwen-testing": {
-            "VQA": "",
+        "Qwen/Qwen3-VL-2B-Instruct": {
+            "answer": "",
+        },
+        "OpenGVLab/InternVL3_5-2B": {
+            "answer": "",
         }
         # pridať ďalšie modely
     }

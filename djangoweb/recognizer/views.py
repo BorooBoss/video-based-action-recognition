@@ -6,6 +6,51 @@ from source_files.models import paligemma, florence
 from source_files import draw_objects, user_input
 import os
 import base64
+import subprocess
+import json
+
+def call_qwen(image_path, prompt):
+    result = subprocess.run(
+        [
+            "/home/borooboss11/miniconda3/envs/qwen_env/bin/python",
+            "/mnt/c/Users/boris/Desktop/5.semester/bp/djangoweb/source_files/models/run_qwen.py",
+            "--image", image_path,
+            "--prompt", prompt,
+        ],
+        capture_output=True,
+        text=True
+    )
+
+    # DEBUG
+    print("=== SUBPROCESS STDOUT ===")
+    print(result.stdout)
+    print("=== SUBPROCESS STDERR ===")
+    print(result.stderr)
+
+    # Vráť len text (už nie JSON)
+    return result.stdout.strip()
+
+
+def call_internvl(image_path, prompt):
+    result = subprocess.run(
+        [
+            "/home/borooboss11/miniconda3/envs/internvl_env/bin/python",
+            "/mnt/c/Users/boris/Desktop/5.semester/bp/djangoweb/source_files/models/run_internvl.py",
+            "--image", image_path,
+            "--prompt", prompt,
+        ],
+        capture_output=True,
+        text=True
+    )
+
+    # DEBUG
+    print("=== INTERNVL STDOUT ===")
+    print(result.stdout)
+    print("=== INTERNVL STDERR ===")
+    print(result.stderr)
+
+    # Vráť len text (už nie JSON)
+    return result.stdout.strip()
 
 def index(request):
     return render(request, 'index.html')
@@ -48,6 +93,14 @@ def recognize(request):
                     result = raw_result.get(ui.full_prompt, raw_result)
                 else:
                     result = raw_result
+
+            elif "qwen" in ui.model_name.lower():
+                result = call_qwen(tmp_path, ui.full_prompt)
+
+            elif "internvl" in ui.model_name.lower():
+                result = call_internvl(tmp_path, ui.full_prompt)
+
+
             else:
                 return JsonResponse({"error": "Unknown model type"}, status=400)
 

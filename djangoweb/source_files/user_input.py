@@ -10,30 +10,28 @@ class UserInput:
 
     PROMPT_MAP = {
         "google/paligemma2-3b-pt-224": {
-            "CAP": "cap en",
-            "CAPTION": "caption en",
-            "DESCRIBE": "describe en",
+            "SIMPLE CAPTION": "cap en",
+            "STANDARD CAPTION": "caption en",
+            "DETAILED CAPTION": "describe en",
             "VQA": "answer en"
         },
         "google/paligemma2-3b-mix-224": {
             "DETECT": "detect",
-            "CAP": "cap en",
-            "CAPTION": "caption en",
-            "DESCRIBE": "describe en",
+            "STANDARD CAPTION": "caption en",
             "VQA": "answer en"
 
         },
         "microsoft/Florence-2-base": {
             "DETECT": "<OD>",
-            "CAP": "<CAPTION>",
-            "CAPTION": "<DETAILED_CAPTION>",
-            "DESCRIBE": "<MORE_DETAILED_CAPTION>",
+            "SIMPLE CAPTION": "<CAPTION>",
+            "STANDARD CAPTION": "<DETAILED_CAPTION>",
+            "DETAILED CAPTION": "<MORE_DETAILED_CAPTION>",
         },
         "microsoft/Florence-2-base-ft": {
             "DETECT": "<OD>",
-            "CAP": "<CAPTION>",
-            "CAPTION": "<DETAILED_CAPTION>",
-            "DESCRIBE": "<MORE_DETAILED_CAPTION>",
+            "SIMPLE CAPTION": "<CAPTION>",
+            "STANDARD CAPTION": "<DETAILED_CAPTION>",
+            "DETAILED CAPTION": "<MORE_DETAILED_CAPTION>",
             "VQA": "<VQA>"
         },
         "Qwen/Qwen3-VL-2B-Instruct": {
@@ -49,11 +47,11 @@ class UserInput:
         if "<OD>" in self.base_prompt or "detect" in self.base_prompt:
             self.prompt_type = "DETECT"
         elif "<CAPTION>" in self.base_prompt or "cap en" in self.base_prompt:
-            self.prompt_type = "CAP"
+            self.prompt_type = "SIMPLE CAPTION"
         elif "<DETAILED_CAPTION>" in self.base_prompt or "caption en" in self.base_prompt:
-            self.prompt_type = "CAPTION"
+            self.prompt_type = "STANDARD CAPTION"
         elif "<MORE_DETAILED_CAPTION>" in self.base_prompt or "describe en" in self.base_prompt:
-            self.prompt_type = "DESCRIBE"
+            self.prompt_type = "DETAILED CAPTION"
         elif "<VQA>" in self.base_prompt or "answer en" in self.base_prompt or "VQA" in self.base_prompt:
             self.prompt_type = "VQA"
 
@@ -66,7 +64,6 @@ class UserInput:
                 break
 
         if model_type is None:
-            print("hihihi")
             return None
         prompt_config = self.PROMPT_MAP[model_type]
 

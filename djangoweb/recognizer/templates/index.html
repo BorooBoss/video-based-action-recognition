@@ -91,8 +91,7 @@
             <div class="columns is-vcentered">
                 <div class="column is-8">
                     <h1 class="title is-2">Image Recognizer</h1>
-                    <h2 class="subtitle is-5">Rýchle a pekné rozpoznanie obrázkov — používame Bulma s modrým
-                        dizajnom</h2>
+                    <h2 class="subtitle is-5">Bulma</h2>
                 </div>
                 <div class="column is-4 has-text-right">
                     <a class="button is-light is-rounded" href="#form">Začni rozpoznávať</a>
@@ -246,10 +245,10 @@
 <script>
     // === DYNAMICKÉ PROMPTY ===
     const promptOptions = {
-        "google/paligemma2-3b-pt-224": ["DETECT","CAP", "CAPTION", "DESCRIBE", "VQA"],
-        "google/paligemma2-3b-mix-224": ["DETECT","CAP", "CAPTION", "DESCRIBE", "VQA"],
-        "microsoft/Florence-2-base": ["DETECT","CAP", "CAPTION", "DESCRIBE"],
-        "microsoft/Florence-2-base-ft": ["DETECT","CAP", "CAPTION", "DESCRIBE", "VQA"],
+        "google/paligemma2-3b-pt-224": ["DETECT","SIMPLE CAPTION", "STANDARD CAPTION", "DETAILED CAPTION", "VQA"],
+        "google/paligemma2-3b-mix-224": ["DETECT", "STANDARD CAPTION", "VQA"],
+        "microsoft/Florence-2-base": ["DETECT","SIMPLE CAPTION", "STANDARD CAPTION", "DETAILED CAPTION"],
+        "microsoft/Florence-2-base-ft": ["DETECT","SIMPLE CAPTION", "STANDARD CAPTION", "DETAILED CAPTION", "VQA"],
         "Qwen/Qwen3-VL-2B-Instruct": ["VQA"],
         "OpenGVLab/InternVL3_5-2B": ["VQA"]
     };

@@ -112,17 +112,38 @@
 
                         <form id="recognize-form" enctype="multipart/form-data">
                             <div class="field">
-                                <label class="label">Model</label>
-                                <div class="control">
-                                    <div class="select is-fullwidth">
-                                        <select name="model" id="model-select">
-                                            <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224</option>
-                                            <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224</option>
-                                            <option value="microsoft/Florence-2-base">florence-2-base</option>
-                                            <option value="microsoft/Florence-2-base-ft">microsoft/Florence-2-base-ft</option>
-                                            <option value="Qwen/Qwen3-VL-2B-Instruct">Qwen/Qwen3-VL-2B-Instruct</option>
-                                            <option value="OpenGVLab/InternVL3_5-2B">OpenGVLab/InternVL3_5-2B</option>
-                                        </select>
+                                <div class="columns is-mobile">
+                                    <div class="column is-6">
+                                        <label class="label">Štandardné modely</label>
+                                        <div class="control">
+                                            <div class="select is-fullwidth">
+                                                <select name="model" id="model-select">
+                                                    <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224
+                                                    </option>
+                                                    <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224
+                                                    </option>
+                                                    <option value="microsoft/Florence-2-base">florence-2-base</option>
+                                                    <option value="microsoft/Florence-2-base-ft">
+                                                        microsoft/Florence-2-base-ft
+                                                    </option>
+                                                    <option value="Qwen/Qwen3-VL-2B-Instruct">
+                                                        Qwen/Qwen3-VL-2B-Instruct
+                                                    </option>
+                                                    <option value="OpenGVLab/InternVL3_5-2B">OpenGVLab/InternVL3_5-2B
+                                                    </option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="column is-6">
+                                        <label class="label">Fine-tuned modely</label>
+                                        <div class="control">
+                                            <div class="select is-fullwidth">
+                                                <select name="finetuned_model" id="finetuned-model-select" disabled>
+                                                    <option value="">not available</option>
+                                                </select>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

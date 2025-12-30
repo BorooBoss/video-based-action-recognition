@@ -37,10 +37,10 @@ class UserInput:
             "VQA": "<VQA>"
         },
         "Qwen/Qwen3-VL-2B-Instruct": {
-            "answer": "",
+            "VQA": "",
         },
         "OpenGVLab/InternVL3_5-2B": {
-            "answer": "",
+            "VQA": "",
         }
         # pridať ďalšie modely
     }

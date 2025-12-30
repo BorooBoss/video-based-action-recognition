@@ -27,7 +27,7 @@ def call_qwen(image_path, prompt):
     print("=== SUBPROCESS STDERR ===")
     print(result.stderr)
 
-    # Vráť len text (už nie JSON)
+    
     return result.stdout.strip()
 
 
@@ -49,7 +49,7 @@ def call_internvl(image_path, prompt):
     print("=== INTERNVL STDERR ===")
     print(result.stderr)
 
-    # Vráť len text (už nie JSON)
+
     return result.stdout.strip()
 
 def index(request):

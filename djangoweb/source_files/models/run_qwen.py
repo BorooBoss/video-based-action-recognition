@@ -19,6 +19,7 @@ model = Qwen3VLForConditionalGeneration.from_pretrained(
 
 if device == "cpu":
     model.to("cpu")
+    print("BEZIM NA CPU")
 
 processor = AutoProcessor.from_pretrained("Qwen/Qwen3-VL-2B-Instruct")
 
@@ -44,5 +45,4 @@ generated = model.generate(**inputs, max_new_tokens=128)
 trimmed = [out[len(inp):] for inp, out in zip(inputs["input_ids"], generated)]
 answer = processor.batch_decode(trimmed, skip_special_tokens=True)[0]
 
-# Vypíše len samotný result
 print(answer)

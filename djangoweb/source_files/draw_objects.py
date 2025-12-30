@@ -32,9 +32,9 @@ def draw_boxes_paligemma(image_path, coords_and_labels, output_path):
    for obj in coords_and_labels:
        # Extract the bounding box coordinates
        y1, x1, y2, x2 = obj['bbox'][0] * height, obj['bbox'][1] * width, obj['bbox'][2] * height, obj['bbox'][3] * width
-       # Draw bounding box and label
+
        draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
        draw.text((x1, y1), obj['label'], fill="red")
-   print("som v draw paligemma")
+   print("som v draw funkcii v paligemme")
    image.save(output_path)
    return image

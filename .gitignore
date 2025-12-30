@@ -2,8 +2,9 @@ datasets/
 scvd/
 djangoweb/source_files/frames/
 djangoweb/source_files/video/
+djangoweb/polls/
+weapon_aug/
 .env
 helper.docx
 db.sqlite3
-djangoweb/polls/
 manager.txt

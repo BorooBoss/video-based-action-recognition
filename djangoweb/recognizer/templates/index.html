@@ -90,8 +90,8 @@
         <div class="container">
             <div class="columns is-vcentered">
                 <div class="column is-8">
-                    <h1 class="title is-2">Image Recognizer</h1>
-                    <h2 class="subtitle is-5">Bulma</h2>
+                    <h1 class="title is-2">VLM Activity Analyzer</h1>
+                    <h2 class="subtitle is-5">Systém na analýzu a detekciu anomálií vo videu.</h2>
                 </div>
                 <div class="column is-4 has-text-right">
                     <a class="button is-light is-rounded" href="#form">Začni rozpoznávať</a>
@@ -107,7 +107,7 @@
             <div class="column is-6 left-col">
                 <div class="card">
                     <div class="card-content">
-                        <h3 class="title is-5">Nastavenia rozpoznávania</h3>
+                        <h3 class="title is-5">Nastavenie parametrov</h3>
 
                         <form id="recognize-form" enctype="multipart/form-data">
                             <div class="field">
@@ -117,19 +117,12 @@
                                         <div class="control">
                                             <div class="select is-fullwidth">
                                                 <select name="model" id="model-select">
-                                                    <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224
-                                                    </option>
-                                                    <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224
-                                                    </option>
+                                                    <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224</option>
+                                                    <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224</option>
                                                     <option value="microsoft/Florence-2-base">florence-2-base</option>
-                                                    <option value="microsoft/Florence-2-base-ft">
-                                                        microsoft/Florence-2-base-ft
-                                                    </option>
-                                                    <option value="Qwen/Qwen3-VL-2B-Instruct">
-                                                        Qwen/Qwen3-VL-2B-Instruct
-                                                    </option>
-                                                    <option value="OpenGVLab/InternVL3_5-2B">OpenGVLab/InternVL3_5-2B
-                                                    </option>
+                                                    <option value="microsoft/Florence-2-base-ft">florence-2-base-ft</option>
+                                                    <option value="Qwen/Qwen3-VL-2B-Instruct">qwen3-vl-2b-instruct</option>
+                                                    <option value="OpenGVLab/InternVL3_5-2B">internvl3_5-2b</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -152,16 +145,15 @@
                                 <div class="control">
                                     <div class="select is-fullwidth">
                                         <select name="prompt_type" id="prompt-type-select">
-                                            <!-- Dynamicky naplnené JavaScript-om -->
                                         </select>
                                     </div>
                                 </div>
                             </div>
 
                             <div class="field">
-                                <label class="label">Doplnok</label>
+                                <label class="label">Upresnenie</label>
                                 <div class="control">
-                                    <input class="input" type="text" name="addition" placeholder="niečo extra...">
+                                    <input class="input" type="text" name="addition" placeholder="doplnenie promptu">
                                 </div>
                             </div>
 

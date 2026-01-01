@@ -1,15 +1,11 @@
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.http import JsonResponse
-from source_files.models import load_model
 from source_files.models import paligemma, florence
 from source_files import draw_objects, user_input
-import os
-import base64
-import subprocess
-import json
+import os, base64, subprocess
 
-def call_qwen(image_path, prompt):
+def call_qwen(image_path, prompt): #FROM qwen_env -> ai_env
     result = subprocess.run(
         [
             "/home/borooboss11/miniconda3/envs/qwen_env/bin/python",
@@ -20,18 +16,10 @@ def call_qwen(image_path, prompt):
         capture_output=True,
         text=True
     )
-
-    # DEBUG
-    print("=== SUBPROCESS STDOUT ===")
-    print(result.stdout)
-    print("=== SUBPROCESS STDERR ===")
-    print(result.stderr)
-
-    
     return result.stdout.strip()
 
 
-def call_internvl(image_path, prompt):
+def call_internvl(image_path, prompt): #FROM invernvl_env -> ai_env
     result = subprocess.run(
         [
             "/home/borooboss11/miniconda3/envs/internvl_env/bin/python",
@@ -42,15 +30,8 @@ def call_internvl(image_path, prompt):
         capture_output=True,
         text=True
     )
-
-    # DEBUG
-    print("=== INTERNVL STDOUT ===")
-    print(result.stdout)
-    print("=== INTERNVL STDERR ===")
-    print(result.stderr)
-
-
     return result.stdout.strip()
+
 
 def index(request):
     return render(request, 'index.html')
@@ -74,30 +55,30 @@ def recognize(request):
 
         if not ui.image or not ui.model_name:
             return JsonResponse({"error": "Missing image or model name"}, status=400)
+
         # SAVE IMAGE
         tmp_path = "/tmp/uploaded_image.jpg"
         with open(tmp_path, "wb") as f:
             for chunk in ui.image.chunks():
                 f.write(chunk)
-        #   TU
         try:
-            raw_result = None
+            raw_result = None #SAVING RESULT
 
-            if "paligemma" in ui.model_name.lower():
+            if "paligemma" in ui.model_name.lower(): #CALL paligemma
                 raw_result = paligemma.predict(tmp_path, ui.full_prompt, model_id=ui.model_name, base_prompt=ui.base_prompt)
                 result = raw_result
 
-            elif "florence" in ui.model_name.lower():
+            elif "florence" in ui.model_name.lower(): #CALL florence
                 raw_result = florence.predict(tmp_path, ui.full_prompt, model_id=ui.model_name, base_prompt=ui.base_prompt)
                 if isinstance(raw_result, dict):
                     result = raw_result.get(ui.full_prompt, raw_result)
                 else:
                     result = raw_result
 
-            elif "qwen" in ui.model_name.lower():
+            elif "qwen" in ui.model_name.lower(): #CALL QWEN
                 result = call_qwen(tmp_path, ui.full_prompt)
 
-            elif "internvl" in ui.model_name.lower():
+            elif "internvl" in ui.model_name.lower(): #CALL INTERNVL
                 result = call_internvl(tmp_path, ui.full_prompt)
 
 
@@ -108,20 +89,19 @@ def recognize(request):
             print(f"DEBUG: raw_result = {raw_result}")
             print(ui.model_name, "\n")
 
-            # DETECTION HANDLING
+            #DETECTION HANDLER
             detections_dict = None
             annotated_image_base64 = None
             output_image_path = None
 
-            if isinstance(raw_result, list) and len(raw_result) > 0:
+            if isinstance(raw_result, list) and len(raw_result) > 0: #######TREBA OPRAVIT KED BUDE PALIGEMMA FUNGOVAT
                 # PaliGemma format - list of dicts with 'label' and 'bbox'
                 print("DEBUG: Processing PaliGemma list format")
-                # Konvertuj do formátu kompatibilného s draw_boxes_paligemma
-                detections_dict = raw_result  # alebo si môžeš vytvoriť wrapper dict ak chceš
+                detections_dict = raw_result
 
             elif isinstance(raw_result, dict):
                 print("DEBUG: Processing Florence dict format")
-                # Florence format
+                #Florence format
                 if "<OD>" in raw_result:
                     detections_dict = raw_result["<OD>"]
                     print("DEBUG: Found <OD> in raw_result")
@@ -132,7 +112,7 @@ def recognize(request):
             if detections_dict:
                 output_image_path = "/tmp/out.jpg"
                 print("DEBUG: DETECTIONS:", detections_dict)
-                #print("JE TO PALIGEMMA ALE SOM TU AJ TAK")
+
                 if "florence" in ui.model_name.lower():
                     # Draw boxes
                     draw_objects.draw_boxes_florence(tmp_path, detections_dict, output_image_path)
@@ -140,7 +120,8 @@ def recognize(request):
 
                 if "paligemma" in ui.model_name.lower():
                     draw_objects.draw_boxes_paligemma(tmp_path, result, output_image_path) #image and coords
-                # Check if output file exists
+
+                #Check if output file exists - leave for now
                 if os.path.exists(output_image_path):
                     print(f"DEBUG: Output image exists at {output_image_path}")
 
@@ -152,7 +133,7 @@ def recognize(request):
                 else:
                     print(f"ERROR: Output image does NOT exist at {output_image_path}")
 
-            # CLEAR TEMP
+            #CLEAR temp
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
                 print(f"DEBUG: Removed temp input image: {tmp_path}")
@@ -168,7 +149,7 @@ def recognize(request):
                 "result": result
             }
 
-            # Add annotated image
+
             if annotated_image_base64:
                 print(f"DEBUG: Adding annotated_image to response")
                 response_data["annotated_image"] = f"data:image/jpeg;base64,{annotated_image_base64}"

@@ -40,7 +40,6 @@ class UserInput:
         "OpenGVLab/InternVL3_5-2B": {
             "VQA": "",
         }
-        # pridať ďalšie modely
     }
 
     def set_prompt_type(self):
@@ -66,7 +65,6 @@ class UserInput:
         if model_type is None:
             return None
         prompt_config = self.PROMPT_MAP[model_type]
-
         if self.prompt_type in prompt_config:
             self.base_prompt = prompt_config[self.prompt_type]
         else:

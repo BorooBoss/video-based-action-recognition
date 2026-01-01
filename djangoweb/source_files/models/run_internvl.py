@@ -5,13 +5,14 @@ from PIL import Image
 import torchvision.transforms as T
 from torchvision.transforms.functional import InterpolationMode
 
+
+IMAGENET_MEAN = (0.485, 0.456, 0.406)
+IMAGENET_STD = (0.229, 0.224, 0.228)
 parser = argparse.ArgumentParser()
 parser.add_argument("--image", type=str, required=True)
 parser.add_argument("--prompt", type=str, required=True)
 args = parser.parse_args()
 
-IMAGENET_MEAN = (0.485, 0.456, 0.406)
-IMAGENET_STD = (0.229, 0.224, 0.228)
 
 def build_transform(input_size):
     transform = T.Compose([
@@ -78,11 +79,8 @@ def load_image(image_path, input_size=448, max_num=12):
 
 
 
-
-
 device = "cuda" if torch.cuda.is_available() else "cpu"
 dtype = torch.bfloat16 if device == "cuda" else torch.float32
-
 
 model = AutoModel.from_pretrained(
     'OpenGVLab/InternVL3_5-2B',
@@ -98,19 +96,15 @@ else:
     model = model.to("cpu")
 
 tokenizer = AutoTokenizer.from_pretrained(
-    'OpenGVLab/InternVL3_5-2B',  # ← ZMENA
+    'OpenGVLab/InternVL3_5-2B',
     trust_remote_code=True,
     use_fast=False
 )
-
-
 pixel_values = load_image(args.image, max_num=12).to(dtype)
 if device == "cuda":
     pixel_values = pixel_values.cuda()
 
-
 question = f"<image>\n{args.prompt}"
-
 generation_config = dict(max_new_tokens=128, do_sample=False)
 response = model.chat(tokenizer, pixel_values, question, generation_config)
 

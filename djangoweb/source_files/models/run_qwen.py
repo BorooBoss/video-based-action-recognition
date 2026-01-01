@@ -1,7 +1,6 @@
 import argparse
 from transformers import Qwen3VLForConditionalGeneration, AutoProcessor
 import torch
-from PIL import Image
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--image", type=str, required=True)

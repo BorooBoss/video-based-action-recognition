@@ -40,18 +40,18 @@ def index(request):
 @csrf_exempt
 def recognize(request):
     if request.method == 'POST':
-        ui = user_input.UserInput()
+        # Načítaj VŠETKY zaškrtnuté prompty z frontendu
+        selected_prompts = request.POST.getlist("selected_prompts[]")  # ["DETECT", "VQA"]
+        prompt_inputs = {}  # {"VQA": "What is this?", "DETECT": "person car"}
 
+        # Pre každý prompt načítaj jeho input (ak má)
+        for prompt_name in selected_prompts:
+            input_value = request.POST.get(f"prompt_input_{prompt_name}", "").strip()
+            prompt_inputs[prompt_name] = input_value
+
+        ui = user_input.UserInput()
         ui.image = request.FILES.get("image")
         ui.model_name = request.POST.get("model")
-        ui.prompt_type = request.POST.get("prompt_type", "describe the image")
-        ui.addition = request.POST.get("addition", "").strip()
-        ui.set_base_prompt()
-
-        print(f"Model: {ui.model_name}")
-        print(f"Prompt type: {ui.prompt_type}")
-        print(f"Base prompt: {ui.base_prompt}")
-        print(f"Final prompt: {ui.full_prompt}")
 
         if not ui.image or not ui.model_name:
             return JsonResponse({"error": "Missing image or model name"}, status=400)
@@ -61,102 +61,91 @@ def recognize(request):
         with open(tmp_path, "wb") as f:
             for chunk in ui.image.chunks():
                 f.write(chunk)
+
         try:
-            raw_result = None #SAVING RESULT
+            results = []  # Tu uložíme výsledky všetkých promptov
 
-            if "paligemma" in ui.model_name.lower(): #CALL paligemma
-                raw_result = paligemma.predict(tmp_path, ui.full_prompt, model_id=ui.model_name, base_prompt=ui.base_prompt)
-                result = raw_result
+            # PREJDI VŠETKY VYBRANÉ PROMPTY
+            for prompt_name in selected_prompts:
+                ui.prompt_type = prompt_name
+                ui.addition = prompt_inputs.get(prompt_name, "")
+                ui.set_base_prompt()
 
-            elif "florence" in ui.model_name.lower(): #CALL florence
-                raw_result = florence.predict(tmp_path, ui.full_prompt, model_id=ui.model_name, base_prompt=ui.base_prompt)
-                if isinstance(raw_result, dict):
-                    result = raw_result.get(ui.full_prompt, raw_result)
-                else:
+                print(f"\n=== Processing prompt: {prompt_name} ===")
+                print(f"Base prompt: {ui.base_prompt}")
+                print(f"Full prompt: {ui.full_prompt}")
+
+                raw_result = None
+
+                # CALL MODEL
+                if "paligemma" in ui.model_name.lower():
+                    raw_result = paligemma.predict(tmp_path, ui.full_prompt, model_id=ui.model_name,
+                                                   base_prompt=ui.base_prompt)
                     result = raw_result
 
-            elif "qwen" in ui.model_name.lower(): #CALL QWEN
-                result = call_qwen(tmp_path, ui.full_prompt)
+                elif "florence" in ui.model_name.lower():
+                    raw_result = florence.predict(tmp_path, ui.full_prompt, model_id=ui.model_name,
+                                                  base_prompt=ui.base_prompt)
+                    if isinstance(raw_result, dict):
+                        result = raw_result.get(ui.full_prompt, raw_result)
+                    else:
+                        result = raw_result
 
-            elif "internvl" in ui.model_name.lower(): #CALL INTERNVL
-                result = call_internvl(tmp_path, ui.full_prompt)
+                elif "qwen" in ui.model_name.lower():
+                    result = call_qwen(tmp_path, ui.full_prompt)
+                    raw_result = result
 
+                elif "internvl" in ui.model_name.lower():
+                    result = call_internvl(tmp_path, ui.full_prompt)
+                    raw_result = result
 
-            else:
-                return JsonResponse({"error": "Unknown model type"}, status=400)
-
-            print(f"DEBUG: raw_result type = {type(raw_result)}")
-            print(f"DEBUG: raw_result = {raw_result}")
-            print(ui.model_name, "\n")
-
-            #DETECTION HANDLER
-            detections_dict = None
-            annotated_image_base64 = None
-            output_image_path = None
-
-            if isinstance(raw_result, list) and len(raw_result) > 0: #######TREBA OPRAVIT KED BUDE PALIGEMMA FUNGOVAT
-                # PaliGemma format - list of dicts with 'label' and 'bbox'
-                print("DEBUG: Processing PaliGemma list format")
-                detections_dict = raw_result
-
-            elif isinstance(raw_result, dict):
-                print("DEBUG: Processing Florence dict format")
-                #Florence format
-                if "<OD>" in raw_result:
-                    detections_dict = raw_result["<OD>"]
-                    print("DEBUG: Found <OD> in raw_result")
-                elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
-                    detections_dict = raw_result[ui.full_prompt]
-                    print(f"DEBUG: Found {ui.full_prompt} in raw_result")
-
-            if detections_dict:
-                output_image_path = "/tmp/out.jpg"
-                print("DEBUG: DETECTIONS:", detections_dict)
-
-                if "florence" in ui.model_name.lower():
-                    # Draw boxes
-                    draw_objects.draw_boxes_florence(tmp_path, detections_dict, output_image_path)
-                    print(f"DEBUG: Bounding boxes drawn!")
-
-                if "paligemma" in ui.model_name.lower():
-                    draw_objects.draw_boxes_paligemma(tmp_path, result, output_image_path) #image and coords
-
-                #Check if output file exists - leave for now
-                if os.path.exists(output_image_path):
-                    print(f"DEBUG: Output image exists at {output_image_path}")
-
-                    # Convert to base64
-                    with open(output_image_path, "rb") as img_file:
-                        annotated_image_base64 = base64.b64encode(img_file.read()).decode('utf-8')
-
-                    print(f"DEBUG: Base64 created, length: {len(annotated_image_base64)}")
                 else:
-                    print(f"ERROR: Output image does NOT exist at {output_image_path}")
+                    continue
 
-            #CLEAR temp
+                # SPRACUJ DETEKCIE (ak je to detekčný prompt)
+                annotated_image_base64 = None
+                detections_dict = None
+
+                if isinstance(raw_result, list) and len(raw_result) > 0:
+                    detections_dict = raw_result
+                elif isinstance(raw_result, dict):
+                    if "<OD>" in raw_result:
+                        detections_dict = raw_result["<OD>"]
+                    elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
+                        detections_dict = raw_result[ui.full_prompt]
+
+                if detections_dict:
+                    output_image_path = f"/tmp/out_{prompt_name}.jpg"
+
+                    if "florence" in ui.model_name.lower():
+                        draw_objects.draw_boxes_florence(tmp_path, detections_dict, output_image_path)
+
+                    if "paligemma" in ui.model_name.lower():
+                        draw_objects.draw_boxes_paligemma(tmp_path, result, output_image_path)
+
+                    if os.path.exists(output_image_path):
+                        with open(output_image_path, "rb") as img_file:
+                            annotated_image_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+                        os.remove(output_image_path)
+
+                # Ulož výsledok tohto promptu
+                results.append({
+                    "prompt_name": prompt_name,
+                    "prompt_code": ui.base_prompt,
+                    "input": ui.addition,
+                    "result": result,
+                    "annotated_image": f"data:image/jpeg;base64,{annotated_image_base64}" if annotated_image_base64 else None
+                })
+
+            # CLEAR temp
             if os.path.exists(tmp_path):
                 os.remove(tmp_path)
-                print(f"DEBUG: Removed temp input image: {tmp_path}")
 
-            if output_image_path and os.path.exists(output_image_path):
-                os.remove(output_image_path)
-                print(f"DEBUG: Removed temp output image: {output_image_path}")
-
-            # Prepare response
-            response_data = {
+            # Vráť VŠETKY výsledky
+            return JsonResponse({
                 "model": ui.model_name,
-                "prompt": ui.full_prompt,
-                "result": result
-            }
-
-
-            if annotated_image_base64:
-                print(f"DEBUG: Adding annotated_image to response")
-                response_data["annotated_image"] = f"data:image/jpeg;base64,{annotated_image_base64}"
-            else:
-                print("DEBUG: No annotated_image to add")
-
-            return JsonResponse(response_data)
+                "results": results
+            })
 
         except Exception as e:
             import traceback

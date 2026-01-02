@@ -151,13 +151,6 @@
                             </div>
 
                             <div class="field">
-                                <label class="label">Upresnenie</label>
-                                <div class="control">
-                                    <input class="input" type="text" name="addition" placeholder="doplnenie promptu">
-                                </div>
-                            </div>
-
-                            <div class="field">
                                 <label class="label">Vyber obrázok</label>
                                 <div class="file file-is-info">
                                     <label class="file-label">
@@ -236,36 +229,120 @@
 
 <script>
     // === DYNAMICKÉ PROMPTY ===
-    const promptOptions = {
-        "google/paligemma2-3b-pt-224": ["DETECT","SIMPLE CAPTION", "STANDARD CAPTION", "DETAILED CAPTION", "VQA"],
-        "google/paligemma2-3b-mix-224": ["DETECT", "STANDARD CAPTION", "VQA"],
-        "microsoft/Florence-2-base": ["DETECT","SIMPLE CAPTION", "STANDARD CAPTION", "DETAILED CAPTION"],
-        "microsoft/Florence-2-base-ft": ["DETECT","SIMPLE CAPTION", "STANDARD CAPTION", "DETAILED CAPTION", "VQA"],
-        "Qwen/Qwen3-VL-2B-Instruct": ["VQA"],
-        "OpenGVLab/InternVL3_5-2B": ["VQA"]
+    const PROMPT_MAP = {
+        "google/paligemma2-3b-pt-224": {
+            "SIMPLE CAPTION": {needsInput: false},
+            "STANDARD CAPTION": {needsInput: false},
+            "DETAILED CAPTION": {needsInput: false},
+            "VQA": {needsInput: true, placeholder: "Opýtaj sa niečo..."}
+        },
+        "google/paligemma2-3b-mix-224": {
+            "STANDARD CAPTION": {needsInput: false},
+            "VQA": {needsInput: true, placeholder: "Opýtaj sa niečo..."},
+            "DETECT": {needsInput: true, placeholder: "e.g., person, car, tree"}
+        },
+        "microsoft/Florence-2-base": {
+            "SIMPLE CAPTION": {needsInput: false},
+            "STANDARD CAPTION": {needsInput: false},
+            "DETAILED CAPTION": {needsInput: false},
+            "DETECT": {needsInput: false}
+        },
+        "microsoft/Florence-2-base-ft": {
+            "SIMPLE CAPTION": {needsInput: false},
+            "STANDARD CAPTION": {needsInput: false},
+            "DETAILED CAPTION": {needsInput: false},
+            "VQA": {needsInput: true, placeholder: "Opýtaj sa niečo..."},
+            "DETECT": {needsInput: false}
+        },
+        "Qwen/Qwen3-VL-2B-Instruct": {
+            "VQA": {needsInput: true, placeholder: "Opýtaj sa niečo..."}
+        },
+        "OpenGVLab/InternVL3_5-2B": {
+            "VQA": {needsInput: true, placeholder: "Opýtaj sa niečo..."}
+        }
     };
 
     const modelSelect = document.getElementById('model-select');
-    const promptSelect = document.getElementById('prompt-type-select');
+    let selectedPrompts = {};
 
     function updatePromptOptions() {
         const selectedModel = modelSelect.value;
-        const availablePrompts = promptOptions[selectedModel] || ["DETECT"];
+        const availablePrompts = PROMPT_MAP[selectedModel] || {};
 
-        promptSelect.innerHTML = '';
+        // Vymaž starý obsah
+        const oldCheckboxContainer = document.getElementById('prompt-checkboxes');
+        if (oldCheckboxContainer) {
+            oldCheckboxContainer.remove();
+        }
 
-        availablePrompts.forEach(promptType => {
-            const option = document.createElement('option');
-            option.value = promptType;
-            option.textContent = promptType;
-            promptSelect.appendChild(option);
+        // Vytvor nový container pre checkboxy
+        const checkboxContainer = document.createElement('div');
+        checkboxContainer.id = 'prompt-checkboxes';
+        checkboxContainer.className = 'field';
+        checkboxContainer.innerHTML = '<label class="label">Typy promptov</label>';
+
+        selectedPrompts = {};
+
+        // Vytvor checkbox pre každý prompt
+        Object.entries(availablePrompts).forEach(([promptName, promptConfig]) => {
+            const promptBox = document.createElement('div');
+            promptBox.className = 'box mb-3';
+            promptBox.style.padding = '1rem';
+            promptBox.style.backgroundColor = '#f5f9ff';
+            promptBox.style.border = '1px solid rgba(10, 108, 255, 0.12)';
+
+            const checkboxLabel = document.createElement('label');
+            checkboxLabel.className = 'checkbox';
+            checkboxLabel.style.display = 'flex';
+            checkboxLabel.style.alignItems = 'center';
+            checkboxLabel.style.cursor = 'pointer';
+
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.style.marginRight = '0.5rem';
+
+            const labelText = document.createElement('span');
+            labelText.textContent = promptName;
+            labelText.style.fontWeight = '600';
+
+            checkboxLabel.appendChild(checkbox);
+            checkboxLabel.appendChild(labelText);
+            promptBox.appendChild(checkboxLabel);
+
+            // Pridaj input pole ak je potrebné
+            if (promptConfig.needsInput) {
+                const inputField = document.createElement('input');
+                inputField.type = 'text';
+                inputField.className = 'input mt-2';
+                inputField.placeholder = promptConfig.placeholder;
+                inputField.id = `input-${promptName}`;
+                inputField.style.display = 'none';
+                promptBox.appendChild(inputField);
+
+                // Event listener pre checkbox - TOTO JE OPRAVA
+                checkbox.addEventListener('change', (e) => {
+                    selectedPrompts[promptName] = e.target.checked;
+                    inputField.style.display = e.target.checked ? 'block' : 'none';
+                });
+            } else {
+                // Pre prompty bez inputu
+                checkbox.addEventListener('change', (e) => {
+                    selectedPrompts[promptName] = e.target.checked;
+                });
+            }
+
+            checkboxContainer.appendChild(promptBox);
         });
+
+        // Vlož za "Typ promptu" pole (ktoré už nepoužívame, ale môžeme ho nechať skryté)
+        const promptTypeField = document.getElementById('prompt-type-select').closest('.field');
+        promptTypeField.style.display = 'none'; // Skry starý dropdown
+        promptTypeField.parentNode.insertBefore(checkboxContainer, promptTypeField.nextSibling);
     }
 
     modelSelect.addEventListener('change', updatePromptOptions);
     updatePromptOptions();
-
-    // === PÔVODNÝ FUNGUJÚCI KÓD ===
+    
     const form = document.getElementById('recognize-form');
     const resultBox = document.getElementById('result-box');
     const imageInput = document.getElementById('image-input');
@@ -307,13 +384,36 @@
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
-        const formData = new FormData(form);
+        const formData = new FormData();
+
+        // Pridaj obrázok a model
+        formData.append('image', imageInput.files[0]);
+        formData.append('model', modelSelect.value);
+
+        // Pridaj všetky zaškrtnuté prompty
+        const checkedPrompts = Object.keys(selectedPrompts).filter(key => selectedPrompts[key]);
+
+        if (checkedPrompts.length === 0) {
+            alert('Vyber aspoň jeden prompt!');
+            return;
+        }
+
+        checkedPrompts.forEach(promptName => {
+            formData.append('selected_prompts[]', promptName);
+
+            // Pridaj input pre prompt ak existuje
+            const inputField = document.getElementById(`input-${promptName}`);
+            if (inputField) {
+                formData.append(`prompt_input_${promptName}`, inputField.value);
+            }
+        });
+
         resultBox.textContent = 'Spracovávam...';
         progress.style.display = 'block';
         progress.value = 10;
 
         try {
-            log('Odosielam požiadavku na /recognizer/recognize/');
+            log(`Odosielam ${checkedPrompts.length} promptov na /recognizer/recognize/`);
             const response = await fetch('/recognizer/recognize/', {
                 method: 'POST',
                 body: formData
@@ -324,13 +424,26 @@
             log('Prijatá odpoveď zo servera.');
             console.log('Full response:', data);
 
-            if (data.result) {
-                resultBox.textContent = `Model: ${data.model}\nPrompt: ${data.prompt}\nResult:\n${JSON.stringify(data.result, null, 2)}`;
+            if (data.results) {
+                // Zobraz všetky výsledky
+                let displayText = `Model: ${data.model}\n\n`;
 
-                if (data.annotated_image) {
-                    log('Zobrazený anotovaný obrázok.');
-                    preview.src = data.annotated_image;
-                }
+                data.results.forEach((result, index) => {
+                    displayText += `=== ${result.prompt_name} ===\n`;
+                    displayText += `Prompt code: ${result.prompt_code}\n`;
+                    if (result.input) {
+                        displayText += `Input: ${result.input}\n`;
+                    }
+                    displayText += `Result: ${JSON.stringify(result.result, null, 2)}\n\n`;
+
+                    // Zobraz anotovaný obrázok posledného promptu (alebo prvého DETECT)
+                    if (result.annotated_image && (index === data.results.length - 1 || result.prompt_name === 'DETECT')) {
+                        preview.src = result.annotated_image;
+                        log('Zobrazený anotovaný obrázok.');
+                    }
+                });
+
+                resultBox.textContent = displayText;
             } else {
                 resultBox.textContent = `Chyba: ${data.error || 'neznáma chyba'}`;
                 log('Server vrátil chybu.');

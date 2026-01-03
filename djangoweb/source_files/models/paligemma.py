@@ -1,14 +1,3 @@
-import os, re
-from dotenv import load_dotenv
-from PIL import Image
-from source_files.model_manager import manager
-import torch
-from transformers import AutoProcessor, PaliGemmaForConditionalGeneration
-from huggingface_hub import login
-import gc
-from source_files.models import profiles
-from source_files.vision_adapter import normalize_output
-from source_files import user_input
 
 import os, re
 from dotenv import load_dotenv

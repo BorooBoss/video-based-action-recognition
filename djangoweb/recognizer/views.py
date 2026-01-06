@@ -3,7 +3,7 @@ import json
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.http import JsonResponse
-from source_files.models import paligemma, florence
+from source_files.models import florence
 from source_files import draw_objects, user_input
 from source_files.vision_adapter import normalize_output
 import os, base64, subprocess

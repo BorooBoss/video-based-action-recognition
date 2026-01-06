@@ -10,6 +10,7 @@ class UserInput:
 
     PROMPT_MAP = {
         "google/paligemma2-3b-pt-224": {
+            "DETECT": "detect",
             "SIMPLE CAPTION": "cap en",
             "STANDARD CAPTION": "caption en",
             "DETAILED CAPTION": "describe en",
@@ -17,9 +18,10 @@ class UserInput:
         },
         "google/paligemma2-3b-mix-224": {
             "DETECT": "detect",
+            "SIMPLE CAPTION": "cap en",
             "STANDARD CAPTION": "caption en",
+            "DETAILED CAPTION": "describe en",
             "VQA": "answer en"
-
         },
         "microsoft/Florence-2-base": {
             "DETECT": "<OD>",

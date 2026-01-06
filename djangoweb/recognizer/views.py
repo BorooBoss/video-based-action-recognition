@@ -1,3 +1,5 @@
+import json
+
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.http import JsonResponse
@@ -31,6 +33,25 @@ def call_internvl(image_path, prompt): #FROM invernvl_env -> ai_env
         text=True
     )
     return result.stdout.strip()
+
+def call_paligemma2(image_path, prompt):
+    result = subprocess.run(
+        [
+            "/home/borooboss11/miniconda3/envs/paligemma2_env/bin/python",
+            "/mnt/c/Users/boris/Desktop/5.semester/bp/djangoweb/source_files/models/run_paligemma2.py",
+            "--image", image_path,
+            "--prompt", prompt,
+        ],
+        capture_output=True,
+        text=True,
+        timeout=600
+    )
+
+    if result.returncode != 0:
+        raise RuntimeError(result.stderr)
+
+    return json.loads(result.stdout)
+
 
 
 def index(request):
@@ -79,9 +100,9 @@ def recognize(request):
 
                 # CALL MODEL
                 if "paligemma" in ui.model_name.lower():
-                    raw_result = paligemma.predict(tmp_path, ui.full_prompt, model_id=ui.model_name,
-                                                   base_prompt=ui.base_prompt)
-                    result = raw_result
+                    print("som v call")
+                    result = call_paligemma2(tmp_path, ui.full_prompt)
+                    raw_result = result
 
                 elif "florence" in ui.model_name.lower():
                     raw_result = florence.predict(tmp_path, ui.full_prompt, model_id=ui.model_name,

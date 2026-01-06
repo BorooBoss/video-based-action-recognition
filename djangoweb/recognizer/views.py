@@ -5,7 +5,9 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from source_files.models import paligemma, florence
 from source_files import draw_objects, user_input
+from source_files.vision_adapter import normalize_output
 import os, base64, subprocess
+
 
 def call_qwen(image_path, prompt): #FROM qwen_env -> ai_env
     result = subprocess.run(
@@ -34,13 +36,14 @@ def call_internvl(image_path, prompt): #FROM invernvl_env -> ai_env
     )
     return result.stdout.strip()
 
-def call_paligemma2(image_path, prompt):
+def call_paligemma2(image_path, prompt, model_id):
     result = subprocess.run(
         [
             "/home/borooboss11/miniconda3/envs/paligemma2_env/bin/python",
             "/mnt/c/Users/boris/Desktop/5.semester/bp/djangoweb/source_files/models/run_paligemma2.py",
             "--image", image_path,
             "--prompt", prompt,
+            "--model_id", model_id
         ],
         capture_output=True,
         text=True,
@@ -95,19 +98,27 @@ def recognize(request):
                 print(f"\n=== Processing prompt: {prompt_name} ===")
                 print(f"Base prompt: {ui.base_prompt}")
                 print(f"Full prompt: {ui.full_prompt}")
+                print(f"Model name: {ui.model_name}")
 
                 raw_result = None
 
                 # CALL MODEL
                 if "paligemma" in ui.model_name.lower():
                     print("som v call")
-                    result = call_paligemma2(tmp_path, ui.full_prompt)
+                    raw_result = call_paligemma2(tmp_path, ui.full_prompt, ui.model_name)
+
+                    if ui.base_prompt == "detect":
+                        result = normalize_output(raw_result, "paligemma")
+                    else:
+                        result = raw_result
+
                     raw_result = result
 
                 elif "florence" in ui.model_name.lower():
                     raw_result = florence.predict(tmp_path, ui.full_prompt, model_id=ui.model_name,
                                                   base_prompt=ui.base_prompt)
-                    if isinstance(raw_result, dict):
+
+                    if isinstance(raw_result, dict): #DETECT
                         result = raw_result.get(ui.full_prompt, raw_result)
                     else:
                         result = raw_result

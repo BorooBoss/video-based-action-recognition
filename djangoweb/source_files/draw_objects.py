@@ -1,6 +1,7 @@
 from PIL import Image, ImageDraw, ImageFont
 
 
+
 #for florence
 def draw_boxes_florence(image_path, detections, output_path):
     """
@@ -20,6 +21,7 @@ def draw_boxes_florence(image_path, detections, output_path):
         draw.text((x1, y1 - 10), label, fill="red")
 
     img.save(output_path)
+
 
 # for paligemma
 def draw_boxes_paligemma(image_path, coords_and_labels, output_path):

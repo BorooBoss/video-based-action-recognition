@@ -23,13 +23,13 @@ class UserInput:
             "DETAILED CAPTION": "describe en",
             "VQA": "answer en"
         },
-        "microsoft/Florence-2-base": {
+        "microsoft/Florence-2-large": {
             "DETECT": "<OD>",
             "SIMPLE CAPTION": "<CAPTION>",
             "STANDARD CAPTION": "<DETAILED_CAPTION>",
             "DETAILED CAPTION": "<MORE_DETAILED_CAPTION>",
         },
-        "microsoft/Florence-2-base-ft": {
+        "microsoft/Florence-2-large-ft": {
             "DETECT": "<OD>",
             "SIMPLE CAPTION": "<CAPTION>",
             "STANDARD CAPTION": "<DETAILED_CAPTION>",

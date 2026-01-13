@@ -1,0 +1,32 @@
+[
+  {
+    "frame": "w001_converted_frame_00000.jpg",
+    "time_sec": 0.0,
+    "frame_idx": 0
+  },
+  {
+    "frame": "w001_converted_frame_00001.jpg",
+    "time_sec": 1.0,
+    "frame_idx": 30
+  },
+  {
+    "frame": "w001_converted_frame_00002.jpg",
+    "time_sec": 2.0,
+    "frame_idx": 60
+  },
+  {
+    "frame": "w001_converted_frame_00003.jpg",
+    "time_sec": 3.0,
+    "frame_idx": 90
+  },
+  {
+    "frame": "w001_converted_frame_00004.jpg",
+    "time_sec": 4.0,
+    "frame_idx": 120
+  },
+  {
+    "frame": "w001_converted_frame_00005.jpg",
+    "time_sec": 5.0,
+    "frame_idx": 150
+  }
+]

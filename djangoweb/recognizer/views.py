@@ -1,15 +1,43 @@
-import json
+import json, os, base64, subprocess, tempfile
 
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, FileResponse, HttpResponse
 from source_files.models import florence
 from source_files import draw_objects, user_input
+from source_files.video.ffmpeg_convert import convert_to_mp4
 from source_files.vision_adapter import normalize_output
-import os, base64, subprocess
 
+@csrf_exempt
+def convert_video(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request"}, status=400)
 
-def call_qwen(image_path, prompt): #FROM qwen_env -> ai_env
+    video = request.FILES.get("video")
+    if not video:
+        return JsonResponse({"error": "No video"}, status=400)
+
+    tmp_in = tempfile.NamedTemporaryFile(delete=False)
+    tmp_out = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
+
+    try:
+        for chunk in video.chunks():
+            tmp_in.write(chunk)
+        tmp_in.close()
+        tmp_out.close()
+
+        convert_to_mp4(tmp_in.name, tmp_out.name)
+
+        with open(tmp_out.name, "rb") as f:
+            data = f.read()
+
+        return HttpResponse(data, content_type="video/mp4")
+
+    finally:
+        os.unlink(tmp_in.name)
+        os.unlink(tmp_out.name)
+
+def call_qwen(image_path, prompt):
     result = subprocess.run(
         [
             "/home/borooboss11/miniconda3/envs/qwen_env/bin/python",
@@ -23,7 +51,7 @@ def call_qwen(image_path, prompt): #FROM qwen_env -> ai_env
     return result.stdout.strip()
 
 
-def call_internvl(image_path, prompt): #FROM invernvl_env -> ai_env
+def call_internvl(image_path, prompt):
     result = subprocess.run(
         [
             "/home/borooboss11/miniconda3/envs/internvl_env/bin/python",
@@ -35,6 +63,7 @@ def call_internvl(image_path, prompt): #FROM invernvl_env -> ai_env
         text=True
     )
     return result.stdout.strip()
+
 
 def call_paligemma2(image_path, prompt, model_id):
     result = subprocess.run(
@@ -56,7 +85,6 @@ def call_paligemma2(image_path, prompt, model_id):
     return json.loads(result.stdout)
 
 
-
 def index(request):
     return render(request, 'index.html')
 
@@ -64,9 +92,9 @@ def index(request):
 @csrf_exempt
 def recognize(request):
     if request.method == 'POST':
-        # Načítaj VŠETKY zaškrtnuté prompty z frontendu
-        selected_prompts = request.POST.getlist("selected_prompts[]")  # ["DETECT", "VQA"]
-        prompt_inputs = {}  # {"VQA": "What is this?", "DETECT": "person car"}
+        # nacitaj vsetky vybrate prompty
+        selected_prompts = request.POST.getlist("selected_prompts[]")
+        prompt_inputs = {}
 
         # Pre každý prompt načítaj jeho input (ak má)
         for prompt_name in selected_prompts:
@@ -87,7 +115,7 @@ def recognize(request):
                 f.write(chunk)
 
         try:
-            results = []  # Tu uložíme výsledky všetkých promptov
+            results = []
 
             # PREJDI VŠETKY VYBRANÉ PROMPTY
             for prompt_name in selected_prompts:
@@ -118,7 +146,7 @@ def recognize(request):
                     raw_result = florence.predict(tmp_path, ui.full_prompt, model_id=ui.model_name,
                                                   base_prompt=ui.base_prompt)
 
-                    if isinstance(raw_result, dict): #DETECT
+                    if isinstance(raw_result, dict):
                         result = raw_result.get(ui.full_prompt, raw_result)
                     else:
                         result = raw_result

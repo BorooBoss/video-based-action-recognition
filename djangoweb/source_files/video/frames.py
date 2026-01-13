@@ -1,5 +1,6 @@
 import os
 import cv2 as OpenCV
+import json
 
 
 def video_to_frames(video_path, output_folder, every_n_seconds=1, by_seconds=True):
@@ -21,6 +22,7 @@ def video_to_frames(video_path, output_folder, every_n_seconds=1, by_seconds=Tru
     video_name = os.path.splitext(os.path.basename(video_path))[0]
 
     frame_count, saved_count = 0, 0
+    metadata = []
     while True:
         ret, frame = video.read()
         if not ret:
@@ -28,22 +30,27 @@ def video_to_frames(video_path, output_folder, every_n_seconds=1, by_seconds=Tru
 
         # check if the frame is the one we want
         if frame_count % frame_interval == 0:
-            filename = os.path.join(output_folder, f"{video_name}_frame_{saved_count:05d}.jpg")
+            filename = os.path.join(f"{video_name}_frame_{saved_count:05d}.jpg")
             OpenCV.imwrite(filename, frame)
+            print("hhhhhhhhkhh")
+
+            time_sec = frame_count / fps
+            metadata.append({
+                "frame": filename,
+                "time_sec": round(time_sec, 2),
+                "frame_idx": frame_count
+            })
             saved_count += 1
 
         frame_count += 1
 
+    with open(os.path.join(output_folder, f"{video_name}_frames.json"), "w") as f:
+        json.dump(metadata, f, indent=2)
     video.release()
     print(f"Saved {saved_count} frames to {output_folder}\n")
 
 
 def process_videos(input_path, output_root, every_n_seconds=1, by_seconds=True):
-    """
-    input_path can be:
-        - path to one video
-        - path to folder with videos
-    """
 
     # case for one video
     if os.path.isfile(input_path):
@@ -81,12 +88,10 @@ def process_videos(input_path, output_root, every_n_seconds=1, by_seconds=True):
     else:
         print("ERROR: input_path is neither a file nor a folder")
 
-
-
-#call
-process_videos(
-    input_path=r"/mnt/c/Users/boris/Desktop/video01.avi",
-    output_root=r"/mnt/c/Users/boris/Desktop/frames_single",
+    #call
+#process_videos(
+    input_path=r"/mnt/c/Users/boris/Desktop/5.semester/bp/datasets/smart-city_cctv_dataset/SCVD_converted/Train/Weaponized/w001_converted.avi",
+    output_root=r"/mnt/c/Users/boris/Desktop/5.semester/bp/djangoweb/frames",
     every_n_seconds=1
-)
+#)
 

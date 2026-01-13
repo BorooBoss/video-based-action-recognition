@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Image Recognizer — Blue Bulma Design</title>
+    <title>Image & Video Recognizer — Blue Bulma Design</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -35,12 +35,14 @@
         }
 
         .preview-image {
-            width: 100%;
-            max-height: 420px;
-            object-fit: contain;
             border-radius: 8px;
             border: 1px solid rgba(10, 108, 255, 0.12);
             background: linear-gradient(180deg, rgba(10, 108, 255, 0.03), rgba(10, 108, 255, 0.01));
+        }
+
+        .preview-video {
+            border-radius: 8px;
+            background: #000;
         }
 
         pre#result-box {
@@ -117,11 +119,15 @@
                                         <div class="control">
                                             <div class="select is-fullwidth">
                                                 <select name="model" id="model-select">
-                                                    <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224</option>
-                                                    <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224</option>
+                                                    <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224
+                                                    </option>
+                                                    <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224
+                                                    </option>
                                                     <option value="microsoft/Florence-2-large">florence-2-large</option>
-                                                    <option value="microsoft/Florence-2-large-ft">florence-2-large-ft</option>
-                                                    <option value="Qwen/Qwen3-VL-2B-Instruct">qwen3-vl-2b-instruct</option>
+                                                    <option value="microsoft/Florence-2-large-ft">florence-2-large-ft
+                                                    </option>
+                                                    <option value="Qwen/Qwen3-VL-2B-Instruct">qwen3-vl-2b-instruct
+                                                    </option>
                                                     <option value="OpenGVLab/InternVL3_5-2B">internvl3_5-2b</option>
                                                 </select>
                                             </div>
@@ -151,10 +157,11 @@
                             </div>
 
                             <div class="field">
-                                <label class="label">Select Image</label>
+                                <label class="label">Select Image or Video</label>
                                 <div class="file file-is-info">
                                     <label class="file-label">
-                                        <input class="file-input" type="file" name="image" id="image-input" required>
+                                        <input class="file-input" type="file" name="image" id="image-input"
+                                               accept="image/*,video/*" required>
                                         <span class="file-cta">
                         <span class="file-icon">
                           <i class="fas fa-upload"></i>
@@ -194,14 +201,20 @@
             <div class="column is-6">
                 <div class="card">
                     <div class="card-content">
-                        <h3 class="title is-5">Image Preview</h3>
-                        <figure class="image is-16by9">
+                        <h3 class="title is-5">Media Preview</h3>
+                        <div style="position: relative; width: 100%; padding-top: 56.25%; background: #f5f9ff; border-radius: 8px; overflow: hidden;">
                             <img id="preview" class="preview-image" alt="Preview image"
+                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;"
                                  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>No image selected</text></svg>">
-                        </figure>
+                            <video id="preview-video" class="preview-video" controls
+                                   style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
 
                         <div class="content mt-4">
-                            <p class="is-size-7 has-text-grey">If server returns an <code>annotated_image</code>, it will be displayed in the preview area.</p>
+                            <p class="is-size-7 has-text-grey">If server returns an <code>annotated_image</code>, it
+                                will be displayed in the preview area.</p>
                             <progress id="progress" class="progress is-primary" value="0" max="100"
                                       style="display:none"></progress>
                         </div>
@@ -349,6 +362,7 @@
     const resultBox = document.getElementById('result-box');
     const imageInput = document.getElementById('image-input');
     const preview = document.getElementById('preview');
+    const previewVideo = document.getElementById('preview-video');
     const fileName = document.getElementById('file-name');
     const consoleLog = document.getElementById('console-log');
     const progress = document.getElementById('progress');
@@ -359,16 +373,68 @@
         consoleLog.textContent = `[${time}] ${msg}\n` + consoleLog.textContent;
     }
 
-    imageInput.addEventListener('change', (e) => {
+    function isVideoFile(file) {
+        return file.type.startsWith('video/');
+    }
+
+    imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
             fileName.textContent = file.name;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                preview.src = event.target.result;
-                log('Uploaded local image preview.');
-            };
-            reader.readAsDataURL(file);
+
+            if (isVideoFile(file)) {
+                // Skry obrázok, zobraz video
+                preview.style.display = 'none';
+                previewVideo.style.display = 'block';
+
+                // Ak je to AVI alebo MPEG, pošli na server pre konverziu
+                const needsConversion = file.name.toLowerCase().endsWith('.avi') ||
+                        file.name.toLowerCase().endsWith('.mpeg') ||
+                        file.name.toLowerCase().endsWith('.mpg');
+
+                if (needsConversion) {
+                    log('Converting video to MP4...');
+                    const formData = new FormData();
+                    formData.append('video', file);
+
+                    try {
+                        const response = await fetch('/recognizer/convert_video/', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (response.ok) {
+                            const blob = await response.blob();
+                            previewVideo.src = URL.createObjectURL(blob);
+                            log('Video converted to MP4 successfully.');
+                        } else {
+                            log('Video conversion failed.');
+                            alert('Failed to convert video. Please try MP4 format.');
+                        }
+                    } catch (err) {
+                        log('Conversion error: ' + err);
+                        alert('Error converting video: ' + err);
+                    }
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = (event) => {
+                        previewVideo.src = event.target.result;
+                        log('Uploaded video preview.');
+                    };
+                    reader.readAsDataURL(file);
+                }
+            } else {
+                // Skry video, zobraz obrázok
+                previewVideo.style.display = 'none';
+                preview.style.display = 'block';
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    preview.src = event.target.result;
+                    log('Uploaded local image preview.');
+                };
+                reader.readAsDataURL(file);
+            }
         } else {
             fileName.textContent = 'No file selected.';
         }
@@ -376,7 +442,10 @@
 
     resetBtn.addEventListener('click', () => {
         form.reset();
+        preview.style.display = 'block';
+        previewVideo.style.display = 'none';
         preview.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>Žiadny obrázok</text></svg>";
+        previewVideo.src = '';
         fileName.textContent = 'No file selected.';
         resultBox.textContent = 'No output available.';
         consoleLog.textContent = 'Cleared.';
@@ -440,6 +509,8 @@
 
                     // Zobraz anotovaný obrázok posledného promptu (alebo prvého DETECT)
                     if (result.annotated_image && (index === data.results.length - 1 || result.prompt_name === 'DETECT')) {
+                        previewVideo.style.display = 'none';
+                        preview.style.display = 'block';
                         preview.src = result.annotated_image;
                         log('Displayed annotated image.');
                     }

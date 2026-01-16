@@ -35,6 +35,8 @@ def video_to_frames(video_path, output_folder, every_n_seconds=1):
 
             frames.append({
                 "file": fname,
+                "index": saved,  #poradie frame-u
+                "frame_idx": idx, #index FRAME-U VIDEA
                 "time": round(idx / fps, 2)
             })
             saved += 1

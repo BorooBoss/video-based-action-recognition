@@ -1,6 +1,6 @@
 datasets/
 scvd/
-djangoweb/source_files/frames/
+djangoweb/temp_frames
 weapon_aug/
 .env
 helper.docx

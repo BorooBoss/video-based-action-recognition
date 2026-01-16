@@ -226,6 +226,7 @@
                             <input id="frame-slider" type="range" min="0" max="0" value="0" style="width:100%">
                             <img id="frame-preview"
                                  style="width:100%; margin-top:0.5rem; border-radius:6px; display:none;">
+                            <div id="frame-info" class="is-size-7 has-text-grey mt-1"></div>
                             <div id="thumbnails"
                                  style="display:flex; gap:6px; overflow-x:auto; margin-top:0.5rem;"></div>
                         </div>
@@ -298,6 +299,7 @@
     const modelSelect = document.getElementById('model-select');
     let selectedPrompts = {};
     let currentVideoFrames = []; // Store frames globally
+    let currentBaseUrl = "";
 
     function updatePromptOptions() {
         const selectedModel = modelSelect.value;
@@ -415,34 +417,52 @@
             const framePreview = document.getElementById("frame-preview");
             const thumbs = document.getElementById("thumbnails");
 
-            slider.max = data.frames.length - 1;
-            framePreview.src = base + data.frames[0].file;
-            framePreview.style.display = 'block';
-
+            // Clear old thumbnails completely
             thumbs.innerHTML = "";
 
+            // Reset slider
+            slider.value = 0;
+            slider.max = data.frames.length - 1;
+
+            // Load first frame
+            framePreview.src = base + data.frames[0].file + '?t=' + Date.now(); // Cache busting
+            framePreview.style.display = 'block';
+
+            currentBaseUrl = base;
+
             data.frames.forEach((f, i) => {
+                const wrapper = document.createElement("div");
+                wrapper.style.textAlign = "center";
+                wrapper.style.fontSize = "11px";
+                wrapper.style.minWidth = "70px";
+
                 const img = document.createElement("img");
-                img.src = base + f.file;
+                img.src = base + f.file + '?t=' + Date.now();
                 img.style.height = "60px";
                 img.style.cursor = "pointer";
-                img.title = `Frame ${i} (${f.time}s)`;
+                const idx = i;
+                const time = f.time;
+
+                img.title =
+                        `Index: ${idx}\n` +
+                        `Time: ${time}s`;
+
+
                 img.onclick = () => {
                     slider.value = i;
-                    framePreview.src = img.src;
-                    if (previewVideo.duration) {
-                        previewVideo.currentTime = f.time;
-                    }
+                    updateFrameWithInfo(i);
                 };
-                thumbs.appendChild(img);
+
+                const label = document.createElement("div");
+                label.innerHTML = `<b>#${idx}</b><br>${time}s`;
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(label);
+                thumbs.appendChild(wrapper);
             });
 
             slider.oninput = () => {
-                const i = slider.value;
-                framePreview.src = base + data.frames[i].file;
-                if (previewVideo.duration) {
-                    previewVideo.currentTime = data.frames[i].time;
-                }
+                updateFrameWithInfo(slider.value);
             };
 
             document.getElementById("frames-container").style.display = "block";
@@ -452,14 +472,48 @@
         }
     }
 
+    function updateFrameWithInfo(i) {
+        const f = currentVideoFrames[i];
+        if (!f) return;
+
+        const framePreview = document.getElementById("frame-preview");
+        const frameInfo = document.getElementById("frame-info");
+
+        const time = f.time_sec ?? f.time;
+
+        framePreview.src = currentBaseUrl + f.file + '?t=' + Date.now();
+        framePreview.style.display = "block";
+
+        frameInfo.innerHTML = `
+            <b>Frame #${i}</b> |
+            Time: ${time}s |
+            Video frame idx: ${i}
+        `;
+
+        if (previewVideo.duration) {
+            previewVideo.currentTime = time;
+        }
+    }
     imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
             fileName.textContent = file.name;
 
-            // Clear previous frames
+            // Clear previous frames completely
             document.getElementById("frames-container").style.display = "none";
+            document.getElementById("thumbnails").innerHTML = "";
+            document.getElementById("frame-preview").src = "";
+            document.getElementById("frame-preview").style.display = "none";
+            document.getElementById("frame-slider").value = 0;
             currentVideoFrames = [];
+
+            // Clear frames on server
+            try {
+                await fetch('/recognizer/clear_frames/', {method: 'POST'});
+                log('Cleared previous frames from server.');
+            } catch (err) {
+                console.error('Failed to clear frames:', err);
+            }
 
             if (isVideoFile(file)) {
                 preview.style.display = 'none';
@@ -582,6 +636,7 @@
 
             progress.value = 50;
             const data = await response.json();
+            currentVideoFrames = data.frames;
             log('Response from server received.');
             console.log('Full response:', data);
 

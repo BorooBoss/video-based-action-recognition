@@ -1,69 +1,13 @@
 import json, os, base64, subprocess, tempfile
-import shutil
-
-import cv2
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.http import JsonResponse, FileResponse, HttpResponse
 
-from mysite import settings
 from source_files.models import florence
 from source_files import draw_objects, user_input
 from source_files.video.ffmpeg_convert import convert_to_mp4
 from source_files.vision_adapter import normalize_output
-
-TEMP_FRAMES_DIR = os.path.join(settings.BASE_DIR, 'temp_frames')
-
-
-def ensure_temp_frames_dir():
-    if not os.path.exists(TEMP_FRAMES_DIR):
-        os.makedirs(TEMP_FRAMES_DIR)
-    return TEMP_FRAMES_DIR
-
-
-def clear_temp_frames():
-    if os.path.exists(TEMP_FRAMES_DIR):
-        shutil.rmtree(TEMP_FRAMES_DIR)
-    ensure_temp_frames_dir()
-
-
-def video_to_frames(video_path, output_folder, every_n_seconds=1):
-    cap = cv2.VideoCapture(video_path)
-    if not cap.isOpened():
-        raise RuntimeError("Cannot open video")
-
-    os.makedirs(output_folder, exist_ok=True)
-
-    fps = cap.get(cv2.CAP_PROP_FPS)
-    if fps <= 0:
-        fps = 30  # fallback
-
-    frame_interval = int(fps * every_n_seconds)
-    video_name = os.path.splitext(os.path.basename(video_path))[0]
-
-    frames = []
-    idx, saved = 0, 0
-
-    while True:
-        ret, frame = cap.read()
-        if not ret:
-            break
-
-        if idx % frame_interval == 0:
-            fname = f"frame_{saved:05d}.jpg"
-            path = os.path.join(output_folder, fname)
-            cv2.imwrite(path, frame)
-
-            frames.append({
-                "file": fname,
-                "time": round(idx / fps, 2)
-            })
-            saved += 1
-
-        idx += 1
-
-    cap.release()
-    return frames
+from source_files.video.frames import clear_temp_frames, ensure_temp_frames_dir, video_to_frames, TEMP_FRAMES_DIR
 
 
 @csrf_exempt
@@ -76,11 +20,9 @@ def video_frames(request):
     if not video:
         return JsonResponse({"error": "No video"}, status=400)
 
-    # Vyčisti staré snímky
     clear_temp_frames()
     frames_dir = ensure_temp_frames_dir()
 
-    # Ulož video dočasne
     tmp_video = tempfile.NamedTemporaryFile(delete=False, suffix=".mp4")
 
     try:
@@ -88,11 +30,10 @@ def video_frames(request):
             tmp_video.write(chunk)
         tmp_video.close()
 
-        # Konvertuj video na snímky (každú 1 sekundu)
         every_n_seconds = float(request.POST.get('every_n_seconds', 1))
         frames = video_to_frames(tmp_video.name, frames_dir, every_n_seconds)
 
-        # Vráť zoznam snímkov
+
         return JsonResponse({
             "frames": frames,
             "base_url": "/recognizer/frame/",

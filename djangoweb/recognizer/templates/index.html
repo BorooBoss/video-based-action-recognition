@@ -83,6 +83,15 @@
                 border-right: 1px dashed rgba(10, 108, 255, 0.06);
             }
         }
+
+        #thumbnails img {
+            border: 2px solid transparent;
+            border-radius: 4px;
+        }
+
+        #thumbnails img:hover {
+            border-color: var(--brand-blue);
+        }
     </style>
 </head>
 <body>
@@ -212,6 +221,15 @@
                             </video>
                         </div>
 
+                        <div id="frames-container" style="margin-top:1rem; display:none;">
+                            <h5 class="title is-6">Video Frames</h5>
+                            <input id="frame-slider" type="range" min="0" max="0" value="0" style="width:100%">
+                            <img id="frame-preview"
+                                 style="width:100%; margin-top:0.5rem; border-radius:6px; display:none;">
+                            <div id="thumbnails"
+                                 style="display:flex; gap:6px; overflow-x:auto; margin-top:0.5rem;"></div>
+                        </div>
+
                         <div class="content mt-4">
                             <p class="is-size-7 has-text-grey">If server returns an <code>annotated_image</code>, it
                                 will be displayed in the preview area.</p>
@@ -279,18 +297,17 @@
 
     const modelSelect = document.getElementById('model-select');
     let selectedPrompts = {};
+    let currentVideoFrames = []; // Store frames globally
 
     function updatePromptOptions() {
         const selectedModel = modelSelect.value;
         const availablePrompts = PROMPT_MAP[selectedModel] || {};
 
-        // Vymaž starý obsah
         const oldCheckboxContainer = document.getElementById('prompt-checkboxes');
         if (oldCheckboxContainer) {
             oldCheckboxContainer.remove();
         }
 
-        // Vytvor nový container pre checkboxy
         const checkboxContainer = document.createElement('div');
         checkboxContainer.id = 'prompt-checkboxes';
         checkboxContainer.className = 'field';
@@ -298,7 +315,6 @@
 
         selectedPrompts = {};
 
-        // Vytvor checkbox pre každý prompt
         Object.entries(availablePrompts).forEach(([promptName, promptConfig]) => {
             const promptBox = document.createElement('div');
             promptBox.className = 'box mb-3';
@@ -324,7 +340,6 @@
             checkboxLabel.appendChild(labelText);
             promptBox.appendChild(checkboxLabel);
 
-            // Pridaj input pole ak je potrebné
             if (promptConfig.needsInput) {
                 const inputField = document.createElement('input');
                 inputField.type = 'text';
@@ -334,13 +349,11 @@
                 inputField.style.display = 'none';
                 promptBox.appendChild(inputField);
 
-                // Event listener pre checkbox - TOTO JE OPRAVA
                 checkbox.addEventListener('change', (e) => {
                     selectedPrompts[promptName] = e.target.checked;
                     inputField.style.display = e.target.checked ? 'block' : 'none';
                 });
             } else {
-                // Pre prompty bez inputu
                 checkbox.addEventListener('change', (e) => {
                     selectedPrompts[promptName] = e.target.checked;
                 });
@@ -349,9 +362,8 @@
             checkboxContainer.appendChild(promptBox);
         });
 
-        // Vlož za "Typ promptu" pole (ktoré už nepoužívame...)
         const promptTypeField = document.getElementById('prompt-type-select').closest('.field');
-        promptTypeField.style.display = 'none'; // Skry starý dropdown
+        promptTypeField.style.display = 'none';
         promptTypeField.parentNode.insertBefore(checkboxContainer, promptTypeField.nextSibling);
     }
 
@@ -377,17 +389,82 @@
         return file.type.startsWith('video/');
     }
 
+    async function loadFrames(file) {
+        log('Extracting frames from video...');
+        const fd = new FormData();
+        fd.append("video", file);
+        fd.append("every_n_seconds", "1");
+
+        try {
+            const res = await fetch("/recognizer/video_frames/", {
+                method: "POST",
+                body: fd
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to extract frames');
+            }
+
+            const data = await res.json();
+            currentVideoFrames = data.frames;
+            const base = data.base_url;
+
+            log(`Extracted ${data.total} frames`);
+
+            const slider = document.getElementById("frame-slider");
+            const framePreview = document.getElementById("frame-preview");
+            const thumbs = document.getElementById("thumbnails");
+
+            slider.max = data.frames.length - 1;
+            framePreview.src = base + data.frames[0].file;
+            framePreview.style.display = 'block';
+
+            thumbs.innerHTML = "";
+
+            data.frames.forEach((f, i) => {
+                const img = document.createElement("img");
+                img.src = base + f.file;
+                img.style.height = "60px";
+                img.style.cursor = "pointer";
+                img.title = `Frame ${i} (${f.time}s)`;
+                img.onclick = () => {
+                    slider.value = i;
+                    framePreview.src = img.src;
+                    if (previewVideo.duration) {
+                        previewVideo.currentTime = f.time;
+                    }
+                };
+                thumbs.appendChild(img);
+            });
+
+            slider.oninput = () => {
+                const i = slider.value;
+                framePreview.src = base + data.frames[i].file;
+                if (previewVideo.duration) {
+                    previewVideo.currentTime = data.frames[i].time;
+                }
+            };
+
+            document.getElementById("frames-container").style.display = "block";
+        } catch (err) {
+            log('Frame extraction error: ' + err);
+            console.error(err);
+        }
+    }
+
     imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
             fileName.textContent = file.name;
 
+            // Clear previous frames
+            document.getElementById("frames-container").style.display = "none";
+            currentVideoFrames = [];
+
             if (isVideoFile(file)) {
-                // Skry obrázok, zobraz video
                 preview.style.display = 'none';
                 previewVideo.style.display = 'block';
 
-                // Ak je to AVI alebo MPEG, pošli na server pre konverziu
                 const needsConversion = file.name.toLowerCase().endsWith('.avi') ||
                         file.name.toLowerCase().endsWith('.mpeg') ||
                         file.name.toLowerCase().endsWith('.mpg');
@@ -407,6 +484,10 @@
                             const blob = await response.blob();
                             previewVideo.src = URL.createObjectURL(blob);
                             log('Video converted to MP4 successfully.');
+
+                            // Extract frames after conversion
+                            const convertedFile = new File([blob], file.name.replace(/\.(avi|mpeg|mpg)$/i, '.mp4'), {type: 'video/mp4'});
+                            await loadFrames(convertedFile);
                         } else {
                             log('Video conversion failed.');
                             alert('Failed to convert video. Please try MP4 format.');
@@ -417,14 +498,16 @@
                     }
                 } else {
                     const reader = new FileReader();
-                    reader.onload = (event) => {
+                    reader.onload = async (event) => {
                         previewVideo.src = event.target.result;
                         log('Uploaded video preview.');
+
+                        // Extract frames
+                        await loadFrames(file);
                     };
                     reader.readAsDataURL(file);
                 }
             } else {
-                // Skry video, zobraz obrázok
                 previewVideo.style.display = 'none';
                 preview.style.display = 'block';
 
@@ -440,16 +523,26 @@
         }
     });
 
-    resetBtn.addEventListener('click', () => {
+    resetBtn.addEventListener('click', async () => {
         form.reset();
         preview.style.display = 'block';
         previewVideo.style.display = 'none';
-        preview.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>Žiadny obrázok</text></svg>";
+        preview.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>No image selected</text></svg>";
         previewVideo.src = '';
         fileName.textContent = 'No file selected.';
         resultBox.textContent = 'No output available.';
         consoleLog.textContent = 'Cleared.';
+        document.getElementById("frames-container").style.display = "none";
+        currentVideoFrames = [];
         updatePromptOptions();
+
+        // Clear frames on server
+        try {
+            await fetch('/recognizer/clear_frames/', {method: 'POST'});
+            log('Cleared server frames.');
+        } catch (err) {
+            console.error('Failed to clear frames:', err);
+        }
     });
 
     form.addEventListener('submit', async (e) => {
@@ -457,11 +550,9 @@
 
         const formData = new FormData();
 
-        // Pridaj obrázok a model
         formData.append('image', imageInput.files[0]);
         formData.append('model', modelSelect.value);
 
-        // Pridaj všetky zaškrtnuté prompty
         const checkedPrompts = Object.keys(selectedPrompts).filter(key => selectedPrompts[key]);
 
         if (checkedPrompts.length === 0) {
@@ -472,7 +563,6 @@
         checkedPrompts.forEach(promptName => {
             formData.append('selected_prompts[]', promptName);
 
-            // Pridaj input pre prompt ak existuje
             const inputField = document.getElementById(`input-${promptName}`);
             if (inputField) {
                 formData.append(`prompt_input_${promptName}`, inputField.value);
@@ -496,7 +586,6 @@
             console.log('Full response:', data);
 
             if (data.results) {
-                // Zobraz všetky výsledky
                 let displayText = `Model: ${data.model}\n\n`;
 
                 data.results.forEach((result, index) => {
@@ -507,7 +596,6 @@
                     }
                     displayText += `Result: ${JSON.stringify(result.result, null, 2)}\n\n`;
 
-                    // Zobraz anotovaný obrázok posledného promptu (alebo prvého DETECT)
                     if (result.annotated_image && (index === data.results.length - 1 || result.prompt_name === 'DETECT')) {
                         previewVideo.style.display = 'none';
                         preview.style.display = 'block';

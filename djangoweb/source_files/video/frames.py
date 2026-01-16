@@ -3,52 +3,46 @@ import cv2 as OpenCV
 import json
 
 
-def video_to_frames(video_path, output_folder, every_n_seconds=1, by_seconds=True):
-    video = OpenCV.VideoCapture(video_path)
-    if not video.isOpened():
-        print("Failed to open video:", video_path)
-        return
+import cv2
+import os
 
-    os.makedirs(output_folder, exist_ok=True) #creates folder if missing
+def video_to_frames(video_path, output_folder, every_n_seconds=1):
+    cap = cv2.VideoCapture(video_path)
+    if not cap.isOpened():
+        raise RuntimeError("Cannot open video")
 
-    fps = video.get(OpenCV.CAP_PROP_FPS)
-    total_frames = int(video.get(OpenCV.CAP_PROP_FRAME_COUNT))
-    print(f"{os.path.basename(video_path)} → {total_frames} frames, {fps:.2f} FPS")
+    os.makedirs(output_folder, exist_ok=True)
 
-    # how often save frames
-    frame_interval = int(fps * every_n_seconds) if by_seconds else every_n_seconds
+    fps = cap.get(cv2.CAP_PROP_FPS)
+    if fps <= 0:
+        fps = 30  # fallback
 
-    # video name without extension
+    frame_interval = int(fps * every_n_seconds)
     video_name = os.path.splitext(os.path.basename(video_path))[0]
 
-    frame_count, saved_count = 0, 0
-    metadata = []
+    frames = []
+    idx, saved = 0, 0
+
     while True:
-        ret, frame = video.read()
+        ret, frame = cap.read()
         if not ret:
             break
 
-        # check if the frame is the one we want
-        if frame_count % frame_interval == 0:
-            filename = os.path.join(f"{video_name}_frame_{saved_count:05d}.jpg")
-            OpenCV.imwrite(filename, frame)
-            print("hhhhhhhhkhh")
+        if idx % frame_interval == 0:
+            fname = f"{video_name}_{saved:05d}.jpg"
+            path = os.path.join(output_folder, fname)
+            cv2.imwrite(path, frame)
 
-            time_sec = frame_count / fps
-            metadata.append({
-                "frame": filename,
-                "time_sec": round(time_sec, 2),
-                "frame_idx": frame_count
+            frames.append({
+                "file": fname,
+                "time": round(idx / fps, 2)
             })
-            saved_count += 1
+            saved += 1
 
-        frame_count += 1
+        idx += 1
 
-    with open(os.path.join(output_folder, f"{video_name}_frames.json"), "w") as f:
-        json.dump(metadata, f, indent=2)
-    video.release()
-    print(f"Saved {saved_count} frames to {output_folder}\n")
-
+    cap.release()
+    return frames
 
 def process_videos(input_path, output_root, every_n_seconds=1, by_seconds=True):
 

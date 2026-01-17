@@ -140,8 +140,12 @@ def call_paligemma2(image_path, prompt, model_id):
     if result.returncode != 0:
         raise RuntimeError(result.stderr)
 
-    return json.loads(result.stdout)
+    # Option 1: If returning plain string
+    return result.stdout.strip()
 
+    # Option 2: If returning JSON dict
+    # parsed = json.loads(result.stdout)
+    # return parsed["result"]
 
 def index(request):
     return render(request, 'index.html')

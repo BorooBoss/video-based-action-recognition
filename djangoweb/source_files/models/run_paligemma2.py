@@ -7,13 +7,16 @@ from transformers import (
 )
 from huggingface_hub import login
 from dotenv import load_dotenv
-import json
 
-DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-DTYPE = torch.bfloat16
+
 
 
 def predict(image_path, prompt, model_id):
+    DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
+    if DEVICE == "cuda":
+        print("BEZIM NA cuda")
+    DTYPE = torch.bfloat16 if torch.cuda.is_available() else torch.float32
+
     load_dotenv()
     login(token=os.getenv("HF_TOKEN"))
 
@@ -57,7 +60,7 @@ def predict(image_path, prompt, model_id):
         skip_special_tokens=True
     )
 
-    print(json.dumps(raw_result))
+    print(raw_result)
 
 
 if __name__ == "__main__":

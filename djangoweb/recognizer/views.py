@@ -154,125 +154,138 @@ def index(request):
 @csrf_exempt
 def recognize(request):
     if request.method == 'POST':
-        # nacitaj vsetky vybrate prompty
         selected_prompts = request.POST.getlist("selected_prompts[]")
-        prompt_inputs = {}
-
-        # Pre každý prompt načítaj jeho input (ak má)
-        for prompt_name in selected_prompts:
-            input_value = request.POST.get(f"prompt_input_{prompt_name}", "").strip()
-            prompt_inputs[prompt_name] = input_value
+        prompt_inputs = {p: request.POST.get(f"prompt_input_{p}", "").strip() for p in selected_prompts}
 
         ui = user_input.UserInput()
-        ui.image = request.FILES.get("image")
         ui.model_name = request.POST.get("model")
+        uploaded_file = request.FILES.get("image")
 
-        if not ui.image or not ui.model_name:
-            return JsonResponse({"error": "Missing image or model name"}, status=400)
+        if not ui.model_name:
+            return JsonResponse({"error": "Missing model name"}, status=400)
 
-        # SAVE IMAGE
-        tmp_path = "/tmp/uploaded_image.jpg"
-        with open(tmp_path, "wb") as f:
-            for chunk in ui.image.chunks():
-                f.write(chunk)
+        # 1. ROZHODNUTIE: Ideme analyzovať video (temp_frames) alebo jeden nahratý obrázok?
+        # Ak existujú súbory v temp_frames a nahratý súbor má video type, analyzujeme frames
+        is_video = uploaded_file and uploaded_file.content_type.startswith('video/')
+
+        frames_to_process = []
+        if is_video:
+            # Získame zoznam všetkých .jpg súborov v temp_frames
+            frame_files = sorted([f for f in os.listdir(TEMP_FRAMES_DIR) if f.endswith('.jpg')])
+            for f in frame_files:
+                frames_to_process.append(os.path.join(TEMP_FRAMES_DIR, f))
+        else:
+            # Klasický proces pre jeden obrázok
+            tmp_path = "/tmp/uploaded_image.jpg"
+            with open(tmp_path, "wb") as f:
+                for chunk in uploaded_file.chunks():
+                    f.write(chunk)
+            frames_to_process = [tmp_path]
 
         try:
-            results = []
+            video_results = []
 
-            # PREJDI VŠETKY VYBRANÉ PROMPTY
-            for prompt_name in selected_prompts:
-                ui.prompt_type = prompt_name
-                ui.addition = prompt_inputs.get(prompt_name, "")
-                ui.set_base_prompt()
+            # 2. CYKLUS CEZ SNÍMKY
+            for current_image_path in frames_to_process:
+                frame_name = os.path.basename(current_image_path)
+                current_frame_results = []
 
-                print(f"\n=== Processing prompt: {prompt_name} ===")
-                print(f"Base prompt: {ui.base_prompt}")
-                print(f"Full prompt: {ui.full_prompt}")
-                print(f"Model name: {ui.model_name}")
+                # 3. CYKLUS CEZ PROMPTY
+                for prompt_name in selected_prompts:
+                    ui.prompt_type = prompt_name
+                    ui.addition = prompt_inputs.get(prompt_name, "")
+                    ui.set_base_prompt()
 
-                raw_result = None
+                    result = None
+                    raw_result = None
 
-                # CALL MODEL
-                if "paligemma" in ui.model_name.lower():
-                    print("som v call")
-                    raw_result = call_paligemma2(tmp_path, ui.full_prompt, ui.model_name)
-
-                    if ui.base_prompt == "detect":
-                        result = normalize_output(raw_result, "paligemma")
-                    else:
-                        result = raw_result
-
-                    raw_result = result
-
-                elif "florence" in ui.model_name.lower():
-                    raw_result = florence.predict(tmp_path, ui.full_prompt, model_id=ui.model_name,
-                                                  base_prompt=ui.base_prompt)
-
-                    if isinstance(raw_result, dict):
-                        result = raw_result.get(ui.full_prompt, raw_result)
-                    else:
-                        result = raw_result
-
-                elif "qwen" in ui.model_name.lower():
-                    result = call_qwen(tmp_path, ui.full_prompt)
-                    raw_result = result
-
-                elif "internvl" in ui.model_name.lower():
-                    result = call_internvl(tmp_path, ui.full_prompt)
-                    raw_result = result
-
-                else:
-                    continue
-
-                # SPRACUJ DETEKCIE (ak je to detekčný prompt)
-                annotated_image_base64 = None
-                detections_dict = None
-
-                if isinstance(raw_result, list) and len(raw_result) > 0:
-                    detections_dict = raw_result
-                elif isinstance(raw_result, dict):
-                    if "<OD>" in raw_result:
-                        detections_dict = raw_result["<OD>"]
-                    elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
-                        detections_dict = raw_result[ui.full_prompt]
-
-                if detections_dict:
-                    output_image_path = f"/tmp/out_{prompt_name}.jpg"
-
-                    if "florence" in ui.model_name.lower():
-                        draw_objects.draw_boxes_florence(tmp_path, detections_dict, output_image_path)
-
+                    # --- VOLANIE MODELOV (Používame current_image_path!) ---
                     if "paligemma" in ui.model_name.lower():
-                        draw_objects.draw_boxes_paligemma(tmp_path, result, output_image_path)
+                        raw_result = call_paligemma2(current_image_path, ui.full_prompt, ui.model_name)
+                        result = normalize_output(raw_result, "paligemma") if ui.base_prompt == "detect" else raw_result
 
-                    if os.path.exists(output_image_path):
-                        with open(output_image_path, "rb") as img_file:
-                            annotated_image_base64 = base64.b64encode(img_file.read()).decode('utf-8')
-                        os.remove(output_image_path)
+                    elif "florence" in ui.model_name.lower():
+                        raw_result = florence.predict(current_image_path, ui.full_prompt, model_id=ui.model_name,
+                                                      base_prompt=ui.base_prompt)
+                        result = raw_result.get(ui.full_prompt, raw_result) if isinstance(raw_result,
+                                                                                          dict) else raw_result
 
-                # Ulož výsledok tohto promptu
-                results.append({
-                    "prompt_name": prompt_name,
-                    "prompt_code": ui.base_prompt,
-                    "input": ui.addition,
-                    "result": result,
-                    "annotated_image": f"data:image/jpeg;base64,{annotated_image_base64}" if annotated_image_base64 else None
+                    elif "qwen" in ui.model_name.lower():
+                        raw_result = call_qwen(current_image_path, ui.full_prompt)
+                        result = raw_result
+
+                    elif "internvl" in ui.model_name.lower():
+                        raw_result = call_internvl(current_image_path, ui.full_prompt)
+                        result = raw_result
+                    else:
+                        continue
+
+                    # --- ANOTÁCIA (Kreslenie boxov) ---
+                    annotated_image_base64 = None
+                    annotated_frame_url = None
+                    detections_dict = None
+
+                    # Logika na vytiahnutie súradníc pre kreslenie
+                    if isinstance(raw_result, list) and len(raw_result) > 0:
+                        detections_dict = raw_result
+                    elif isinstance(raw_result, dict):
+                        if "<OD>" in raw_result:
+                            detections_dict = raw_result["<OD>"]
+                        elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
+                            detections_dict = raw_result[ui.full_prompt]
+
+                    if detections_dict:
+                        # Pre video: ulož do TEMP_FRAMES_DIR, pre fotku: /tmp
+                        if is_video:
+                            base_name = frame_name.replace('.jpg', '')
+                            annotated_filename = f"annotated_{base_name}.jpg"
+                            out_path = os.path.join(TEMP_FRAMES_DIR, annotated_filename)
+                        else:
+                            out_path = f"/tmp/out_{prompt_name}_{frame_name}"
+
+                        if "florence" in ui.model_name.lower():
+                            draw_objects.draw_boxes_florence(current_image_path, detections_dict, out_path)
+                        elif "paligemma" in ui.model_name.lower():
+                            draw_objects.draw_boxes_paligemma(current_image_path, result, out_path)
+
+                        if os.path.exists(out_path):
+                            if not is_video:
+                                with open(out_path, "rb") as img_file:
+                                    annotated_image_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+                                os.remove(out_path)
+                            else:
+                                annotated_frame_url = f"/recognizer/frame/{annotated_filename}"
+
+                    current_frame_results.append({
+                        "prompt_name": prompt_name,
+                        "prompt_code": ui.base_prompt,
+                        "input": ui.addition,
+                        "result": result,
+                        "annotated_image": f"data:image/jpeg;base64,{annotated_image_base64}" if annotated_image_base64 else None,
+                        "annotated_frame_url": annotated_frame_url
+                    })
+
+                # Uložíme výsledok pre tento konkrétny frame
+                # Snažíme sa získať číslo sekundy z názvu (napr. frame_00005.jpg -> 00005)
+                timestamp_val = frame_name.split('_')[-1].replace('.jpg', '') if '_' in frame_name else "0"
+
+                video_results.append({
+                    "frame": frame_name,
+                    "timestamp": timestamp_val,
+                    "analysis": current_frame_results
                 })
 
-            # CLEAR temp
-            if os.path.exists(tmp_path):
+            # 4. UPRATANIE
+            if not is_video and os.path.exists(tmp_path):
                 os.remove(tmp_path)
 
-            # Vráť VŠETKY výsledky
             return JsonResponse({
                 "model": ui.model_name,
-                "results": results
+                "is_video": is_video,
+                "results": video_results  # Vrátime pole výsledkov pre všetky snímky
             })
 
         except Exception as e:
-            import traceback
-            print("ERROR occurred:")
-            traceback.print_exc()
             return JsonResponse({"error": str(e)}, status=500)
 
     return JsonResponse({"error": "Invalid request"}, status=400)

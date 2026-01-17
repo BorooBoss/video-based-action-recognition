@@ -19,7 +19,6 @@ def draw_boxes_florence(image_path, detections, output_path):
 
         draw.rectangle([x1, y1, x2, y2], outline="red", width=4)
         draw.text((x1, y1 - 10), label, fill="red")
-
     img.save(output_path)
 
 

@@ -48,7 +48,7 @@
         pre#result-box {
             white-space: pre-wrap;
             word-wrap: break-word;
-            max-height: 260px;
+            max-height: 500px;
             overflow: auto;
             background: #f5f9ff;
             border-left: 4px solid var(--brand-blue);
@@ -475,10 +475,20 @@
 
         const framePreview = document.getElementById("frame-preview");
         const frameInfo = document.getElementById("frame-info");
-
         const time = f.time_sec ?? f.time;
 
-        framePreview.src = currentBaseUrl + f.file + '?t=' + Date.now();
+        const annotatedFilename = `annotated_frame_${String(f.index).padStart(5, '0')}.jpg`;
+        const annotatedUrl = currentBaseUrl + annotatedFilename;
+
+        const testImg = new Image();
+        testImg.onload = () => {
+            framePreview.src = annotatedUrl + '?t=' + Date.now();
+        };
+        testImg.onerror = () => {
+            framePreview.src = currentBaseUrl + f.file + '?t=' + Date.now();
+        };
+        testImg.src = annotatedUrl;
+
         framePreview.style.display = "block";
 
         frameInfo.innerHTML = `
@@ -491,6 +501,26 @@
             previewVideo.currentTime = time;
         }
     }
+
+
+    function updateThumbnailsWithAnnotations(annotatedFramesMap) {
+        const thumbs = document.getElementById("thumbnails");
+        const thumbImages = thumbs.querySelectorAll("img");
+
+        thumbImages.forEach((img, idx) => {
+            const frameData = currentVideoFrames[idx];
+            if (!frameData) return;
+
+            const frameName = frameData.file;
+
+            if (annotatedFramesMap[frameName]) {
+                const annotatedUrl = annotatedFramesMap[frameName];
+                img.src = annotatedUrl + '?t=' + Date.now();
+                img.style.border = "2px solid #00ff00";
+            }
+        });
+    }
+
     imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -633,30 +663,56 @@
 
             progress.value = 50;
             const data = await response.json();
-            currentVideoFrames = data.frames;
+            //currentVideoFrames = data.frames;
             log('Response from server received.');
             console.log('Full response:', data);
 
             if (data.results) {
-                let displayText = `Model: ${data.model}\n\n`;
+                let displayText = `Model: ${data.model}\n`;
+                displayText += `Type: ${data.is_video ? 'Video Analysis' : 'Single Image Analysis'}\n`;
+                displayText += `------------------------------------------\n\n`;
 
-                data.results.forEach((result, index) => {
-                    displayText += `=== ${result.prompt_name} ===\n`;
-                    displayText += `Prompt code: ${result.prompt_code}\n`;
-                    if (result.input) {
-                        displayText += `Input: ${result.input}\n`;
+                const annotatedFramesMap = {};
+
+                data.results.forEach((frameData) => {
+                    if (data.is_video) {
+                        const timeLabel = parseFloat(frameData.timestamp).toFixed(1).replace('.', ',');
+                        displayText += `>>> Time: ${timeLabel}s (Capture: ${frameData.frame}) <<<\n`;
                     }
-                    displayText += `Result: ${JSON.stringify(result.result, null, 2)}\n\n`;
 
-                    if (result.annotated_image && (index === data.results.length - 1 || result.prompt_name === 'DETECT')) {
+                    frameData.analysis.forEach((res) => {
+                        displayText += `[${res.prompt_name}]\n`;
+                        const resultOutput = (typeof res.result === 'object')
+                                ? JSON.stringify(res.result, null, 2)
+                                : res.result;
+                        displayText += `${resultOutput}\n\n`;
+
+                        if (res.annotated_frame_url && data.is_video) {
+                            annotatedFramesMap[frameData.frame] = res.annotated_frame_url;
+                        }
+                    });
+
+                    displayText += `------------------------------------------\n`;
+
+                    if (!data.is_video && frameData.analysis[0]?.annotated_image) {
                         previewVideo.style.display = 'none';
                         preview.style.display = 'block';
-                        preview.src = result.annotated_image;
-                        log('Displayed annotated image.');
+                        preview.src = frameData.analysis[0].annotated_image;
                     }
                 });
 
                 resultBox.textContent = displayText;
+
+                if (data.is_video && Object.keys(annotatedFramesMap).length > 0) {
+                    updateThumbnailsWithAnnotations(annotatedFramesMap);
+
+                    const firstAnnotatedUrl = Object.values(annotatedFramesMap)[0];
+                    if (firstAnnotatedUrl) {
+                        const framePreview = document.getElementById("frame-preview");
+                        framePreview.src = firstAnnotatedUrl + '?t=' + Date.now();
+                        framePreview.style.display = 'block';
+                    }
+                }
             } else {
                 resultBox.textContent = `Error: ${data.error || 'unknown error'}`;
                 log('Server returned error');

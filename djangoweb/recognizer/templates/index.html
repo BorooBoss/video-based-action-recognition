@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Image Recognizer — Blue Bulma Design</title>
+    <title>Image & Video Recognizer — Blue Bulma Design</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -35,18 +35,20 @@
         }
 
         .preview-image {
-            width: 100%;
-            max-height: 420px;
-            object-fit: contain;
             border-radius: 8px;
             border: 1px solid rgba(10, 108, 255, 0.12);
             background: linear-gradient(180deg, rgba(10, 108, 255, 0.03), rgba(10, 108, 255, 0.01));
         }
 
+        .preview-video {
+            border-radius: 8px;
+            background: #000;
+        }
+
         pre#result-box {
             white-space: pre-wrap;
             word-wrap: break-word;
-            max-height: 260px;
+            max-height: 500px;
             overflow: auto;
             background: #f5f9ff;
             border-left: 4px solid var(--brand-blue);
@@ -80,6 +82,15 @@
             .left-col {
                 border-right: 1px dashed rgba(10, 108, 255, 0.06);
             }
+        }
+
+        #thumbnails img {
+            border: 2px solid transparent;
+            border-radius: 4px;
+        }
+
+        #thumbnails img:hover {
+            border-color: var(--brand-blue);
         }
     </style>
 </head>
@@ -117,11 +128,15 @@
                                         <div class="control">
                                             <div class="select is-fullwidth">
                                                 <select name="model" id="model-select">
-                                                    <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224</option>
-                                                    <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224</option>
+                                                    <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224
+                                                    </option>
+                                                    <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224
+                                                    </option>
                                                     <option value="microsoft/Florence-2-large">florence-2-large</option>
-                                                    <option value="microsoft/Florence-2-large-ft">florence-2-large-ft</option>
-                                                    <option value="Qwen/Qwen3-VL-2B-Instruct">qwen3-vl-2b-instruct</option>
+                                                    <option value="microsoft/Florence-2-large-ft">florence-2-large-ft
+                                                    </option>
+                                                    <option value="Qwen/Qwen3-VL-2B-Instruct">qwen3-vl-2b-instruct
+                                                    </option>
                                                     <option value="OpenGVLab/InternVL3_5-2B">internvl3_5-2b</option>
                                                 </select>
                                             </div>
@@ -151,10 +166,11 @@
                             </div>
 
                             <div class="field">
-                                <label class="label">Select Image</label>
+                                <label class="label">Select Image or Video</label>
                                 <div class="file file-is-info">
                                     <label class="file-label">
-                                        <input class="file-input" type="file" name="image" id="image-input" required>
+                                        <input class="file-input" type="file" name="image" id="image-input"
+                                               accept="image/*,video/*" required>
                                         <span class="file-cta">
                         <span class="file-icon">
                           <i class="fas fa-upload"></i>
@@ -194,14 +210,30 @@
             <div class="column is-6">
                 <div class="card">
                     <div class="card-content">
-                        <h3 class="title is-5">Image Preview</h3>
-                        <figure class="image is-16by9">
+                        <h3 class="title is-5">Visual Preview</h3>
+                        <div style="position: relative; width: 100%; padding-top: 56.25%; background: #f5f9ff; border-radius: 8px; overflow: hidden;">
                             <img id="preview" class="preview-image" alt="Preview image"
+                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;"
                                  src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>No image selected</text></svg>">
-                        </figure>
+                            <video id="preview-video" class="preview-video" controls
+                                   style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;">
+                                Your browser does not support the video tag.
+                            </video>
+                        </div>
+
+                        <div id="frames-container" style="margin-top:1rem; display:none;">
+                            <h5 class="title is-6">Individual Frames</h5>
+                            <input id="frame-slider" type="range" min="0" max="0" value="0" style="width:100%">
+                            <img id="frame-preview"
+                                 style="width:100%; margin-top:0.5rem; border-radius:6px; display:none;">
+                            <div id="frame-info" class="is-size-7 has-text-grey mt-1"></div>
+                            <div id="thumbnails"
+                                 style="display:flex; gap:6px; overflow-x:auto; margin-top:0.5rem;"></div>
+                        </div>
 
                         <div class="content mt-4">
-                            <p class="is-size-7 has-text-grey">If server returns an <code>annotated_image</code>, it will be displayed in the preview area.</p>
+                            <p class="is-size-7 has-text-grey">If server returns an <code>annotated_image</code>, it
+                                will be displayed in the preview area.</p>
                             <progress id="progress" class="progress is-primary" value="0" max="100"
                                       style="display:none"></progress>
                         </div>
@@ -227,7 +259,7 @@
 </footer>
 
 <script>
-    // === DYNAMICKÉ PROMPTY ===
+
     const PROMPT_MAP = {
         "google/paligemma2-3b-pt-224": {
             "SIMPLE CAPTION": {needsInput: false},
@@ -266,18 +298,18 @@
 
     const modelSelect = document.getElementById('model-select');
     let selectedPrompts = {};
+    let currentVideoFrames = []; // Store frames globally
+    let currentBaseUrl = "";
 
     function updatePromptOptions() {
         const selectedModel = modelSelect.value;
         const availablePrompts = PROMPT_MAP[selectedModel] || {};
 
-        // Vymaž starý obsah
         const oldCheckboxContainer = document.getElementById('prompt-checkboxes');
         if (oldCheckboxContainer) {
             oldCheckboxContainer.remove();
         }
 
-        // Vytvor nový container pre checkboxy
         const checkboxContainer = document.createElement('div');
         checkboxContainer.id = 'prompt-checkboxes';
         checkboxContainer.className = 'field';
@@ -285,7 +317,6 @@
 
         selectedPrompts = {};
 
-        // Vytvor checkbox pre každý prompt
         Object.entries(availablePrompts).forEach(([promptName, promptConfig]) => {
             const promptBox = document.createElement('div');
             promptBox.className = 'box mb-3';
@@ -311,7 +342,6 @@
             checkboxLabel.appendChild(labelText);
             promptBox.appendChild(checkboxLabel);
 
-            // Pridaj input pole ak je potrebné
             if (promptConfig.needsInput) {
                 const inputField = document.createElement('input');
                 inputField.type = 'text';
@@ -321,13 +351,11 @@
                 inputField.style.display = 'none';
                 promptBox.appendChild(inputField);
 
-                // Event listener pre checkbox - TOTO JE OPRAVA
                 checkbox.addEventListener('change', (e) => {
                     selectedPrompts[promptName] = e.target.checked;
                     inputField.style.display = e.target.checked ? 'block' : 'none';
                 });
             } else {
-                // Pre prompty bez inputu
                 checkbox.addEventListener('change', (e) => {
                     selectedPrompts[promptName] = e.target.checked;
                 });
@@ -336,9 +364,8 @@
             checkboxContainer.appendChild(promptBox);
         });
 
-        // Vlož za "Typ promptu" pole (ktoré už nepoužívame...)
         const promptTypeField = document.getElementById('prompt-type-select').closest('.field');
-        promptTypeField.style.display = 'none'; // Skry starý dropdown
+        promptTypeField.style.display = 'none';
         promptTypeField.parentNode.insertBefore(checkboxContainer, promptTypeField.nextSibling);
     }
 
@@ -349,6 +376,7 @@
     const resultBox = document.getElementById('result-box');
     const imageInput = document.getElementById('image-input');
     const preview = document.getElementById('preview');
+    const previewVideo = document.getElementById('preview-video');
     const fileName = document.getElementById('file-name');
     const consoleLog = document.getElementById('console-log');
     const progress = document.getElementById('progress');
@@ -359,28 +387,243 @@
         consoleLog.textContent = `[${time}] ${msg}\n` + consoleLog.textContent;
     }
 
-    imageInput.addEventListener('change', (e) => {
+    function isVideoFile(file) {
+        return file.type.startsWith('video/');
+    }
+
+    async function loadFrames(file) {
+        log('Extracting frames from video...');
+        const fd = new FormData();
+        fd.append("video", file);
+        fd.append("every_n_seconds", "1");
+
+        try {
+            const res = await fetch("/recognizer/video_frames/", {
+                method: "POST",
+                body: fd
+            });
+
+            if (!res.ok) {
+                throw new Error('Failed to extract frames');
+            }
+
+            const data = await res.json();
+            currentVideoFrames = data.frames;
+            const base = data.base_url;
+
+            log(`Extracted ${data.total} frames`);
+
+            const slider = document.getElementById("frame-slider");
+            const framePreview = document.getElementById("frame-preview");
+            const thumbs = document.getElementById("thumbnails");
+
+            // Clear old thumbnails completely
+            thumbs.innerHTML = "";
+
+            // Reset slider
+            slider.value = 0;
+            slider.max = data.frames.length - 1;
+
+            // Load first frame
+            framePreview.src = base + data.frames[0].file + '?t=' + Date.now(); // Cache busting
+            framePreview.style.display = 'block';
+
+            currentBaseUrl = base;
+
+            data.frames.forEach((f, i) => {
+                const wrapper = document.createElement("div");
+                wrapper.style.textAlign = "center";
+                wrapper.style.fontSize = "11px";
+                wrapper.style.minWidth = "70px";
+
+                const img = document.createElement("img");
+                img.src = base + f.file + '?t=' + Date.now();
+                img.style.height = "60px";
+                img.style.cursor = "pointer";
+                const idx = i;
+
+                img.title =
+                        `Index: ${idx}\n`;
+
+                img.onclick = () => {
+                    slider.value = i;
+                    updateFrameWithInfo(i);
+                };
+
+                const label = document.createElement("div");
+                label.innerHTML = `<b>#${idx}</b><br>`;
+
+                wrapper.appendChild(img);
+                wrapper.appendChild(label);
+                thumbs.appendChild(wrapper);
+            });
+
+            slider.oninput = () => {
+                updateFrameWithInfo(slider.value);
+            };
+
+            document.getElementById("frames-container").style.display = "block";
+        } catch (err) {
+            log('Frame extraction error: ' + err);
+            console.error(err);
+        }
+    }
+
+    function updateFrameWithInfo(i) {
+        const f = currentVideoFrames[i];
+        if (!f) return;
+
+        const framePreview = document.getElementById("frame-preview");
+        const frameInfo = document.getElementById("frame-info");
+        const time = f.time_sec ?? f.time;
+
+        const annotatedFilename = `annotated_frame_${String(f.index).padStart(5, '0')}.jpg`;
+        const annotatedUrl = currentBaseUrl + annotatedFilename;
+
+        const testImg = new Image();
+        testImg.onload = () => {
+            framePreview.src = annotatedUrl + '?t=' + Date.now();
+        };
+        testImg.onerror = () => {
+            framePreview.src = currentBaseUrl + f.file + '?t=' + Date.now();
+        };
+        testImg.src = annotatedUrl;
+
+        framePreview.style.display = "block";
+
+        frameInfo.innerHTML = `
+          <b>Capture #${f.index}</b> |
+          Time: ${f.time_sec}.0 |
+          Frame index: ${f.frame_idx}
+        `;
+
+        if (previewVideo.duration) {
+            previewVideo.currentTime = time;
+        }
+    }
+
+
+    function updateThumbnailsWithAnnotations(annotatedFramesMap) {
+        const thumbs = document.getElementById("thumbnails");
+        const thumbImages = thumbs.querySelectorAll("img");
+
+        thumbImages.forEach((img, idx) => {
+            const frameData = currentVideoFrames[idx];
+            if (!frameData) return;
+
+            const frameName = frameData.file;
+
+            if (annotatedFramesMap[frameName]) {
+                const annotatedUrl = annotatedFramesMap[frameName];
+                img.src = annotatedUrl + '?t=' + Date.now();
+                img.style.border = "2px solid #00ff00";
+            }
+        });
+    }
+
+    imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
             fileName.textContent = file.name;
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                preview.src = event.target.result;
-                log('Uploaded local image preview.');
-            };
-            reader.readAsDataURL(file);
+
+            // Clear previous frames completely
+            document.getElementById("frames-container").style.display = "none";
+            document.getElementById("thumbnails").innerHTML = "";
+            document.getElementById("frame-preview").src = "";
+            document.getElementById("frame-preview").style.display = "none";
+            document.getElementById("frame-slider").value = 0;
+            currentVideoFrames = [];
+
+            // Clear frames on server
+            try {
+                await fetch('/recognizer/clear_frames/', {method: 'POST'});
+                log('Cleared previous frames from server.');
+            } catch (err) {
+                console.error('Failed to clear frames:', err);
+            }
+
+            if (isVideoFile(file)) {
+                preview.style.display = 'none';
+                previewVideo.style.display = 'block';
+
+                const needsConversion = file.name.toLowerCase().endsWith('.avi') ||
+                        file.name.toLowerCase().endsWith('.mpeg') ||
+                        file.name.toLowerCase().endsWith('.mpg');
+
+                if (needsConversion) {
+                    log('Converting video to MP4...');
+                    const formData = new FormData();
+                    formData.append('video', file);
+
+                    try {
+                        const response = await fetch('/recognizer/convert_video/', {
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (response.ok) {
+                            const blob = await response.blob();
+                            previewVideo.src = URL.createObjectURL(blob);
+                            log('Video converted to MP4 successfully.');
+
+                            // Extract frames after conversion
+                            const convertedFile = new File([blob], file.name.replace(/\.(avi|mpeg|mpg)$/i, '.mp4'), {type: 'video/mp4'});
+                            await loadFrames(convertedFile);
+                        } else {
+                            log('Video conversion failed.');
+                            alert('Failed to convert video. Please try MP4 format.');
+                        }
+                    } catch (err) {
+                        log('Conversion error: ' + err);
+                        alert('Error converting video: ' + err);
+                    }
+                } else {
+                    const reader = new FileReader();
+                    reader.onload = async (event) => {
+                        previewVideo.src = event.target.result;
+                        log('Uploaded video preview.');
+
+                        // Extract frames
+                        await loadFrames(file);
+                    };
+                    reader.readAsDataURL(file);
+                }
+            } else {
+                previewVideo.style.display = 'none';
+                preview.style.display = 'block';
+
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    preview.src = event.target.result;
+                    log('Uploaded local image preview.');
+                };
+                reader.readAsDataURL(file);
+            }
         } else {
             fileName.textContent = 'No file selected.';
         }
     });
 
-    resetBtn.addEventListener('click', () => {
+    resetBtn.addEventListener('click', async () => {
         form.reset();
-        preview.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>Žiadny obrázok</text></svg>";
+        preview.style.display = 'block';
+        previewVideo.style.display = 'none';
+        preview.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>No image selected</text></svg>";
+        previewVideo.src = '';
         fileName.textContent = 'No file selected.';
         resultBox.textContent = 'No output available.';
         consoleLog.textContent = 'Cleared.';
+        document.getElementById("frames-container").style.display = "none";
+        currentVideoFrames = [];
         updatePromptOptions();
+
+        // Clear frames on server
+        try {
+            await fetch('/recognizer/clear_frames/', {method: 'POST'});
+            log('Cleared server frames.');
+        } catch (err) {
+            console.error('Failed to clear frames:', err);
+        }
     });
 
     form.addEventListener('submit', async (e) => {
@@ -388,11 +631,9 @@
 
         const formData = new FormData();
 
-        // Pridaj obrázok a model
         formData.append('image', imageInput.files[0]);
         formData.append('model', modelSelect.value);
 
-        // Pridaj všetky zaškrtnuté prompty
         const checkedPrompts = Object.keys(selectedPrompts).filter(key => selectedPrompts[key]);
 
         if (checkedPrompts.length === 0) {
@@ -403,7 +644,6 @@
         checkedPrompts.forEach(promptName => {
             formData.append('selected_prompts[]', promptName);
 
-            // Pridaj input pre prompt ak existuje
             const inputField = document.getElementById(`input-${promptName}`);
             if (inputField) {
                 formData.append(`prompt_input_${promptName}`, inputField.value);
@@ -423,29 +663,56 @@
 
             progress.value = 50;
             const data = await response.json();
+            //currentVideoFrames = data.frames;
             log('Response from server received.');
             console.log('Full response:', data);
 
             if (data.results) {
-                // Zobraz všetky výsledky
-                let displayText = `Model: ${data.model}\n\n`;
+                let displayText = `Model: ${data.model}\n`;
+                displayText += `Type: ${data.is_video ? 'Video Analysis' : 'Single Image Analysis'}\n`;
+                displayText += `------------------------------------------\n\n`;
 
-                data.results.forEach((result, index) => {
-                    displayText += `=== ${result.prompt_name} ===\n`;
-                    displayText += `Prompt code: ${result.prompt_code}\n`;
-                    if (result.input) {
-                        displayText += `Input: ${result.input}\n`;
+                const annotatedFramesMap = {};
+
+                data.results.forEach((frameData) => {
+                    if (data.is_video) {
+                        const timeLabel = parseFloat(frameData.timestamp).toFixed(1).replace('.', ',');
+                        displayText += `>>> Time: ${timeLabel}s (Capture: ${frameData.frame}) <<<\n`;
                     }
-                    displayText += `Result: ${JSON.stringify(result.result, null, 2)}\n\n`;
 
-                    // Zobraz anotovaný obrázok posledného promptu (alebo prvého DETECT)
-                    if (result.annotated_image && (index === data.results.length - 1 || result.prompt_name === 'DETECT')) {
-                        preview.src = result.annotated_image;
-                        log('Displayed annotated image.');
+                    frameData.analysis.forEach((res) => {
+                        displayText += `[${res.prompt_name}]\n`;
+                        const resultOutput = (typeof res.result === 'object')
+                                ? JSON.stringify(res.result, null, 2)
+                                : res.result;
+                        displayText += `${resultOutput}\n\n`;
+
+                        if (res.annotated_frame_url && data.is_video) {
+                            annotatedFramesMap[frameData.frame] = res.annotated_frame_url;
+                        }
+                    });
+
+                    displayText += `------------------------------------------\n`;
+
+                    if (!data.is_video && frameData.analysis[0]?.annotated_image) {
+                        previewVideo.style.display = 'none';
+                        preview.style.display = 'block';
+                        preview.src = frameData.analysis[0].annotated_image;
                     }
                 });
 
                 resultBox.textContent = displayText;
+
+                if (data.is_video && Object.keys(annotatedFramesMap).length > 0) {
+                    updateThumbnailsWithAnnotations(annotatedFramesMap);
+
+                    const firstAnnotatedUrl = Object.values(annotatedFramesMap)[0];
+                    if (firstAnnotatedUrl) {
+                        const framePreview = document.getElementById("frame-preview");
+                        framePreview.src = firstAnnotatedUrl + '?t=' + Date.now();
+                        framePreview.style.display = 'block';
+                    }
+                }
             } else {
                 resultBox.textContent = `Error: ${data.error || 'unknown error'}`;
                 log('Server returned error');

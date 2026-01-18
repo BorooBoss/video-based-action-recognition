@@ -1,8 +1,6 @@
 datasets/
 scvd/
-djangoweb/source_files/frames/
-djangoweb/source_files/video/
-djangoweb/polls/
+djangoweb/temp_frames/
 weapon_aug/
 .env
 helper.docx

@@ -20,10 +20,8 @@ def predict(image_path, prompt, model_id):
     load_dotenv()
     login(token=os.getenv("HF_TOKEN"))
 
-    # Načítaj obrázok
     image = Image.open(image_path).convert("RGB")
 
-    # Načítaj model a presun na GPU
     model = PaliGemmaForConditionalGeneration.from_pretrained(
         model_id,
         torch_dtype=DTYPE,
@@ -31,8 +29,6 @@ def predict(image_path, prompt, model_id):
     ).eval()
 
     processor = PaliGemmaProcessor.from_pretrained(model_id)
-
-    # Priprav inputs a presun na GPU
     inputs = processor(
         text=prompt,
         images=image,
@@ -54,7 +50,7 @@ def predict(image_path, prompt, model_id):
                 do_sample=False
             )
 
-    # Dekódovanie výstupu
+
     raw_result = processor.decode(
         outputs[0][input_len:],
         skip_special_tokens=True

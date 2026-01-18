@@ -164,13 +164,12 @@ def recognize(request):
         if not ui.model_name:
             return JsonResponse({"error": "Missing model name"}, status=400)
 
-        # 1. ROZHODNUTIE: Ideme analyzovať video (temp_frames) alebo jeden nahratý obrázok?
         # Ak existujú súbory v temp_frames a nahratý súbor má video type, analyzujeme frames
         is_video = uploaded_file and uploaded_file.content_type.startswith('video/')
 
         frames_to_process = []
         if is_video:
-            # Získame zoznam všetkých .jpg súborov v temp_frames
+            # Získame zoznam všetkých .jpg temp_frames
             frame_files = sorted([f for f in os.listdir(TEMP_FRAMES_DIR) if f.endswith('.jpg')])
             for f in frame_files:
                 frames_to_process.append(os.path.join(TEMP_FRAMES_DIR, f))
@@ -199,7 +198,7 @@ def recognize(request):
                     result = None
                     raw_result = None
 
-                    # --- VOLANIE MODELOV (Používame current_image_path!) ---
+                    #vyber modelu s current_image_path
                     if "paligemma" in ui.model_name.lower():
                         raw_result = call_paligemma2(current_image_path, ui.full_prompt, ui.model_name)
                         result = normalize_output(raw_result, "paligemma") if ui.base_prompt == "detect" else raw_result
@@ -220,12 +219,12 @@ def recognize(request):
                     else:
                         continue
 
-                    # --- ANOTÁCIA (Kreslenie boxov) ---
+                    #nastavenia pre bboxes a detect prompty
                     annotated_image_base64 = None
                     annotated_frame_url = None
                     detections_dict = None
 
-                    # Logika na vytiahnutie súradníc pre kreslenie
+
                     if isinstance(raw_result, list) and len(raw_result) > 0:
                         detections_dict = raw_result
                     elif isinstance(raw_result, dict):
@@ -275,7 +274,6 @@ def recognize(request):
                     "analysis": current_frame_results
                 })
 
-            # 4. UPRATANIE
             if not is_video and os.path.exists(tmp_path):
                 os.remove(tmp_path)
 

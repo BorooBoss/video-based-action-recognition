@@ -181,6 +181,7 @@ def recognize(request):
                     f.write(chunk)
             frames_to_process = [tmp_path]
 
+
         try:
             video_results = []
 
@@ -195,13 +196,24 @@ def recognize(request):
                     ui.addition = prompt_inputs.get(prompt_name, "")
                     ui.set_base_prompt()
 
+                    print(f"\n=== Processing prompt: {prompt_name} ===")
+                    print(f"Base prompt: {ui.base_prompt}")
+                    print(f"Full prompt: {ui.full_prompt}")
+                    print(f"Model name: {ui.model_name}")
+
                     result = None
                     raw_result = None
 
                     #vyber modelu s current_image_path
                     if "paligemma" in ui.model_name.lower():
                         raw_result = call_paligemma2(current_image_path, ui.full_prompt, ui.model_name)
-                        result = normalize_output(raw_result, "paligemma") if ui.base_prompt == "detect" else raw_result
+                        if ui.base_prompt == "detect":
+                            result = normalize_output(raw_result, "paligemma")
+                        else:
+                            result = raw_result
+
+                        raw_result = result
+
 
                     elif "florence" in ui.model_name.lower():
                         raw_result = florence.predict(current_image_path, ui.full_prompt, model_id=ui.model_name,
@@ -224,7 +236,6 @@ def recognize(request):
                     annotated_frame_url = None
                     detections_dict = None
 
-
                     if isinstance(raw_result, list) and len(raw_result) > 0:
                         detections_dict = raw_result
                     elif isinstance(raw_result, dict):
@@ -245,7 +256,8 @@ def recognize(request):
                         if "florence" in ui.model_name.lower():
                             draw_objects.draw_boxes_florence(current_image_path, detections_dict, out_path)
                         elif "paligemma" in ui.model_name.lower():
-                            draw_objects.draw_boxes_paligemma(current_image_path, result, out_path)
+                            print("VYKRESLUJEM....")
+                            draw_objects.draw_boxes_paligemma(current_image_path, detections_dict, out_path)
 
                         if os.path.exists(out_path):
                             if not is_video:

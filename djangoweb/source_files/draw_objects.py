@@ -1,15 +1,8 @@
 from PIL import Image, ImageDraw, ImageFont
 
-
-
-#for florence
+#drawing with florence normalized co-ordinates
 def draw_boxes_florence(image_path, detections, output_path):
-    """
-    detections = {
-        "bboxes": [[x1, y1, x2, y2], ...],
-        "labels": ["elephant", "giraffe", ...]
-    }
-    """
+
 
     img = Image.open(image_path)
     draw = ImageDraw.Draw(img)
@@ -22,7 +15,7 @@ def draw_boxes_florence(image_path, detections, output_path):
     img.save(output_path)
 
 
-# for paligemma
+#drawing with paligemma normalized co-ordinates
 def draw_boxes_paligemma(image_path, coords_and_labels, output_path):
 
    image = Image.open(image_path)

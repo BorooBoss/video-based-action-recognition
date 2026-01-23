@@ -1,13 +1,13 @@
 class UserInput:
     def __init__(self):
         self.image = None
-        self.base_prompt = None #detect
-        self.prompt_type = None #DETECT
+        self.base_prompt = None #detect or <OD>
+        self.prompt_type = None #DETECT or CAPTION or DESCRIBE
         self.model_name = None
         self.addition = "" #dog
         self.full_prompt = "" #detect dog
 
-
+    #dictionary for user-friendly use
     PROMPT_MAP = {
         "google/paligemma2-3b-pt-224": {
             "DETECT": "detect",
@@ -59,7 +59,7 @@ class UserInput:
     def set_base_prompt(self):
         model_type = None
         for key in self.PROMPT_MAP:
-            print(key, self.model_name)
+            #print(key, self.model_name)
             if key.lower() == self.model_name.lower():
                 model_type = key
                 break
@@ -70,7 +70,7 @@ class UserInput:
         if self.prompt_type in prompt_config:
             self.base_prompt = prompt_config[self.prompt_type]
         else:
-            return None  # prompt_type neexistuje v mape
+            return None  #prompt_type neexistuje v mape
 
         self.full_prompt = self.base_prompt
         if self.addition:

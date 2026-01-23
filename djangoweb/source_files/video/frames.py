@@ -1,23 +1,21 @@
-import shutil
-import cv2
-import os
+import shutil, cv2, os
 from mysite import settings
 
 TEMP_FRAMES_DIR = os.path.join(settings.BASE_DIR, 'temp_frames')
 
-
+#check if frames dir exists
 def ensure_temp_frames_dir():
     if not os.path.exists(TEMP_FRAMES_DIR):
         os.makedirs(TEMP_FRAMES_DIR)
     return TEMP_FRAMES_DIR
 
-
+#remove old temp frames
 def clear_temp_frames():
     if os.path.exists(TEMP_FRAMES_DIR):
         shutil.rmtree(TEMP_FRAMES_DIR)
     ensure_temp_frames_dir()
 
-
+#create frames with metadata from uploaded video
 def video_to_frames(video_path, output_folder, every_n_seconds=1):
     cap = cv2.VideoCapture(video_path)
     if not cap.isOpened():

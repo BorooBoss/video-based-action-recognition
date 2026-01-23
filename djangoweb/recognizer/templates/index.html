@@ -101,8 +101,8 @@
         <div class="container">
             <div class="columns is-vcentered">
                 <div class="column is-8">
-                    <h1 class="title is-2">VLM Activity Analyzer</h1>
-                    <h2 class="subtitle is-5">Video activity analysis and anomaly detection</h2>
+                    <h1 class="title is-2">VLM Anomaly Analyzer</h1>
+                    <h2 class="subtitle is-5">Video/Image activity analysis and anomaly detection</h2>
                 </div>
                 <div class="column is-4 has-text-right">
                     <a class="button is-light is-rounded" href="#form">Instructions</a>
@@ -298,9 +298,10 @@
 
     const modelSelect = document.getElementById('model-select');
     let selectedPrompts = {};
-    let currentVideoFrames = []; // Store frames globally
+    let currentVideoFrames = [];
     let currentBaseUrl = "";
 
+    //generates prompt checkboxes for models
     function updatePromptOptions() {
         const selectedModel = modelSelect.value;
         const availablePrompts = PROMPT_MAP[selectedModel] || {};
@@ -382,15 +383,16 @@
     const progress = document.getElementById('progress');
     const resetBtn = document.getElementById('reset-btn');
 
+    //logging
     function log(msg) {
         const time = new Date().toLocaleTimeString();
         consoleLog.textContent = `[${time}] ${msg}\n` + consoleLog.textContent;
     }
-
+    //check if the media is video
     function isVideoFile(file) {
         return file.type.startsWith('video/');
     }
-
+    //extract frames from video
     async function loadFrames(file) {
         log('Extracting frames from video...');
         const fd = new FormData();
@@ -417,14 +419,14 @@
             const framePreview = document.getElementById("frame-preview");
             const thumbs = document.getElementById("thumbnails");
 
-            // Clear old thumbnails completely
+            //clear old thumbnails completely
             thumbs.innerHTML = "";
 
-            // Reset slider
+            //reset slider
             slider.value = 0;
             slider.max = data.frames.length - 1;
 
-            // Load first frame
+            //load first frame
             framePreview.src = base + data.frames[0].file + '?t=' + Date.now(); // Cache busting
             framePreview.style.display = 'block';
 
@@ -468,7 +470,7 @@
             console.error(err);
         }
     }
-
+    //add info under every frame
     function updateFrameWithInfo(i) {
         const f = currentVideoFrames[i];
         if (!f) return;
@@ -502,7 +504,7 @@
         }
     }
 
-
+    //update frames with annotations if detect prompt was called
     function updateThumbnailsWithAnnotations(annotatedFramesMap) {
         const thumbs = document.getElementById("thumbnails");
         const thumbImages = thumbs.querySelectorAll("img");
@@ -520,13 +522,13 @@
             }
         });
     }
-
+    //main javascript function
     imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
             fileName.textContent = file.name;
 
-            // Clear previous frames completely
+            //clear previous frames completely
             document.getElementById("frames-container").style.display = "none";
             document.getElementById("thumbnails").innerHTML = "";
             document.getElementById("frame-preview").src = "";
@@ -534,7 +536,7 @@
             document.getElementById("frame-slider").value = 0;
             currentVideoFrames = [];
 
-            // Clear frames on server
+            //clear frames on server
             try {
                 await fetch('/recognizer/clear_frames/', {method: 'POST'});
                 log('Cleared previous frames from server.');
@@ -545,7 +547,7 @@
             if (isVideoFile(file)) {
                 preview.style.display = 'none';
                 previewVideo.style.display = 'block';
-
+                //check if format is .avi/.mpeg/.mpg -> will call conversion
                 const needsConversion = file.name.toLowerCase().endsWith('.avi') ||
                         file.name.toLowerCase().endsWith('.mpeg') ||
                         file.name.toLowerCase().endsWith('.mpg');
@@ -566,7 +568,7 @@
                             previewVideo.src = URL.createObjectURL(blob);
                             log('Video converted to MP4 successfully.');
 
-                            // Extract frames after conversion
+                            //extract frames after conversion
                             const convertedFile = new File([blob], file.name.replace(/\.(avi|mpeg|mpg)$/i, '.mp4'), {type: 'video/mp4'});
                             await loadFrames(convertedFile);
                         } else {
@@ -583,7 +585,7 @@
                         previewVideo.src = event.target.result;
                         log('Uploaded video preview.');
 
-                        // Extract frames
+                        //
                         await loadFrames(file);
                     };
                     reader.readAsDataURL(file);
@@ -617,7 +619,7 @@
         currentVideoFrames = [];
         updatePromptOptions();
 
-        // Clear frames on server
+        //clear frames on server
         try {
             await fetch('/recognizer/clear_frames/', {method: 'POST'});
             log('Cleared server frames.');
@@ -629,21 +631,23 @@
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        //create FormData object for sending data to backend
         const formData = new FormData();
 
+        //append image,model,prompts
         formData.append('image', imageInput.files[0]);
         formData.append('model', modelSelect.value);
 
         const checkedPrompts = Object.keys(selectedPrompts).filter(key => selectedPrompts[key]);
-
+        //if no prompts checked
         if (checkedPrompts.length === 0) {
             alert('Select at least one prompt');
             return;
         }
-
+        //add prompts to array
         checkedPrompts.forEach(promptName => {
             formData.append('selected_prompts[]', promptName);
-
+            //if prompt contains text
             const inputField = document.getElementById(`input-${promptName}`);
             if (inputField) {
                 formData.append(`prompt_input_${promptName}`, inputField.value);
@@ -655,6 +659,7 @@
         progress.value = 10;
 
         try {
+            //send POST request to backend
             log(`Sending ${checkedPrompts.length} prompts to /recognizer/recognize/`);
             const response = await fetch('/recognizer/recognize/', {
                 method: 'POST',
@@ -669,15 +674,15 @@
 
             if (data.results) {
                 let displayText = `Model: ${data.model}\n`;
-                displayText += `Type: ${data.is_video ? 'Video Analysis' : 'Single Image Analysis'}\n`;
-                displayText += `------------------------------------------\n\n`;
+                //displayText += `Type: ${data.is_video ? 'Video Analysis' : 'Single Image Analysis'}\n`;
+                //displayText += `------------------------------------------\n\n`;
 
                 const annotatedFramesMap = {};
 
                 data.results.forEach((frameData) => {
                     if (data.is_video) {
                         const timeLabel = parseFloat(frameData.timestamp).toFixed(1).replace('.', ',');
-                        displayText += `>>> Time: ${timeLabel}s (Capture: ${frameData.frame}) <<<\n`;
+                        displayText += `>>> Time: ${timeLabel}s <<<\n`;
                     }
 
                     frameData.analysis.forEach((res) => {
@@ -692,7 +697,7 @@
                         }
                     });
 
-                    displayText += `------------------------------------------\n`;
+                    //displayText += `------------------------------------------\n`;
 
                     if (!data.is_video && frameData.analysis[0]?.annotated_image) {
                         previewVideo.style.display = 'none';
@@ -700,9 +705,9 @@
                         preview.src = frameData.analysis[0].annotated_image;
                     }
                 });
-
+                //print results to resultbox
                 resultBox.textContent = displayText;
-
+                //if detect - display bboxes
                 if (data.is_video && Object.keys(annotatedFramesMap).length > 0) {
                     updateThumbnailsWithAnnotations(annotatedFramesMap);
 

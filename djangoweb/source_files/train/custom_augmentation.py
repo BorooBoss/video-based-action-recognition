@@ -1,7 +1,5 @@
-import os
-import cv2
-import random
-import albumentations as A
+#create image augmentation from dataset
+import os, cv2, random, albumentations as A
 from tqdm import tqdm
 
 IMAGES_DIR = r"/mnt/c/Users/boris/Desktop/5.semester/bp/weapon_aug/train/images"

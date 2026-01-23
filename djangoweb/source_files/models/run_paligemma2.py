@@ -1,4 +1,3 @@
-# run_paligemma2.py
 import argparse, os, torch
 from PIL import Image
 from transformers import (
@@ -9,23 +8,20 @@ from huggingface_hub import login
 from dotenv import load_dotenv
 
 
-
-
 def predict(image_path, prompt, model_id):
     DEVICE = "cuda" if torch.cuda.is_available() else "cpu"
-    if DEVICE == "cuda":
-        print("BEZIM NA cuda")
+    #if DEVICE == "cuda":
+        #print("BEZIM NA cuda")
     DTYPE = torch.bfloat16 if torch.cuda.is_available() else torch.float32
 
     load_dotenv()
     login(token=os.getenv("HF_TOKEN"))
 
     image = Image.open(image_path).convert("RGB")
-
     model = PaliGemmaForConditionalGeneration.from_pretrained(
         model_id,
         torch_dtype=DTYPE,
-        device_map=DEVICE  # Explicitne nastav device_map
+        device_map=DEVICE
     ).eval()
 
     processor = PaliGemmaProcessor.from_pretrained(model_id)
@@ -35,13 +31,12 @@ def predict(image_path, prompt, model_id):
         return_tensors="pt"
     )
 
-    # Explicitne presun všetky tensory na GPU
+    # explicit move tensors to GPU
     inputs = {k: v.to(DEVICE, dtype=DTYPE if v.dtype == torch.float32 else v.dtype)
               for k, v in inputs.items()}
 
     input_len = inputs["input_ids"].shape[-1]
 
-    # Generovanie s explicitným device
     with torch.inference_mode():
         with torch.cuda.amp.autocast(dtype=DTYPE):  # Použitie mixed precision
             outputs = model.generate(

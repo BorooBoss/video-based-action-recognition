@@ -10,9 +10,8 @@ from source_files.vision_adapter import normalize_output
 from source_files.video.frames import clear_temp_frames, ensure_temp_frames_dir, video_to_frames, TEMP_FRAMES_DIR
 
 
-@csrf_exempt
+@csrf_exempt #load video and return temp frames
 def video_frames(request):
-    """Spracuje video a vráti zoznam snímkov"""
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request"}, status=400)
 
@@ -46,9 +45,8 @@ def video_frames(request):
         os.unlink(tmp_video.name)
 
 
-@csrf_exempt
+@csrf_exempt #return exact frame
 def get_frame(request, filename):
-    """Vráti konkrétny snímok"""
     frame_path = os.path.join(TEMP_FRAMES_DIR, filename)
 
     if not os.path.exists(frame_path):
@@ -57,16 +55,15 @@ def get_frame(request, filename):
     return FileResponse(open(frame_path, 'rb'), content_type='image/jpeg')
 
 
-@csrf_exempt
+@csrf_exempt #remove temp frames from sever
 def clear_frames(request):
-    """Vymaže všetky dočasné snímky"""
     if request.method == "POST":
         clear_temp_frames()
         return JsonResponse({"status": "cleared"})
     return JsonResponse({"error": "Invalid request"}, status=400)
 
 
-@csrf_exempt
+@csrf_exempt #convert videos to MP4
 def convert_video(request):
     if request.method != "POST":
         return JsonResponse({"error": "Invalid request"}, status=400)
@@ -140,18 +137,13 @@ def call_paligemma2(image_path, prompt, model_id):
     if result.returncode != 0:
         raise RuntimeError(result.stderr)
 
-    # Option 1: If returning plain string
     return result.stdout.strip()
-
-    # Option 2: If returning JSON dict
-    # parsed = json.loads(result.stdout)
-    # return parsed["result"]
 
 def index(request):
     return render(request, 'index.html')
 
 
-@csrf_exempt
+@csrf_exempt #backend heart
 def recognize(request):
     if request.method == 'POST':
         selected_prompts = request.POST.getlist("selected_prompts[]")
@@ -164,44 +156,56 @@ def recognize(request):
         if not ui.model_name:
             return JsonResponse({"error": "Missing model name"}, status=400)
 
-        # Ak existujú súbory v temp_frames a nahratý súbor má video type, analyzujeme frames
+        #was video uploaded?
         is_video = uploaded_file and uploaded_file.content_type.startswith('video/')
 
         frames_to_process = []
         if is_video:
-            # Získame zoznam všetkých .jpg temp_frames
+            #get array of all .jpg temp_frames
             frame_files = sorted([f for f in os.listdir(TEMP_FRAMES_DIR) if f.endswith('.jpg')])
             for f in frame_files:
                 frames_to_process.append(os.path.join(TEMP_FRAMES_DIR, f))
         else:
-            # Klasický proces pre jeden obrázok
+            #one image
             tmp_path = "/tmp/uploaded_image.jpg"
             with open(tmp_path, "wb") as f:
                 for chunk in uploaded_file.chunks():
                     f.write(chunk)
             frames_to_process = [tmp_path]
 
+
         try:
             video_results = []
 
-            # 2. CYKLUS CEZ SNÍMKY
+            #frames loop
             for current_image_path in frames_to_process:
                 frame_name = os.path.basename(current_image_path)
                 current_frame_results = []
 
-                # 3. CYKLUS CEZ PROMPTY
+                #prompts loop
                 for prompt_name in selected_prompts:
                     ui.prompt_type = prompt_name
                     ui.addition = prompt_inputs.get(prompt_name, "")
                     ui.set_base_prompt()
 
-                    result = None
-                    raw_result = None
+                    print(f"\n=== Processing prompt: {prompt_name} ===")
+                    print(f"Base prompt: {ui.base_prompt}")
+                    print(f"Full prompt: {ui.full_prompt}")
+                    print(f"Model name: {ui.model_name}")
+
+                    result = None #USED FOR DESCRIBE/VQA PROMPTS
+                    raw_result = None #USED FOR DETECT PROMPTS NORMALIZATION
 
                     #vyber modelu s current_image_path
                     if "paligemma" in ui.model_name.lower():
                         raw_result = call_paligemma2(current_image_path, ui.full_prompt, ui.model_name)
-                        result = normalize_output(raw_result, "paligemma") if ui.base_prompt == "detect" else raw_result
+                        if ui.base_prompt == "detect":
+                            result = normalize_output(raw_result, "paligemma")
+                        else:
+                            result = raw_result
+
+                        raw_result = result
+
 
                     elif "florence" in ui.model_name.lower():
                         raw_result = florence.predict(current_image_path, ui.full_prompt, model_id=ui.model_name,
@@ -219,11 +223,10 @@ def recognize(request):
                     else:
                         continue
 
-                    #nastavenia pre bboxes a detect prompty
+                    #settings for detect and bboxes
                     annotated_image_base64 = None
                     annotated_frame_url = None
                     detections_dict = None
-
 
                     if isinstance(raw_result, list) and len(raw_result) > 0:
                         detections_dict = raw_result
@@ -234,7 +237,7 @@ def recognize(request):
                             detections_dict = raw_result[ui.full_prompt]
 
                     if detections_dict:
-                        # Pre video: ulož do TEMP_FRAMES_DIR, pre fotku: /tmp
+                        #for video: save into TEMP_FRAMES_DIR, for one frame: /tmp
                         if is_video:
                             base_name = frame_name.replace('.jpg', '')
                             annotated_filename = f"annotated_{base_name}.jpg"
@@ -245,7 +248,8 @@ def recognize(request):
                         if "florence" in ui.model_name.lower():
                             draw_objects.draw_boxes_florence(current_image_path, detections_dict, out_path)
                         elif "paligemma" in ui.model_name.lower():
-                            draw_objects.draw_boxes_paligemma(current_image_path, result, out_path)
+                            print("VYKRESLUJEM....")
+                            draw_objects.draw_boxes_paligemma(current_image_path, detections_dict, out_path)
 
                         if os.path.exists(out_path):
                             if not is_video:
@@ -264,8 +268,8 @@ def recognize(request):
                         "annotated_frame_url": annotated_frame_url
                     })
 
-                # Uložíme výsledok pre tento konkrétny frame
-                # Snažíme sa získať číslo sekundy z názvu (napr. frame_00005.jpg -> 00005)
+                #save result for one exact frame
+                #should work like frame_00005.jpg -> 00005
                 timestamp_val = frame_name.split('_')[-1].replace('.jpg', '') if '_' in frame_name else "0"
 
                 video_results.append({
@@ -280,7 +284,7 @@ def recognize(request):
             return JsonResponse({
                 "model": ui.model_name,
                 "is_video": is_video,
-                "results": video_results  # Vrátime pole výsledkov pre všetky snímky
+                "results": video_results  #return array of results for every screen
             })
 
         except Exception as e:

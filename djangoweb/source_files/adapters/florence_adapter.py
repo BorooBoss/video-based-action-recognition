@@ -1,3 +1,4 @@
+#normalize florence image co-ordinates to one format
 def convert(result, image_size=None):
     if "<OD>" in result:
         print("hububububu")

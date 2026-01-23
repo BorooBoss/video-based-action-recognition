@@ -1,6 +1,5 @@
+#normalize paligemma image co-ordinates to one format
 import re
-
-
 def convert(decoded, image_size=None): #parsing
     pattern = r"<loc(\d{4})><loc(\d{4})><loc(\d{4})><loc(\d{4})>\s*(\w+)"
     matches = re.findall(pattern, decoded)

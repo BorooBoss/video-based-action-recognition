@@ -2,6 +2,7 @@ import subprocess
 
 
 def convert_to_mp4(input_path, output_path, timeout=300):
+    #convert if format is .avi/.mpeg/.mpg
     cmd = [
         "ffmpeg",
         "-i", input_path,

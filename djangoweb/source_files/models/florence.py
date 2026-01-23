@@ -4,7 +4,7 @@ from transformers import AutoProcessor, AutoModelForCausalLM
 from source_files.model_manager import manager
 from source_files.vision_adapter import normalize_output
 
-
+#laod model into cache
 def initialize_model(model_id):
     if manager.model_id == model_id and manager.model is not None:
         print(f"Working with already loaded {model_id}")
@@ -13,7 +13,7 @@ def initialize_model(model_id):
     if manager.model is not None and manager.model_id != model_id:
         manager.unload_model()
 
-    # MODEL_ID = "microsoft/Florence-2-base"
+
     device = "cuda:0" if torch.cuda.is_available() else "cpu"
     dtype = torch.float16 if torch.cuda.is_available() else torch.float32
 
@@ -26,11 +26,12 @@ def initialize_model(model_id):
     manager.switch_model(model_id, model, processor, device, dtype)
     print(f"MODEL {model_id} LOADED SUCCESSFULLY")
 
+#predict function with results
 def predict(image_path, prompt="describe", model_id=None, base_prompt=None):
     if model_id:
-        initialize_model(model_id)
-    
-    #LOAD from path
+        initialize_model(model_id) #first check cache
+
+
     print(f"LOADING IMAGE FROM: {image_path}")
     image = Image.open(image_path).convert("RGB") # convert for PNG working
 
@@ -48,8 +49,10 @@ def predict(image_path, prompt="describe", model_id=None, base_prompt=None):
         task=prompt,
         image_size=(image.width, image.height)
     )
+    #change structure of output because of detect prompt
     if base_prompt == "<OD>":
         result = normalize_output(raw_result, "florence")
+    #standard output
     else:
         result = raw_result
 
@@ -60,13 +63,3 @@ def predict(image_path, prompt="describe", model_id=None, base_prompt=None):
     print(result)
     print("=" * 60)
     return result
-
-""" 
-EXAMPLES 
-
-prompt = "<CAPTION>"
-prompt = "<DETAILED_CAPTION>"
-prompt = "<MORE_DETAILED_CAPTION>"
-prompt = "<OD>"
-
-"""

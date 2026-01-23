@@ -1,6 +1,5 @@
-import cv2
-import os
-import random
+#preview augmented results
+import cv2, os, random
 from matplotlib import pyplot as plt
 
 IMAGES = r"/mnt/c/Users/boris/Desktop/5.semester/bp/weapon_aug/train/images_aug"
@@ -27,10 +26,10 @@ for img_name in samples:
             color = (255, 0, 0) if int(cls) == 0 else (0, 255, 0)  # BGR for OpenCV
             cv2.rectangle(img, (x1, y1), (x2, y2), color, 2)
 
-    # Convert BGR to RGB for matplotlib
+    #convert BGR to RGB for matplotlib
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    # Display using matplotlib
+    #display random images for correction
     plt.figure(figsize=(10, 8))
     plt.imshow(img_rgb)
     plt.axis('off')

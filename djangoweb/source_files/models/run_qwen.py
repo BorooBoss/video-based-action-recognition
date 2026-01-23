@@ -1,6 +1,5 @@
-import argparse
+import argparse, torch
 from transformers import Qwen3VLForConditionalGeneration, AutoProcessor
-import torch
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--image", type=str, required=True)

@@ -32,10 +32,10 @@ class ModelManager:
 
         print("OLD MODEL CLEARED FROM MEMORY\n")
 
+
     def switch_model(self, model_id, model, processor, device, dtype):
-        # Ak sa typ alebo ID líši, najprv vyčisti starý model
         if self.model is not None and self.model_id != model_id :
-            self.unload()
+            self.unload() #TOTO pozriet
 
         self.model_id = model_id
         self.model = model

@@ -1,8 +1,6 @@
-import argparse
-import torch
+import argparse, torch, torchvision.transforms as T
 from transformers import AutoTokenizer, AutoModel
 from PIL import Image
-import torchvision.transforms as T
 from torchvision.transforms.functional import InterpolationMode
 
 

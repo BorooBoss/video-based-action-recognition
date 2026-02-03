@@ -4,7 +4,7 @@ class UserInput:
         self.base_prompt = None #detect or <OD>
         self.prompt_type = None #DETECT or CAPTION or DESCRIBE
         self.model_name = None
-        self.addition = "" #dog
+        self.prompt_input = "" #dog
         self.full_prompt = "" #detect dog
 
     #dictionary for user-friendly use
@@ -73,8 +73,8 @@ class UserInput:
             return None  #prompt_type neexistuje v mape
 
         self.full_prompt = self.base_prompt
-        if self.addition:
-            self.full_prompt = f"{self.base_prompt} {self.addition}"
+        if self.prompt_input:
+            self.full_prompt = f"{self.base_prompt} {self.prompt_input}"
 
         return model_type
 

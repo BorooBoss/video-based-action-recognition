@@ -185,7 +185,7 @@ def recognize(request):
                 #prompts loop
                 for prompt_name in selected_prompts:
                     ui.prompt_type = prompt_name
-                    ui.addition = prompt_inputs.get(prompt_name, "")
+                    ui.prompt_input = prompt_inputs.get(prompt_name, "")
                     ui.set_base_prompt()
 
                     print(f"\n=== Processing prompt: {prompt_name} ===")
@@ -265,7 +265,7 @@ def recognize(request):
                     current_frame_results.append({
                         "prompt_name": prompt_name,
                         "prompt_code": ui.base_prompt,
-                        "input": ui.addition,
+                        "input": ui.prompt_input,
                         "result": result,
                         "annotated_image": f"data:image/jpeg;base64,{annotated_image_base64}" if annotated_image_base64 else None,
                         "annotated_frame_url": annotated_frame_url

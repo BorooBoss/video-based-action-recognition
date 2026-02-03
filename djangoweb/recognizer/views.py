@@ -210,8 +210,11 @@ def recognize(request):
                     elif "florence" in ui.model_name.lower():
                         raw_result = florence.predict(current_image_path, ui.full_prompt, model_id=ui.model_name,
                                                       base_prompt=ui.base_prompt)
-                        result = raw_result.get(ui.full_prompt, raw_result) if isinstance(raw_result,
-                                                                                          dict) else raw_result
+                        if ui.base_prompt == "detect":
+                            result = normalize_output(raw_result, "florence")
+                            raw_result = result  # 🔥 DÔLEŽITÉ
+                        else:
+                            result = raw_result
 
                     elif "qwen" in ui.model_name.lower():
                         raw_result = call_qwen(current_image_path, ui.full_prompt)

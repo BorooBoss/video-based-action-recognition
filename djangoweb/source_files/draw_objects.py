@@ -7,11 +7,11 @@ def draw_boxes_florence(image_path, detections, output_path):
     img = Image.open(image_path)
     draw = ImageDraw.Draw(img)
 
-    for bbox, label in zip(detections["bboxes"], detections["labels"]):
-        x1, y1, x2, y2 = bbox
+    for obj in detections:
+        x1, y1, x2, y2 = obj["bbox"]
 
         draw.rectangle([x1, y1, x2, y2], outline="red", width=4)
-        draw.text((x1, y1 - 10), label, fill="red")
+        draw.text((x1, max(0, y1 - 12)), obj["label"], fill="red")
     img.save(output_path)
 
 

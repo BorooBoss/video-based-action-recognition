@@ -95,8 +95,8 @@ def convert_video(request):
 def call_qwen(image_path, prompt):
     result = subprocess.run(
         [
-            "/home/borooboss11/miniconda3/envs/qwen_env/bin/python",
-            "/mnt/c/Users/boris/Desktop/5.semester/bp/djangoweb/source_files/models/run_qwen.py",
+            "/home/xpekarcik/anaconda3/envs/qwen_env/bin/python",
+            "/home/xpekarcik/video-based-action-recognition/djangoweb/source_files/models/run_qwen.py",
             "--image", image_path,
             "--prompt", prompt,
         ],
@@ -109,8 +109,8 @@ def call_qwen(image_path, prompt):
 def call_internvl(image_path, prompt):
     result = subprocess.run(
         [
-            "/home/borooboss11/miniconda3/envs/internvl_env/bin/python",
-            "/mnt/c/Users/boris/Desktop/5.semester/bp/djangoweb/source_files/models/run_internvl.py",
+            "/home/xpekarcik/anaconda3/envs/internvl_env/bin/python",
+            "/home/xpekarcik/video-based-action-recognition/djangoweb/source_files/models/run_internvl.py",
             "--image", image_path,
             "--prompt", prompt,
         ],
@@ -123,8 +123,8 @@ def call_internvl(image_path, prompt):
 def call_paligemma2(image_path, prompt, model_id):
     result = subprocess.run(
         [
-            "/home/borooboss11/miniconda3/envs/paligemma2_env/bin/python",
-            "/mnt/c/Users/boris/Desktop/5.semester/bp/djangoweb/source_files/models/run_paligemma2.py",
+            "/home/xpekarcik/anaconda3/envs/paligemma2_env/bin/python",
+            "/home/xpekarcik/video-based-action-recognition/djangoweb/source_files/models/run_paligemma2.py",
             "--image", image_path,
             "--prompt", prompt,
             "--model_id", model_id

@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="Python 3.11.13 WSL (Debian): (/home/borooboss11/.virtualenvs/bp/bin/python)" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11.13 WSL (Debian): (/home/borooboss11/miniconda3/envs/ai_env/bin/python)" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.11 (video-based-action-recognition)" project-jdk-type="Python SDK" />
 </project>

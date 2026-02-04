@@ -1,3 +1,6 @@
+import re
+
+
 class UserInput:
     def __init__(self):
         self.image = None
@@ -77,4 +80,30 @@ class UserInput:
             self.full_prompt = f"{self.base_prompt} {self.prompt_input}"
 
         return model_type
+
+
+    def split_if_needed(self, prompt_type, prompt_input):
+        prompt_input = prompt_input.strip()
+        if not prompt_input:
+            return [""]
+
+        if prompt_type == "DETECT": # ";" in DETECT -> split
+            if ";" in prompt_input:
+                return [p.strip() for p in prompt_input.split(";") if p.strip()]
+            return [prompt_input]
+
+        if prompt_type == "VQA": # ";" in VQA -> split
+            if ";" in prompt_input:
+                return [p.strip() for p in prompt_input.split(";") if p.strip()]
+
+            questions = re.findall(r"[^?]+\?", prompt_input)
+
+            if len(questions) <= 1:
+                return [prompt_input]
+
+            #case if more than one "?" in VQA
+            return [q.strip() for q in questions if q.strip()]
+
+        return [prompt_input]
+
 

@@ -177,99 +177,104 @@ def recognize(request):
         try:
             video_results = []
 
-            #frames loop
+            #first loop - iterates each frame
             for current_image_path in frames_to_process:
                 frame_name = os.path.basename(current_image_path)
                 current_frame_results = []
 
-                #prompts loop
+                #second loop - iterates each prompt (detect/caption/vqa)
                 for prompt_name in selected_prompts:
                     ui.prompt_type = prompt_name
-                    ui.prompt_input = prompt_inputs.get(prompt_name, "")
-                    ui.set_base_prompt()
+                    raw_input = prompt_inputs.get(prompt_name, "")
 
-                    print(f"\n=== Processing prompt: {prompt_name} ===")
-                    print(f"Base prompt: {ui.base_prompt}")
-                    print(f"Full prompt: {ui.full_prompt}")
-                    print(f"Model name: {ui.model_name}")
+                    sub_inputs = ui.split_if_needed(prompt_name, raw_input)
+                    #third loop - iterates multiple prompts of one type (detect person; gun)
+                    for sub_input in sub_inputs:
+                        ui.prompt_input = sub_input
+                        ui.set_base_prompt()
 
-                    result = None #USED FOR DESCRIBE/VQA PROMPTS
-                    raw_result = None #USED FOR DETECT PROMPTS NORMALIZATION
+                        print(f"\n=== Processing prompt: {prompt_name} ===")
+                        print(f"Base prompt: {ui.base_prompt}")
+                        print(f"Full prompt: {ui.full_prompt}")
+                        print(f"Model name: {ui.model_name}")
 
-                    #vyber modelu s current_image_path
-                    if "paligemma" in ui.model_name.lower():
-                        raw_result = call_paligemma2(current_image_path, ui.full_prompt, ui.model_name)
-                        if ui.base_prompt == "detect":
-                            result = normalize_output(raw_result, "paligemma")
-                        else:
-                            result = raw_result
+                        result = None #USED FOR DESCRIBE/VQA PROMPTS
+                        raw_result = None #USED FOR DETECT PROMPTS NORMALIZATION
 
-                        raw_result = result
-
-
-                    elif "florence" in ui.model_name.lower():
-                        raw_result = florence.predict(current_image_path, ui.full_prompt, model_id=ui.model_name,
-                                                      base_prompt=ui.base_prompt)
-                        if ui.base_prompt == "detect":
-                            result = normalize_output(raw_result, "florence")
-                            raw_result = result  # 🔥 DÔLEŽITÉ
-                        else:
-                            result = raw_result
-
-                    elif "qwen" in ui.model_name.lower():
-                        raw_result = call_qwen(current_image_path, ui.full_prompt)
-                        result = raw_result
-
-                    elif "internvl" in ui.model_name.lower():
-                        raw_result = call_internvl(current_image_path, ui.full_prompt)
-                        result = raw_result
-                    else:
-                        continue
-
-                    #settings for detect and bboxes
-                    annotated_image_base64 = None
-                    annotated_frame_url = None
-                    detections_dict = None
-
-                    if isinstance(raw_result, list) and len(raw_result) > 0:
-                        detections_dict = raw_result
-                    elif isinstance(raw_result, dict):
-                        if "<OD>" in raw_result:
-                            detections_dict = raw_result["<OD>"]
-                        elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
-                            detections_dict = raw_result[ui.full_prompt]
-
-                    if detections_dict:
-                        #for video: save into TEMP_FRAMES_DIR, for one frame: /tmp
-                        if is_video:
-                            base_name = frame_name.replace('.jpg', '')
-                            annotated_filename = f"annotated_{base_name}.jpg"
-                            out_path = os.path.join(TEMP_FRAMES_DIR, annotated_filename)
-                        else:
-                            out_path = f"/tmp/out_{prompt_name}_{frame_name}"
-
-                        if "florence" in ui.model_name.lower():
-                            draw_objects.draw_boxes_florence(current_image_path, detections_dict, out_path)
-                        elif "paligemma" in ui.model_name.lower():
-                            print("VYKRESLUJEM....")
-                            draw_objects.draw_boxes_paligemma(current_image_path, detections_dict, out_path)
-
-                        if os.path.exists(out_path):
-                            if not is_video:
-                                with open(out_path, "rb") as img_file:
-                                    annotated_image_base64 = base64.b64encode(img_file.read()).decode('utf-8')
-                                os.remove(out_path)
+                        #vyber modelu s current_image_path
+                        if "paligemma" in ui.model_name.lower():
+                            raw_result = call_paligemma2(current_image_path, ui.full_prompt, ui.model_name)
+                            if ui.base_prompt == "detect":
+                                result = normalize_output(raw_result, "paligemma")
                             else:
-                                annotated_frame_url = f"/recognizer/frame/{annotated_filename}"
+                                result = raw_result
 
-                    current_frame_results.append({
-                        "prompt_name": prompt_name,
-                        "prompt_code": ui.base_prompt,
-                        "input": ui.prompt_input,
-                        "result": result,
-                        "annotated_image": f"data:image/jpeg;base64,{annotated_image_base64}" if annotated_image_base64 else None,
-                        "annotated_frame_url": annotated_frame_url
-                    })
+                            raw_result = result
+
+
+                        elif "florence" in ui.model_name.lower():
+                            raw_result = florence.predict(current_image_path, ui.full_prompt, model_id=ui.model_name,
+                                                          base_prompt=ui.base_prompt)
+                            if ui.base_prompt == "detect":
+                                result = normalize_output(raw_result, "florence")
+                                raw_result = result  # 🔥 DÔLEŽITÉ
+                            else:
+                                result = raw_result
+
+                        elif "qwen" in ui.model_name.lower():
+                            raw_result = call_qwen(current_image_path, ui.full_prompt)
+                            result = raw_result
+
+                        elif "internvl" in ui.model_name.lower():
+                            raw_result = call_internvl(current_image_path, ui.full_prompt)
+                            result = raw_result
+                        else:
+                            continue
+
+                        #settings for detect and bboxes
+                        annotated_image_base64 = None
+                        annotated_frame_url = None
+                        detections_dict = None
+
+                        if isinstance(raw_result, list) and len(raw_result) > 0:
+                            detections_dict = raw_result
+                        elif isinstance(raw_result, dict):
+                            if "<OD>" in raw_result:
+                                detections_dict = raw_result["<OD>"]
+                            elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
+                                detections_dict = raw_result[ui.full_prompt]
+
+                        if detections_dict:
+                            #for video: save into TEMP_FRAMES_DIR, for one frame: /tmp
+                            if is_video:
+                                base_name = frame_name.replace('.jpg', '')
+                                annotated_filename = f"annotated_{base_name}.jpg"
+                                out_path = os.path.join(TEMP_FRAMES_DIR, annotated_filename)
+                            else:
+                                out_path = f"/tmp/out_{prompt_name}_{frame_name}"
+
+                            if "florence" in ui.model_name.lower():
+                                draw_objects.draw_boxes_florence(current_image_path, detections_dict, out_path)
+                            elif "paligemma" in ui.model_name.lower():
+                                print("VYKRESLUJEM....")
+                                draw_objects.draw_boxes_paligemma(current_image_path, detections_dict, out_path)
+
+                            if os.path.exists(out_path):
+                                if not is_video:
+                                    with open(out_path, "rb") as img_file:
+                                        annotated_image_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+                                    os.remove(out_path)
+                                else:
+                                    annotated_frame_url = f"/recognizer/frame/{annotated_filename}"
+
+                        current_frame_results.append({
+                            "prompt_name": prompt_name,
+                            "prompt_code": ui.base_prompt,
+                            "input": ui.prompt_input,
+                            "result": result,
+                            "annotated_image": f"data:image/jpeg;base64,{annotated_image_base64}" if annotated_image_base64 else None,
+                            "annotated_frame_url": annotated_frame_url
+                        })
 
                 #save result for one exact frame
                 #should work like frame_00005.jpg -> 00005

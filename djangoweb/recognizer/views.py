@@ -143,7 +143,7 @@ def index(request):
     return render(request, 'index.html')
 
 
-@csrf_exempt #backend heart
+@csrf_exempt
 def recognize(request):
     if request.method == 'POST':
         selected_prompts = request.POST.getlist("selected_prompts[]")
@@ -155,7 +155,6 @@ def recognize(request):
 
         if not ui.model_name:
             return JsonResponse({"error": "Missing model name"}, status=400)
-
         #was video uploaded?
         is_video = uploaded_file and uploaded_file.content_type.startswith('video/')
 
@@ -173,7 +172,6 @@ def recognize(request):
                     f.write(chunk)
             frames_to_process = [tmp_path]
 
-
         try:
             video_results = []
 
@@ -181,13 +179,21 @@ def recognize(request):
             for current_image_path in frames_to_process:
                 frame_name = os.path.basename(current_image_path)
                 current_frame_results = []
-
                 #second loop - iterates each prompt (detect/caption/vqa)
                 for prompt_name in selected_prompts:
                     ui.prompt_type = prompt_name
                     raw_input = prompt_inputs.get(prompt_name, "")
-
                     sub_inputs = ui.split_if_needed(prompt_name, raw_input)
+
+                    out_path = None
+                    annotated_image_base64 = None
+                    annotated_frame_url = None
+                    all_results = []
+                    all_detections = []
+
+                    if not is_video:
+                        out_path = f"/tmp/out_{prompt_name}_{frame_name}"
+
                     #third loop - iterates multiple prompts of one type (detect person; gun)
                     for sub_input in sub_inputs:
                         ui.prompt_input = sub_input
@@ -201,23 +207,20 @@ def recognize(request):
                         result = None #USED FOR DESCRIBE/VQA PROMPTS
                         raw_result = None #USED FOR DETECT PROMPTS NORMALIZATION
 
-                        #vyber modelu s current_image_path
+                        #choose model with current_image_path
                         if "paligemma" in ui.model_name.lower():
                             raw_result = call_paligemma2(current_image_path, ui.full_prompt, ui.model_name)
                             if ui.base_prompt == "detect":
                                 result = normalize_output(raw_result, "paligemma")
                             else:
                                 result = raw_result
-
                             raw_result = result
 
-
                         elif "florence" in ui.model_name.lower():
-                            raw_result = florence.predict(current_image_path, ui.full_prompt, model_id=ui.model_name,
-                                                          base_prompt=ui.base_prompt)
+                            raw_result = florence.predict(current_image_path, ui.full_prompt, model_id=ui.model_name,base_prompt=ui.base_prompt)
                             if ui.base_prompt == "detect":
                                 result = normalize_output(raw_result, "florence")
-                                raw_result = result  # 🔥 DÔLEŽITÉ
+                                raw_result = result
                             else:
                                 result = raw_result
 
@@ -231,9 +234,8 @@ def recognize(request):
                         else:
                             continue
 
-                        #settings for detect and bboxes
-                        annotated_image_base64 = None
-                        annotated_frame_url = None
+                        all_results.append(result)
+
                         detections_dict = None
 
                         if isinstance(raw_result, list) and len(raw_result) > 0:
@@ -245,37 +247,39 @@ def recognize(request):
                                 detections_dict = raw_result[ui.full_prompt]
 
                         if detections_dict:
-                            #for video: save into TEMP_FRAMES_DIR, for one frame: /tmp
-                            if is_video:
-                                base_name = frame_name.replace('.jpg', '')
-                                annotated_filename = f"annotated_{base_name}.jpg"
-                                out_path = os.path.join(TEMP_FRAMES_DIR, annotated_filename)
-                            else:
-                                out_path = f"/tmp/out_{prompt_name}_{frame_name}"
+                            if isinstance(detections_dict, list):
+                                all_detections.extend(detections_dict)
+                            elif isinstance(detections_dict, dict):
+                                all_detections.append(detections_dict)
 
-                            if "florence" in ui.model_name.lower():
-                                draw_objects.draw_boxes_florence(current_image_path, detections_dict, out_path)
-                            elif "paligemma" in ui.model_name.lower():
-                                print("VYKRESLUJEM....")
-                                draw_objects.draw_boxes_paligemma(current_image_path, detections_dict, out_path)
+                    if all_detections:
+                        #for video: save into TEMP_FRAMES_DIR, for one frame: /tmp
+                        if is_video:
+                            base_name = frame_name.replace('.jpg', '')
+                            annotated_filename = f"annotated_{base_name}.jpg"
+                            out_path = os.path.join(TEMP_FRAMES_DIR, annotated_filename)
 
-                            if os.path.exists(out_path):
-                                if not is_video:
-                                    with open(out_path, "rb") as img_file:
-                                        annotated_image_base64 = base64.b64encode(img_file.read()).decode('utf-8')
-                                    os.remove(out_path)
-                                else:
-                                    annotated_frame_url = f"/recognizer/frame/{annotated_filename}"
+                        if "florence" in ui.model_name.lower():
+                            draw_objects.draw_boxes_florence(current_image_path, all_detections, out_path)
+                        elif "paligemma" in ui.model_name.lower():
+                            draw_objects.draw_boxes_paligemma(current_image_path, all_detections, out_path)
 
-                        current_frame_results.append({
-                            "prompt_name": prompt_name,
-                            "prompt_code": ui.base_prompt,
-                            "input": ui.prompt_input,
-                            "result": result,
-                            "annotated_image": f"data:image/jpeg;base64,{annotated_image_base64}" if annotated_image_base64 else None,
-                            "annotated_frame_url": annotated_frame_url
-                        })
+                    if out_path and os.path.exists(out_path):
+                        if not is_video:
+                            with open(out_path, "rb") as img_file:
+                                annotated_image_base64 = base64.b64encode(img_file.read()).decode('utf-8')
+                            os.remove(out_path)
+                        else:
+                            annotated_frame_url = f"/recognizer/frame/{annotated_filename}"
 
+                    current_frame_results.append({
+                        "prompt_name": prompt_name,
+                        "prompt_code": ui.base_prompt,
+                        "input": raw_input,
+                        "result": all_results if len(all_results) > 1 else (all_results[0] if all_results else None),
+                        "annotated_image": f"data:image/jpeg;base64,{annotated_image_base64}" if annotated_image_base64 else None,
+                        "annotated_frame_url": annotated_frame_url
+                    })
                 #save result for one exact frame
                 #should work like frame_00005.jpg -> 00005
                 timestamp_val = frame_name.split('_')[-1].replace('.jpg', '') if '_' in frame_name else "0"
@@ -292,7 +296,7 @@ def recognize(request):
             return JsonResponse({
                 "model": ui.model_name,
                 "is_video": is_video,
-                "results": video_results  #return array of results for every screen
+                "results": video_results #return array of results for every screen
             })
 
         except Exception as e:

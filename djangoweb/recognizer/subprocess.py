@@ -36,7 +36,7 @@ def call_internvl(image_path, prompt):
 
     return "\n".join(cleaned).strip()
 
-
+#not used
 def call_paligemma2(image_path, prompt, model_id):
     result = subprocess.run(
         [

@@ -3,7 +3,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.http import JsonResponse, FileResponse, HttpResponse
 
-from source_files.models import florence
+from source_files.models import florence, run_paligemma2
 from recognizer import subprocess
 from source_files import draw_objects, user_input
 from source_files.video.ffmpeg_convert import convert_to_mp4
@@ -101,6 +101,7 @@ def index(request):
 def recognize(request):
     if request.method == 'POST':
         selected_prompts = request.POST.getlist("selected_prompts[]")
+        print(f"DEBUG: selected_prompts = {selected_prompts}")
         prompt_inputs = {p: request.POST.get(f"prompt_input_{p}", "").strip() for p in selected_prompts}
 
         ui = user_input.UserInput()
@@ -163,7 +164,8 @@ def recognize(request):
 
                         #choose model with current_image_path
                         if "paligemma" in ui.model_name.lower():
-                            raw_result = subprocess.call_paligemma2(current_image_path, ui.full_prompt, ui.model_name)
+                            raw_result = run_paligemma2.predict(current_image_path, ui.full_prompt, ui.model_name)
+                            #raw_result = subprocess.call_paligemma2(current_image_path, ui.full_prompt, ui.model_name)
                             if ui.base_prompt == "detect":
                                 result = normalize_output(raw_result, "paligemma")
                             else:

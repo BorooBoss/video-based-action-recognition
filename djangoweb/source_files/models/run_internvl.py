@@ -2,7 +2,7 @@ import argparse, torch, torchvision.transforms as T
 from transformers import AutoTokenizer, AutoModel
 from PIL import Image
 from torchvision.transforms.functional import InterpolationMode
-
+#from source_files.model_manager import manager
 
 IMAGENET_MEAN = (0.485, 0.456, 0.406)
 IMAGENET_STD = (0.229, 0.224, 0.228)

@@ -1,6 +1,6 @@
 import gc, torch
 
-class ModelManager:
+class CurrentCache:
     def __init__(self):
         self.model_id = None 
         self.model = None
@@ -44,4 +44,4 @@ class ModelManager:
         self.dtype = dtype
         #self.name = name
 
-manager = ModelManager() # ONE AND ONLY instance of ModelManager
+cache = CurrentCache() # ONE AND ONLY instance of ModelManager

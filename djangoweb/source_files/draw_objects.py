@@ -5,6 +5,8 @@ from PIL import Image, ImageDraw, ImageFont
 #drawing with florence normalized co-ordinates
 def draw_boxes_florence(image_path, detections, output_path):
     img = Image.open(image_path)
+    if img.mode == "RGBA":
+        img = img.convert("RGB")
     draw = ImageDraw.Draw(img)
 
     for obj in detections:
@@ -16,14 +18,17 @@ def draw_boxes_florence(image_path, detections, output_path):
 
 #drawing with paligemma normalized co-ordinates
 def draw_boxes_paligemma(image_path, coords_and_labels, output_path):
-    image = Image.open(image_path)
-    draw = ImageDraw.Draw(image)
-    width, height = image.size
+    img = Image.open(image_path)
+    if img.mode == "RGBA":
+        img = img.convert("RGB")
+    draw = ImageDraw.Draw(img)
+    width, height = img.size
 
     for obj in coords_and_labels:
         y1, x1, y2, x2 = obj['bbox'][0] * height, obj['bbox'][1] * width, obj['bbox'][2] * height, obj['bbox'][3] * width
+        x1, y1, x2, y2 = map(int, [x1, y1, x2, y2])
         draw.rectangle([x1, y1, x2, y2], outline="red", width=3)
         draw.text((x1, max(0, y1 - 12)), obj['label'], fill="red")
 
-    image.save(output_path)
-    return image
+    img.save(output_path)
+    return img

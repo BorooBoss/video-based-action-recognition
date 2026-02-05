@@ -1,9 +1,10 @@
-import json, os, base64, subprocess, tempfile
+import os, base64, subprocess, tempfile
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.http import JsonResponse, FileResponse, HttpResponse
 
 from source_files.models import florence
+from recognizer import subprocess
 from source_files import draw_objects, user_input
 from source_files.video.ffmpeg_convert import convert_to_mp4
 from source_files.vision_adapter import normalize_output
@@ -92,53 +93,6 @@ def convert_video(request):
         os.unlink(tmp_in.name)
         os.unlink(tmp_out.name)
 
-def call_qwen(image_path, prompt):
-    result = subprocess.run(
-        [
-            "/home/xpekarcik/anaconda3/envs/qwen_env/bin/python",
-            "/home/xpekarcik/video-based-action-recognition/djangoweb/source_files/models/run_qwen.py",
-            "--image", image_path,
-            "--prompt", prompt,
-        ],
-        capture_output=True,
-        text=True
-    )
-    return result.stdout.strip()
-
-
-def call_internvl(image_path, prompt):
-    result = subprocess.run(
-        [
-            "/home/xpekarcik/anaconda3/envs/internvl_env/bin/python",
-            "/home/xpekarcik/video-based-action-recognition/djangoweb/source_files/models/run_internvl.py",
-            "--image", image_path,
-            "--prompt", prompt,
-        ],
-        capture_output=True,
-        text=True
-    )
-    return result.stdout.strip()
-
-
-def call_paligemma2(image_path, prompt, model_id):
-    result = subprocess.run(
-        [
-            "/home/xpekarcik/anaconda3/envs/paligemma2_env/bin/python",
-            "/home/xpekarcik/video-based-action-recognition/djangoweb/source_files/models/run_paligemma2.py",
-            "--image", image_path,
-            "--prompt", prompt,
-            "--model_id", model_id
-        ],
-        capture_output=True,
-        text=True,
-        timeout=600
-    )
-
-    if result.returncode != 0:
-        raise RuntimeError(result.stderr)
-
-    return result.stdout.strip()
-
 def index(request):
     return render(request, 'index.html')
 
@@ -209,7 +163,7 @@ def recognize(request):
 
                         #choose model with current_image_path
                         if "paligemma" in ui.model_name.lower():
-                            raw_result = call_paligemma2(current_image_path, ui.full_prompt, ui.model_name)
+                            raw_result = subprocess.call_paligemma2(current_image_path, ui.full_prompt, ui.model_name)
                             if ui.base_prompt == "detect":
                                 result = normalize_output(raw_result, "paligemma")
                             else:
@@ -225,11 +179,11 @@ def recognize(request):
                                 result = raw_result
 
                         elif "qwen" in ui.model_name.lower():
-                            raw_result = call_qwen(current_image_path, ui.full_prompt)
+                            raw_result = subprocess.call_qwen(current_image_path, ui.full_prompt)
                             result = raw_result
 
                         elif "internvl" in ui.model_name.lower():
-                            raw_result = call_internvl(current_image_path, ui.full_prompt)
+                            raw_result = subprocess.call_internvl(current_image_path, ui.full_prompt)
                             result = raw_result
                         else:
                             continue

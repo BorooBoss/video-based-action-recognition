@@ -9,6 +9,10 @@ from huggingface_hub import login
 from dotenv import load_dotenv
 from source_files.current_cache import cache
 
+#DISABLE CUDA GRAPHS + torch.compile
+os.environ["TORCH_LOGS"] = "+dynamo"
+os.environ["TORCHDYNAMO_DISABLE"] = "1"  # Vypne torch.compile úplne
+torch._dynamo.config.suppress_errors = True
 
 #laod model into cache
 def initialize_model(model_id):

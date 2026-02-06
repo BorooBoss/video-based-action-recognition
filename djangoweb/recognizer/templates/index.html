@@ -336,14 +336,14 @@
             "STANDARD CAPTION": {needsInput: false},
             "DETAILED CAPTION": {needsInput: false},
             "VQA": {needsInput: true, placeholder: "Ask model anything..."},
-            "DETECT": {needsInput: true, placeholder: "example: person, car, tree..."}
+            "DETECT": {needsInput: true, placeholder: "example: person; car; tree..."}
         },
         "google/paligemma2-3b-mix-224": {
             "SIMPLE CAPTION": {needsInput: false},
             "STANDARD CAPTION": {needsInput: false},
             "DETAILED CAPTION": {needsInput: false},
             "VQA": {needsInput: true, placeholder: "Ask model anything..."},
-            "DETECT": {needsInput: true, placeholder: "example: person, car, tree..."}
+            "DETECT": {needsInput: true, placeholder: "example: person; car; tree..."}
         },
         "microsoft/Florence-2-large": {
             "SIMPLE CAPTION": {needsInput: false},
@@ -380,6 +380,12 @@
         const oldCheckboxContainer = document.getElementById('prompt-checkboxes');
         if (oldCheckboxContainer) {
             oldCheckboxContainer.remove();
+        }
+
+        // Remove old error message
+        const oldError = document.getElementById('prompt-error');
+        if (oldError) {
+            oldError.remove();
         }
 
         const checkboxContainer = document.createElement('div');
@@ -426,10 +432,22 @@
                 checkbox.addEventListener('change', (e) => {
                     selectedPrompts[promptName] = e.target.checked;
                     inputField.style.display = e.target.checked ? 'block' : 'none';
+
+                    // Clear validation error when checkbox is checked
+                    if (e.target.checked) {
+                        const analyzeButton = document.querySelector('button[type="submit"]');
+                        analyzeButton.setCustomValidity('');
+                    }
                 });
             } else {
                 checkbox.addEventListener('change', (e) => {
                     selectedPrompts[promptName] = e.target.checked;
+
+                    // Clear validation error when checkbox is checked
+                    if (e.target.checked) {
+                        const analyzeButton = document.querySelector('button[type="submit"]');
+                        analyzeButton.setCustomValidity('');
+                    }
                 });
             }
 
@@ -739,6 +757,17 @@
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        const checkedPrompts = Object.keys(selectedPrompts).filter(key => selectedPrompts[key]);
+        const analyzeButton = document.querySelector('button[type="submit"]');
+
+        if (checkedPrompts.length === 0) {
+            analyzeButton.setCustomValidity('Vyberte aspoň jeden prompt.');
+            analyzeButton.reportValidity();
+            return;
+        }
+
+        analyzeButton.setCustomValidity('');
+
         //create FormData object for sending data to backend
         const formData = new FormData();
 
@@ -746,12 +775,6 @@
         formData.append('image', imageInput.files[0]);
         formData.append('model', modelSelect.value);
 
-        const checkedPrompts = Object.keys(selectedPrompts).filter(key => selectedPrompts[key]);
-        //if no prompts checked
-        if (checkedPrompts.length === 0) {
-            alert('Select at least one prompt');
-            return;
-        }
         //add prompts to array
         checkedPrompts.forEach(promptName => {
             formData.append('selected_prompts[]', promptName);

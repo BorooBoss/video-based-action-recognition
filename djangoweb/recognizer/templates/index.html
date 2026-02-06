@@ -11,6 +11,7 @@
         :root {
             --brand-blue: #0a6cff;
             --brand-dark: #053b8a;
+            --brand-cobalt: #3555ff;
         }
 
         .hero.is-brand {
@@ -91,6 +92,79 @@
 
         #thumbnails img:hover {
             border-color: var(--brand-blue);
+        }
+
+        /* main slider with pin above */
+        #frame-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #555353;
+            outline: none;
+            margin: 1.5rem 0 1rem 0;
+            position: relative;
+            cursor: pointer;
+        }
+
+        /* Track for Firefox */
+        #frame-slider::-moz-range-track {
+            height: 8px;
+            border-radius: 4px;
+            background: transparent;
+        }
+
+        /* Slider thumb/pin for Webkit (Chrome, Safari, Edge) */
+        #frame-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--brand-cobalt) 0%, var(--brand-dark) 100%);
+            cursor: grab;
+            border-radius: 12px 12px 4px 4px;
+            box-shadow: 0 4px 12px rgba(106, 119, 139, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+            position: relative;
+            border: 2px solid white;
+            transform: translateY(-14px); /* Posunie pin nad os */
+        }
+
+        #frame-slider::-webkit-slider-thumb:hover {
+            box-shadow: 0 6px 16px rgba(106, 119, 139, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+            transform: translateY(-14px) scale(1.1);
+        }
+
+        #frame-slider::-webkit-slider-thumb:active {
+            cursor: grabbing;
+            transform: translateY(-14px) scale(1.05);
+        }
+
+        /* Slider thumb/pin for Firefox */
+        #frame-slider::-moz-range-thumb {
+            width: 24px;
+            height: 36px;
+            background: linear-gradient(135deg, var(--brand-cobalt) 0%, var(--brand-dark) 100%);
+            cursor: grab;
+            border-radius: 12px 12px 4px 4px;
+            box-shadow: 0 4px 12px rgba(106, 119, 139, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
+            border: 2px solid white;
+        }
+
+        #frame-slider::-moz-range-thumb:hover {
+            box-shadow: 0 6px 16px rgba(106, 119, 139, 0.4), 0 2px 6px rgba(0, 0, 0, 0.3);
+            transform: scale(1.1);
+        }
+
+        #frame-slider::-moz-range-thumb:active {
+            cursor: grabbing;
+            transform: scale(1.05);
+        }
+
+        /* Container for slider to add padding for pin */
+        #frames-container {
+            margin-top: 1rem;
+            padding-top: 20px; /* Extra space for pin */
         }
     </style>
 </head>
@@ -219,9 +293,9 @@
                             </video>
                         </div>
 
-                        <div id="frames-container" style="margin-top:1rem; display:none;">
+                        <div id="frames-container" style="display:none;">
                             <h5 class="title is-6">Individual Frames</h5>
-                            <input id="frame-slider" type="range" min="0" max="0" value="0" style="width:100%">
+                            <input id="frame-slider" type="range" min="0" max="0" value="0">
                             <img id="frame-preview"
                                  style="width:100%; margin-top:0.5rem; border-radius:6px; display:none;">
                             <div id="frame-info" class="is-size-7 has-text-grey mt-1"></div>
@@ -296,6 +370,7 @@
     let selectedPrompts = {};
     let currentVideoFrames = [];
     let currentBaseUrl = "";
+    let vqaResults = {}; // Store VQA results: {frameIndex: true/false}
 
     //generates prompt checkboxes for models
     function updatePromptOptions() {
@@ -384,10 +459,42 @@
         const time = new Date().toLocaleTimeString();
         consoleLog.textContent = `[${time}] ${msg}\n` + consoleLog.textContent;
     }
+
     //check if the media is video
     function isVideoFile(file) {
         return file.type.startsWith('video/');
     }
+
+    //update slider track colors based on VQA results
+    function updateSliderColors() {
+        const slider = document.getElementById("frame-slider");
+        if (!slider || currentVideoFrames.length === 0) return;
+
+        const totalFrames = currentVideoFrames.length;
+
+        //if no VQA results yet, show default gray
+        if (Object.keys(vqaResults).length === 0) {
+            slider.style.background = '#555353';
+            return;
+        }
+
+        let gradientParts = [];
+
+        //build gradient for each frame segment
+        for (let i = 0; i < totalFrames; i++) {
+            const startPercent = (i / totalFrames) * 100;
+            const endPercent = ((i + 1) / totalFrames) * 100;
+
+            //Green if detection, red if no detection
+            const color = vqaResults[i] === true ? '#00cc66' : '#ff4444';
+
+            gradientParts.push(`${color} ${startPercent}%`);
+            gradientParts.push(`${color} ${endPercent}%`);
+        }
+
+        slider.style.background = `linear-gradient(to right, ${gradientParts.join(', ')})`;
+    }
+
     //extract frames from video
     async function loadFrames(file) {
         log('Extracting frames from video...');
@@ -440,8 +547,7 @@
                 img.style.cursor = "pointer";
                 const idx = i;
 
-                img.title =
-                        `Index: ${idx}\n`;
+                img.title = `Index: ${idx}\n`;
 
                 img.onclick = () => {
                     slider.value = i;
@@ -460,12 +566,17 @@
                 updateFrameWithInfo(slider.value);
             };
 
+            //reset VQA results for new video
+            vqaResults = {};
+            updateSliderColors();
+
             document.getElementById("frames-container").style.display = "block";
         } catch (err) {
             log('Frame extraction error: ' + err);
             console.error(err);
         }
     }
+
     //add info under every frame
     function updateFrameWithInfo(i) {
         const f = currentVideoFrames[i];
@@ -518,6 +629,7 @@
             }
         });
     }
+
     //main javascript function
     imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
@@ -581,7 +693,6 @@
                         previewVideo.src = event.target.result;
                         log('Uploaded video preview.');
 
-                        //
                         await loadFrames(file);
                     };
                     reader.readAsDataURL(file);
@@ -613,6 +724,7 @@
         consoleLog.textContent = 'Cleared.';
         document.getElementById("frames-container").style.display = "none";
         currentVideoFrames = [];
+        vqaResults = {};
         updatePromptOptions();
 
         //clear frames on server
@@ -664,17 +776,54 @@
 
             progress.value = 50;
             const data = await response.json();
-            //currentVideoFrames = data.frames;
             log('Response from server received.');
             console.log('Full response:', data);
 
             if (data.results) {
                 let displayText = `Model: ${data.model}\n`;
-                //displayText += `Type: ${data.is_video ? 'Video Analysis' : 'Single Image Analysis'}\n`;
-                //displayText += `------------------------------------------\n\n`;
 
                 const annotatedFramesMap = {};
+                vqaResults = {}; // Reset results
 
+                //first pass - extract VQA results for slider coloring
+                data.results.forEach((frameData, frameIndex) => {
+                    frameData.analysis.forEach((res) => {
+                        //check if prompt is VQA
+                        if (res.prompt_name && res.prompt_name.toUpperCase().includes('VQA')) {
+                            const resultText = (typeof res.result === 'string'
+                                            ? res.result
+                                            : JSON.stringify(res.result)
+                            ).toLowerCase().trim();
+
+                            console.log(`Frame ${frameIndex} VQA result:`, resultText);
+
+                            //detection keywords
+                            const isPositive = //GREEN
+                                    resultText.includes('yes') ||
+                                    resultText.includes('gun') ||
+                                    resultText.includes('weapon') ||
+                                    resultText.includes('pistol') ||
+                                    resultText.includes('firearm') ||
+                                    resultText.includes('detected') ||
+                                    resultText.includes('present') ||
+                                    resultText.includes('visible') ||
+                                    resultText.startsWith('yes,');
+
+                            const isNegative = //RED
+                                    resultText.includes('no') ||
+                                    resultText.includes('not') ||
+                                    resultText.includes('none') ||
+                                    resultText.includes('absent') ||
+                                    resultText.startsWith('no,');
+
+                            // Set detection status (positive overrides if both found)
+                            vqaResults[frameIndex] = isPositive && !isNegative;
+                        }
+                    });
+                });
+                updateSliderColors();
+
+                //second pass: build display text and process annotations
                 data.results.forEach((frameData) => {
                     if (data.is_video) {
                         const timeLabel = parseFloat(frameData.timestamp).toFixed(1).replace('.', ',');
@@ -693,16 +842,16 @@
                         }
                     });
 
-                    //displayText += `------------------------------------------\n`;
-
                     if (!data.is_video && frameData.analysis[0]?.annotated_image) {
                         previewVideo.style.display = 'none';
                         preview.style.display = 'block';
                         preview.src = frameData.analysis[0].annotated_image;
                     }
                 });
+
                 //print results to resultbox
                 resultBox.textContent = displayText;
+
                 //if detect - display bboxes
                 if (data.is_video && Object.keys(annotatedFramesMap).length > 0) {
                     updateThumbnailsWithAnnotations(annotatedFramesMap);

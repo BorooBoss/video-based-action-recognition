@@ -116,7 +116,7 @@ def recognize(request):
         frames_to_process = []
         if is_video:
             #get array of all .jpg temp_frames
-            frame_files = sorted([f for f in os.listdir(TEMP_FRAMES_DIR) if f.endswith('.jpg')])
+            frame_files = sorted([f for f in os.listdir(TEMP_FRAMES_DIR) if f.endswith('.jpg') and not f.startswith('annotated_')])
             for f in frame_files:
                 frames_to_process.append(os.path.join(TEMP_FRAMES_DIR, f))
         else:

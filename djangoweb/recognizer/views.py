@@ -190,9 +190,8 @@ def recognize(request):
                         else:
                             continue
 
-                        all_results.append(result)
-
                         detections_dict = None
+
 
                         if isinstance(raw_result, list) and len(raw_result) > 0:
                             detections_dict = raw_result
@@ -207,6 +206,16 @@ def recognize(request):
                                 all_detections.extend(detections_dict)
                             elif isinstance(detections_dict, dict):
                                 all_detections.append(detections_dict)
+
+
+                        #remove florence prompt <OD>/<VQA> from origin output
+                        if isinstance(raw_result, dict) and len(raw_result) == 1:
+                            result = list(raw_result.values())[0]
+                        elif isinstance(raw_result, dict) and ui.full_prompt in raw_result:
+                            result = raw_result[ui.full_prompt]
+                        else:
+                            result = raw_result
+                        all_results.append(result)
 
                     if all_detections:
                         #for video: save into TEMP_FRAMES_DIR, for one frame: /tmp

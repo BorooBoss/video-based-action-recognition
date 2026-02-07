@@ -3,12 +3,12 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.http import JsonResponse, FileResponse, HttpResponse
 
-from source_files.models import florence, run_paligemma2
+from src.models import florence, run_paligemma2
 from recognizer import subprocess
-from source_files import draw_objects, user_input
-from source_files.video.ffmpeg_convert import convert_to_mp4
-from source_files.vision_adapter import normalize_output
-from source_files.video.frames import clear_temp_frames, ensure_temp_frames_dir, video_to_frames, TEMP_FRAMES_DIR
+from src import draw_objects, user_input
+from src.video.ffmpeg_convert import convert_to_mp4
+from src.vision_adapter import normalize_output
+from src.video.frames import clear_temp_frames, ensure_temp_frames_dir, video_to_frames, TEMP_FRAMES_DIR
 
 
 @csrf_exempt #load video and return temp frames

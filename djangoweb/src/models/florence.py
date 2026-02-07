@@ -1,8 +1,8 @@
 import torch
 from PIL import Image
 from transformers import AutoProcessor, AutoModelForCausalLM
-from source_files.current_cache import cache
-from source_files.vision_adapter import normalize_output
+from src.cache_manager import cache
+from src.vision_adapter import normalize_output
 
 #laod model into cache
 def initialize_model(model_id):

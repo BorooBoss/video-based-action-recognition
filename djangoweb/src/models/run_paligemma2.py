@@ -7,7 +7,7 @@ from transformers import (
 )
 from huggingface_hub import login
 from dotenv import load_dotenv
-from source_files.current_cache import cache
+from src.cache_manager import cache
 
 #DISABLE CUDA GRAPHS + torch.compile
 os.environ["TORCH_LOGS"] = "+dynamo"

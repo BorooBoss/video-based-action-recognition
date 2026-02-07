@@ -13,7 +13,7 @@ class FastAPIServiceManager:
             'qwen': {
                 'port': 8001,
                 'url': 'http://127.0.0.1:8001/health',
-                'script': '/home/xpekarcik/video-based-action-recognition/djangoweb/fastapi_services/qwen_service.py',
+                'script': '/home/xpekarcik/video-based-action-recognition/djangoweb/fastapi_services/service_qwen.py',
                 'env': 'qwen_env',
                 'python': '/home/xpekarcik/anaconda3/envs/qwen_env/bin/python',
                 'process': None,
@@ -22,7 +22,7 @@ class FastAPIServiceManager:
             'internvl': {
                 'port': 8002,
                 'url': 'http://127.0.0.1:8002/health',
-                'script': '/home/xpekarcik/video-based-action-recognition/djangoweb/fastapi_services/internvl_service.py',
+                'script': '/home/xpekarcik/video-based-action-recognition/djangoweb/fastapi_services/service_internvl.py',
                 'env': 'internvl_env',
                 'python': '/home/xpekarcik/anaconda3/envs/internvl_env/bin/python',
                 'process': None,

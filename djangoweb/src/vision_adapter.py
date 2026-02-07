@@ -1,5 +1,5 @@
-from source_files.adapters import florence_adapter
-from source_files.adapters import paligemma_adapter
+from src.adapters import florence_adapter
+from src.adapters import paligemma_adapter
 
 #open convert/normalize for used model - works with detect prompts
 ADAPTERS = {

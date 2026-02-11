@@ -73,7 +73,6 @@ def save_yolo_labels(path, boxes, classes):
             f.write(f"{cls} {' '.join(map(str, box))}\n")
 
 image_files = [f for f in os.listdir(IMAGES_DIR) if f.endswith((".jpg", ".png"))]
-git s
 generated = 0
 idx = 0
 

@@ -47,16 +47,24 @@ transform = A.Compose([
     min_visibility=0.3
 ))
 
-# -----------------------------------------------------
+
+
 
 def load_yolo_labels(path):
     boxes = []
     classes = []
+    if not os.path.exists(path):
+        return boxes, classes
+
     with open(path, "r") as f:
         for line in f:
-            c, x, y, w, h = map(float, line.split())
-            boxes.append([x, y, w, h])
-            classes.append(int(c))
+            parts = line.strip().split()
+            if len(parts) != 5:
+                continue
+            c = int(parts[0])
+            coords = [float(x) for x in parts[1:]]
+            boxes.append(coords)
+            classes.append(c)
     return boxes, classes
 
 def save_yolo_labels(path, boxes, classes):
@@ -65,7 +73,7 @@ def save_yolo_labels(path, boxes, classes):
             f.write(f"{cls} {' '.join(map(str, box))}\n")
 
 image_files = [f for f in os.listdir(IMAGES_DIR) if f.endswith((".jpg", ".png"))]
-
+git s
 generated = 0
 idx = 0
 

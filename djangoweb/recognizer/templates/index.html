@@ -127,7 +127,7 @@
             box-shadow: 0 4px 12px rgba(106, 119, 139, 0.4), 0 2px 4px rgba(0, 0, 0, 0.2);
             position: relative;
             border: 2px solid white;
-            transform: translateY(-14px); /* Posunie pin nad os */
+            transform: translateY(-14px);
         }
 
         #frame-slider::-webkit-slider-thumb:hover {
@@ -164,7 +164,106 @@
         /* Container for slider to add padding for pin */
         #frames-container {
             margin-top: 1rem;
-            padding-top: 20px; /* Extra space for pin */
+            padding-top: 20px;
+        }
+
+        /* timeline switch */
+        #vqa-timeline-wrapper {
+            display: none;
+            margin-bottom: 0.5rem;
+        }
+
+        .timeline-nav {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: #f0f5ff;
+            border: 1px solid rgba(10, 108, 255, 0.15);
+            border-radius: 10px;
+            padding: 7px 12px;
+        }
+
+        .timeline-nav-btn {
+            background: white;
+            border: 1px solid rgba(9, 103, 228, 0.25);
+            border-radius: 6px;
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--brand-cobalt);
+            font-size: 13px;
+            flex-shrink: 0;
+            transition: background 0.15s, box-shadow 0.15s;
+            user-select: none;
+        }
+
+        .timeline-nav-btn:hover:not(:disabled) {
+            background: #e8f0ff;
+            box-shadow: 0 2px 6px rgba(10, 108, 255, 0.15);
+        }
+
+        .timeline-nav-btn:disabled {
+            opacity: 0.35;
+            cursor: not-allowed;
+        }
+
+        .timeline-label {
+            flex: 1;
+            min-width: 0;
+            text-align: center;
+        }
+
+        .timeline-label-vqa {
+            font-size: 10px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--brand-blue);
+            opacity: 0.7;
+            line-height: 1;
+            margin-bottom: 2px;
+        }
+
+        .timeline-label-question {
+            font-size: 12px;
+            font-weight: 600;
+            color: #1a2e5a;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* counter e.g. "2 / 3" */
+        .timeline-counter {
+            font-size: 11px;
+            color: #888;
+            flex-shrink: 0;
+            min-width: 32px;
+            text-align: center;
+        }
+
+        /* frames legend */
+        .timeline-legend {
+            display: flex;
+            gap: 14px;
+            margin-top: 2px;
+            font-size: 11px;
+            color: #666;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .legend-swatch {
+            width: 14px;
+            height: 8px;
+            border-radius: 2px;
         }
     </style>
 </head>
@@ -202,15 +301,11 @@
                                         <div class="control">
                                             <div class="select is-fullwidth">
                                                 <select name="model" id="model-select">
-                                                    <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224
-                                                    </option>
-                                                    <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224
-                                                    </option>
+                                                    <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224</option>
+                                                    <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224</option>
                                                     <option value="microsoft/Florence-2-large">florence-2-large</option>
-                                                    <option value="microsoft/Florence-2-large-ft">florence-2-large-ft
-                                                    </option>
-                                                    <option value="Qwen/Qwen3-VL-2B-Instruct">qwen3-vl-2b-instruct
-                                                    </option>
+                                                    <option value="microsoft/Florence-2-large-ft">florence-2-large-ft</option>
+                                                    <option value="Qwen/Qwen3-VL-2B-Instruct">qwen3-vl-2b-instruct</option>
                                                     <option value="OpenGVLab/InternVL3_5-2B">internvl3_5-2b</option>
                                                 </select>
                                             </div>
@@ -233,8 +328,7 @@
                                 <label class="label">Prompt type</label>
                                 <div class="control">
                                     <div class="select is-fullwidth">
-                                        <select name="prompt_type" id="prompt-type-select">
-                                        </select>
+                                        <select name="prompt_type" id="prompt-type-select"></select>
                                     </div>
                                 </div>
                             </div>
@@ -246,11 +340,9 @@
                                         <input class="file-input" type="file" name="image" id="image-input"
                                                accept="image/*,video/*" required>
                                         <span class="file-cta">
-                        <span class="file-icon">
-                          <i class="fas fa-upload"></i>
-                        </span>
-                        <span class="file-label">Choose File…</span>
-                      </span>
+                                            <span class="file-icon"><i class="fas fa-upload"></i></span>
+                                            <span class="file-label">Choose File…</span>
+                                        </span>
                                         <span class="file-name" id="file-name">No File Selected</span>
                                     </label>
                                 </div>
@@ -264,7 +356,6 @@
                                     <button class="button is-light" type="button" id="reset-btn">Reset</button>
                                 </div>
                             </div>
-
                         </form>
                     </div>
                 </div>
@@ -294,8 +385,38 @@
                         </div>
 
                         <div id="frames-container" style="display:none;">
-                            <h5 class="title is-6">Individual Frames</h5>
+                            <h5 class="title is-6" style="margin-bottom: 0.5rem;">Individual Frames</h5>
+
+                            <!-- VQA TIMELINE SWITCHER - shown only when there are VQA results -->
+                            <div id="vqa-timeline-wrapper">
+                                <div class="timeline-nav">
+                                    <button class="timeline-nav-btn" id="timeline-prev" title="Previous question">
+                                        <i class="fas fa-chevron-left"></i>
+                                    </button>
+                                    <div class="timeline-label">
+                                        <div class="timeline-label-vqa">VQA Timeline</div>
+                                        <div class="timeline-label-question" id="timeline-question-text">—</div>
+                                    </div>
+                                    <div class="timeline-counter" id="timeline-counter">1 / 1</div>
+                                    <button class="timeline-nav-btn" id="timeline-next" title="Next question">
+                                        <i class="fas fa-chevron-right"></i>
+                                    </button>
+                                </div>
+                            </div>
+
                             <input id="frame-slider" type="range" min="0" max="0" value="0">
+
+                            <!-- Legend below slider, only visible when timelines exist -->
+                            <div class="timeline-legend" id="timeline-legend" style="display:none;">
+                                <div class="legend-item">
+                                    <div class="legend-swatch" style="background:#00cc66;"></div>
+                                    <span>Detected</span>
+                                </div>
+                                <div class="legend-item">
+                                    <div class="legend-swatch" style="background:#ff4444;"></div>
+                                    <span>Not Detected</span>
+                                </div>
+                            </div>
                             <img id="frame-preview"
                                  style="width:100%; margin-top:0.5rem; border-radius:6px; display:none;">
                             <div id="frame-info" class="is-size-7 has-text-grey mt-1"></div>
@@ -329,7 +450,6 @@
 </footer>
 
 <script>
-
     const PROMPT_MAP = {
         "google/paligemma2-3b-pt-224": {
             "SIMPLE CAPTION": {needsInput: false},
@@ -370,23 +490,103 @@
     let selectedPrompts = {};
     let currentVideoFrames = [];
     let currentBaseUrl = "";
-    let vqaResults = {}; // Store VQA results: {frameIndex: true/false}
 
-    //generates prompt checkboxes for models
+    // multi-vqa TIMELINE STATE =====
+    // vqaTimelines = [ { question: "is there a gun?", results: {0: true, 1: false, ...} }, ... ]
+    let vqaTimelines = [];
+    let activeTimelineIndex = 0;
+
+    // timelines switch
+    function switchTimeline(index) {
+        if (index < 0 || index >= vqaTimelines.length) return;
+        activeTimelineIndex = index;
+
+        const tl = vqaTimelines[index];
+        const q = tl.question;
+
+        // header label: DETECT TIMELINE or VQA TIMELINE
+        const headerEl = document.querySelector('.timeline-label-vqa');
+        if (headerEl) {
+            headerEl.textContent = tl.isDetect ? 'DETECT TIMELINE' : 'VQA TIMELINE';
+        }
+
+        document.getElementById('timeline-question-text').textContent =
+                q.length > 52 ? q.substring(0, 49) + '…' : q;
+
+        document.getElementById('timeline-counter').textContent =
+                `${index + 1} / ${vqaTimelines.length}`;
+
+        document.getElementById('timeline-prev').disabled = (index === 0);
+        document.getElementById('timeline-next').disabled = (index === vqaTimelines.length - 1);
+
+        updateSliderColors();
+    }
+
+    function renderVqaTimelineUI() {
+        const wrapper = document.getElementById('vqa-timeline-wrapper');
+        const legend  = document.getElementById('timeline-legend');
+
+        if (vqaTimelines.length === 0) {
+            wrapper.style.display = 'none';
+            legend.style.display  = 'none';
+            return;
+        }
+
+        wrapper.style.display = 'block';
+        legend.style.display  = 'flex';
+        activeTimelineIndex   = 0;
+        switchTimeline(0);
+    }
+
+    document.getElementById('timeline-prev').addEventListener('click', () => {
+        switchTimeline(activeTimelineIndex - 1);
+    });
+    document.getElementById('timeline-next').addEventListener('click', () => {
+        switchTimeline(activeTimelineIndex + 1);
+    });
+
+    // update slider colors based on current timeline
+    function updateSliderColors() {
+        const slider = document.getElementById("frame-slider");
+        if (!slider || currentVideoFrames.length === 0) return;
+
+        if (vqaTimelines.length === 0) {
+            slider.style.background = '#555353';
+            return;
+        }
+
+        const results = vqaTimelines[activeTimelineIndex]?.results || {};
+        const totalFrames = currentVideoFrames.length;
+        let gradientParts = [];
+
+        //build gradient for each frame segment
+        for (let i = 0; i < totalFrames; i++) {
+            const startPercent = (i / totalFrames) * 100;
+            const endPercent = ((i + 1) / totalFrames) * 100;
+
+            let color; //green if detection, red if no detection
+            if (results[i] === true)
+                color = '#00cc66';
+            else
+                color = '#ff4444';
+
+
+            gradientParts.push(`${color} ${startPercent}%`);
+            gradientParts.push(`${color} ${endPercent}%`);
+        }
+
+        slider.style.background = `linear-gradient(to right, ${gradientParts.join(', ')})`;
+    }
+
+    // generates prompt checkboxes for models
     function updatePromptOptions() {
         const selectedModel = modelSelect.value;
         const availablePrompts = PROMPT_MAP[selectedModel] || {};
 
         const oldCheckboxContainer = document.getElementById('prompt-checkboxes');
-        if (oldCheckboxContainer) {
-            oldCheckboxContainer.remove();
-        }
-
-        // Remove old error message
+        if (oldCheckboxContainer) oldCheckboxContainer.remove();
         const oldError = document.getElementById('prompt-error');
-        if (oldError) {
-            oldError.remove();
-        }
+        if (oldError) oldError.remove();
 
         const checkboxContainer = document.createElement('div');
         checkboxContainer.id = 'prompt-checkboxes';
@@ -432,21 +632,15 @@
                 checkbox.addEventListener('change', (e) => {
                     selectedPrompts[promptName] = e.target.checked;
                     inputField.style.display = e.target.checked ? 'block' : 'none';
-
-                    // Clear validation error when checkbox is checked
                     if (e.target.checked) {
-                        const analyzeButton = document.querySelector('button[type="submit"]');
-                        analyzeButton.setCustomValidity('');
+                        document.querySelector('button[type="submit"]').setCustomValidity('');
                     }
                 });
             } else {
                 checkbox.addEventListener('change', (e) => {
                     selectedPrompts[promptName] = e.target.checked;
-
-                    // Clear validation error when checkbox is checked
                     if (e.target.checked) {
-                        const analyzeButton = document.querySelector('button[type="submit"]');
-                        analyzeButton.setCustomValidity('');
+                        document.querySelector('button[type="submit"]').setCustomValidity('');
                     }
                 });
             }
@@ -472,45 +666,13 @@
     const progress = document.getElementById('progress');
     const resetBtn = document.getElementById('reset-btn');
 
-    //logging
     function log(msg) {
         const time = new Date().toLocaleTimeString();
         consoleLog.textContent = `[${time}] ${msg}\n` + consoleLog.textContent;
     }
-
     //check if the media is video
     function isVideoFile(file) {
         return file.type.startsWith('video/');
-    }
-
-    //update slider track colors based on VQA results
-    function updateSliderColors() {
-        const slider = document.getElementById("frame-slider");
-        if (!slider || currentVideoFrames.length === 0) return;
-
-        const totalFrames = currentVideoFrames.length;
-
-        //if no VQA results yet, show default gray
-        if (Object.keys(vqaResults).length === 0) {
-            slider.style.background = '#555353';
-            return;
-        }
-
-        let gradientParts = [];
-
-        //build gradient for each frame segment
-        for (let i = 0; i < totalFrames; i++) {
-            const startPercent = (i / totalFrames) * 100;
-            const endPercent = ((i + 1) / totalFrames) * 100;
-
-            //Green if detection, red if no detection
-            const color = vqaResults[i] === true ? '#00cc66' : '#ff4444';
-
-            gradientParts.push(`${color} ${startPercent}%`);
-            gradientParts.push(`${color} ${endPercent}%`);
-        }
-
-        slider.style.background = `linear-gradient(to right, ${gradientParts.join(', ')})`;
     }
 
     //extract frames from video
@@ -525,15 +687,11 @@
                 method: "POST",
                 body: fd
             });
-
-            if (!res.ok) {
-                throw new Error('Failed to extract frames');
-            }
+            if (!res.ok) throw new Error('Failed to extract frames');
 
             const data = await res.json();
             currentVideoFrames = data.frames;
             const base = data.base_url;
-
             log(`Extracted ${data.total} frames`);
 
             const slider = document.getElementById("frame-slider");
@@ -548,9 +706,8 @@
             slider.max = data.frames.length - 1;
 
             //load first frame
-            framePreview.src = base + data.frames[0].file + '?t=' + Date.now(); // Cache busting
+            framePreview.src = base + data.frames[0].file + '?t=' + Date.now();
             framePreview.style.display = 'block';
-
             currentBaseUrl = base;
 
             data.frames.forEach((f, i) => {
@@ -563,29 +720,25 @@
                 img.src = base + f.file + '?t=' + Date.now();
                 img.style.height = "60px";
                 img.style.cursor = "pointer";
-                const idx = i;
-
-                img.title = `Index: ${idx}\n`;
-
+                img.title = `Index: ${i}`;
                 img.onclick = () => {
                     slider.value = i;
                     updateFrameWithInfo(i);
                 };
 
                 const label = document.createElement("div");
-                label.innerHTML = `<b>#${idx}</b><br>`;
+                label.innerHTML = `<b>#${i}</b><br>`;
 
                 wrapper.appendChild(img);
                 wrapper.appendChild(label);
                 thumbs.appendChild(wrapper);
             });
 
-            slider.oninput = () => {
-                updateFrameWithInfo(slider.value);
-            };
+            slider.oninput = () => { updateFrameWithInfo(slider.value); };
 
-            //reset VQA results for new video
-            vqaResults = {};
+            // Reset timelines for new video
+            vqaTimelines = [];
+            renderVqaTimelineUI();
             updateSliderColors();
 
             document.getElementById("frames-container").style.display = "block";
@@ -594,7 +747,6 @@
             console.error(err);
         }
     }
-
     //add info under every frame
     function updateFrameWithInfo(i) {
         const f = currentVideoFrames[i];
@@ -608,27 +760,21 @@
         const annotatedUrl = currentBaseUrl + annotatedFilename;
 
         const testImg = new Image();
-        testImg.onload = () => {
-            framePreview.src = annotatedUrl + '?t=' + Date.now();
-        };
-        testImg.onerror = () => {
-            framePreview.src = currentBaseUrl + f.file + '?t=' + Date.now();
-        };
+        testImg.onload = () => { framePreview.src = annotatedUrl + '?t=' + Date.now(); };
+        testImg.onerror = () => { framePreview.src = currentBaseUrl + f.file + '?t=' + Date.now(); };
         testImg.src = annotatedUrl;
 
         framePreview.style.display = "block";
-
         frameInfo.innerHTML = `
-          <b>Capture #${f.index}</b> |
-          Time: ${f.time_sec}.0 |
-          Frame index: ${f.frame_idx}
+            <b>Capture #${f.index}</b> |
+            Time: ${f.time_sec}.0 |
+            Frame index: ${f.frame_idx}
         `;
 
         if (previewVideo.duration) {
             previewVideo.currentTime = time;
         }
     }
-
     //update frames with annotations if detect prompt was called
     function updateThumbnailsWithAnnotations(annotatedFramesMap) {
         const thumbs = document.getElementById("thumbnails");
@@ -637,18 +783,14 @@
         thumbImages.forEach((img, idx) => {
             const frameData = currentVideoFrames[idx];
             if (!frameData) return;
-
-            const frameName = frameData.file;
-
-            if (annotatedFramesMap[frameName]) {
-                const annotatedUrl = annotatedFramesMap[frameName];
-                img.src = annotatedUrl + '?t=' + Date.now();
+            if (annotatedFramesMap[frameData.file]) {
+                img.src = annotatedFramesMap[frameData.file] + '?t=' + Date.now();
                 img.style.border = "2px solid #00ff00";
             }
         });
     }
 
-    //main javascript function
+    //main javascript function - file input
     imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
@@ -661,6 +803,7 @@
             document.getElementById("frame-preview").style.display = "none";
             document.getElementById("frame-slider").value = 0;
             currentVideoFrames = [];
+            vqaTimelines = [];
 
             //clear frames on server
             try {
@@ -673,6 +816,7 @@
             if (isVideoFile(file)) {
                 preview.style.display = 'none';
                 previewVideo.style.display = 'block';
+
                 //check if format is .avi/.mpeg/.mpg -> will call conversion
                 const needsConversion = file.name.toLowerCase().endsWith('.avi') ||
                         file.name.toLowerCase().endsWith('.mpeg') ||
@@ -682,13 +826,11 @@
                     log('Converting video to MP4...');
                     const formData = new FormData();
                     formData.append('video', file);
-
                     try {
                         const response = await fetch('/recognizer/convert_video/', {
                             method: 'POST',
                             body: formData
                         });
-
                         if (response.ok) {
                             const blob = await response.blob();
                             previewVideo.src = URL.createObjectURL(blob);
@@ -710,7 +852,6 @@
                     reader.onload = async (event) => {
                         previewVideo.src = event.target.result;
                         log('Uploaded video preview.');
-
                         await loadFrames(file);
                     };
                     reader.readAsDataURL(file);
@@ -718,7 +859,6 @@
             } else {
                 previewVideo.style.display = 'none';
                 preview.style.display = 'block';
-
                 const reader = new FileReader();
                 reader.onload = (event) => {
                     preview.src = event.target.result;
@@ -731,6 +871,7 @@
         }
     });
 
+    // ===== RESET =====
     resetBtn.addEventListener('click', async () => {
         form.reset();
         preview.style.display = 'block';
@@ -742,7 +883,8 @@
         consoleLog.textContent = 'Cleared.';
         document.getElementById("frames-container").style.display = "none";
         currentVideoFrames = [];
-        vqaResults = {};
+        vqaTimelines = []; // clears both VQA and DETECT timelines
+        renderVqaTimelineUI();
         updatePromptOptions();
 
         //clear frames on server
@@ -754,6 +896,7 @@
         }
     });
 
+    // form submit
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -765,12 +908,10 @@
             analyzeButton.reportValidity();
             return;
         }
-
         analyzeButton.setCustomValidity('');
 
         //create FormData object for sending data to backend
         const formData = new FormData();
-
         //append image,model,prompts
         formData.append('image', imageInput.files[0]);
         formData.append('model', modelSelect.value);
@@ -804,49 +945,146 @@
 
             if (data.results) {
                 let displayText = `Model: ${data.model}\n`;
-
                 const annotatedFramesMap = {};
-                vqaResults = {}; // Reset results
 
-                //first pass - extract VQA results for slider coloring
+                // BUILD VQA TIMELINE
+                function splitVqaQuestions(rawQuestion) {
+                    const trimmed = rawQuestion.trim();
+                    if (!trimmed) return [trimmed];
+                    if (trimmed.includes(';')) {
+                        return trimmed.split(';').map(q => q.trim()).filter(q => q.length > 0);
+                    }
+                    const byQuestion = trimmed.match(/[^?]+\?/g);
+                    if (byQuestion && byQuestion.length > 1) {
+                        return byQuestion.map(q => q.trim()).filter(q => q.length > 0);
+                    }
+                    return [trimmed];
+                }
+
+                const vqaPromptEntries = checkedPrompts
+                        .filter(p => p.toUpperCase().includes('VQA'))
+                        .map(promptName => {
+                            const inputField = document.getElementById(`input-${promptName}`);
+                            const rawQuestion = inputField ? inputField.value.trim() : '';
+                            const subQuestions = splitVqaQuestions(rawQuestion);
+                            return { promptName, subQuestions: subQuestions.length ? subQuestions : [rawQuestion || promptName] };
+                        });
+
+                // Build flat list of timelines: one per sub-question
+                const newTimelines = [];
+                vqaPromptEntries.forEach(entry => {
+                    entry.subQuestions.forEach(q => {
+                        newTimelines.push({ question: q, promptName: entry.promptName, results: {} });
+                    });
+                });
+
+                // Fill results: iterate frames, find VQA analysis items
                 data.results.forEach((frameData, frameIndex) => {
                     frameData.analysis.forEach((res) => {
-                        //check if prompt is VQA
-                        if (res.prompt_name && res.prompt_name.toUpperCase().includes('VQA')) {
-                            const resultText = (typeof res.result === 'string'
-                                            ? res.result
-                                            : JSON.stringify(res.result)
+                        if (!res.prompt_name || !res.prompt_name.toUpperCase().includes('VQA')) return;
+
+                        // result may be a single string OR an array (one item per sub-question)
+                        const rawResult = res.result;
+                        const resultsArray = Array.isArray(rawResult) ? rawResult : [rawResult];
+
+                        // Find the timelines that belong to this prompt
+                        const matchingTimelines = newTimelines.filter(t => t.promptName === res.prompt_name);
+
+                        resultsArray.forEach((singleResult, subIdx) => {
+                            const tl = matchingTimelines[subIdx];
+                            if (!tl) return;
+
+                            const resultText = (typeof singleResult === 'string'
+                                            ? singleResult
+                                            : JSON.stringify(singleResult)
                             ).toLowerCase().trim();
 
-                            console.log(`Frame ${frameIndex} VQA result:`, resultText);
-
-                            //detection keywords
-                            const isPositive = //GREEN
-                                    resultText.includes('yes') ||
+                            const isPositive =
+                                    resultText.startsWith('yes') ||
                                     resultText.includes('gun') ||
                                     resultText.includes('weapon') ||
                                     resultText.includes('pistol') ||
                                     resultText.includes('firearm') ||
                                     resultText.includes('detected') ||
                                     resultText.includes('present') ||
-                                    resultText.includes('visible') ||
-                                    resultText.startsWith('yes,');
+                                    resultText.includes('visible');
 
-                            const isNegative = //RED
-                                    resultText.includes('no') ||
+                            const isNegative =
+                                    resultText.startsWith('no') ||
                                     resultText.includes('not') ||
                                     resultText.includes('none') ||
-                                    resultText.includes('absent') ||
-                                    resultText.startsWith('no,');
+                                    resultText.includes('absent');
 
-                            // Set detection status (positive overrides if both found)
-                            vqaResults[frameIndex] = isPositive && !isNegative;
-                        }
+                            tl.results[frameIndex] = isPositive && !isNegative;
+                        });
                     });
                 });
-                updateSliderColors();
 
-                //second pass: build display text and process annotations
+                // Only keep timelines that received data
+                vqaTimelines = newTimelines.filter(t => Object.keys(t.results).length > 0);
+
+                // BUILD DETECT TIMELINES
+                const modelName = data.model ? data.model.toLowerCase() : '';
+                if (modelName.includes('paligemma')) {
+                    const detectPromptEntries = checkedPrompts
+                            .filter(p => p.toUpperCase() === 'DETECT')
+                            .map(promptName => {
+                                const inputField = document.getElementById(`input-${promptName}`);
+                                const rawInput = inputField ? inputField.value.trim() : '';
+                                // Backend splits DETECT only by ";"
+                                const subLabels = rawInput.includes(';')
+                                        ? rawInput.split(';').map(s => s.trim()).filter(s => s.length > 0)
+                                        : [rawInput || 'object'];
+                                return { promptName, subLabels };
+                            });
+
+                    const detectTimelines = [];
+                    detectPromptEntries.forEach(entry => {
+                        entry.subLabels.forEach(label => {
+                            detectTimelines.push({
+                                question: `detect: ${label}`,
+                                promptName: entry.promptName,
+                                isDetect: true,
+                                detectLabel: label.toLowerCase(),
+                                results: {}
+                            });
+                        });
+                    });
+
+                    data.results.forEach((frameData, frameIndex) => {
+                        frameData.analysis.forEach((res) => {
+                            if (!res.prompt_name || res.prompt_name.toUpperCase() !== 'DETECT') return;
+
+                            const rawResult = res.result;
+                            // Normalize to array of arrays
+                            let subResults;
+                            if (Array.isArray(rawResult) && rawResult.length > 0 && Array.isArray(rawResult[0])) {
+                                // Already array of arrays
+                                subResults = rawResult;
+                            } else if (Array.isArray(rawResult)) {
+                                // Single sub-input — wrap in outer array
+                                subResults = [rawResult];
+                            } else {
+                                subResults = [[]];
+                            }
+
+                            detectTimelines.forEach((tl, tlIdx) => {
+                                if (tl.promptName !== res.prompt_name) return;
+                                const subArr = subResults[tlIdx];
+                                // Found = sub-array exists and has at least one detection
+                                tl.results[frameIndex] = Array.isArray(subArr) && subArr.length > 0;
+                            });
+                        });
+                    });
+
+                    // Merge detect timelines into vqaTimelines (shared switcher)
+                    const filledDetect = detectTimelines.filter(t => Object.keys(t.results).length > 0);
+                    vqaTimelines = vqaTimelines.concat(filledDetect);
+                }
+
+                renderVqaTimelineUI();
+
+                // build display text and annotations
                 data.results.forEach((frameData) => {
                     if (data.is_video) {
                         const timeLabel = parseFloat(frameData.timestamp).toFixed(1).replace('.', ',');
@@ -872,13 +1110,10 @@
                     }
                 });
 
-                //print results to resultbox
                 resultBox.textContent = displayText;
 
-                //if detect - display bboxes
                 if (data.is_video && Object.keys(annotatedFramesMap).length > 0) {
                     updateThumbnailsWithAnnotations(annotatedFramesMap);
-
                     const firstAnnotatedUrl = Object.values(annotatedFramesMap)[0];
                     if (firstAnnotatedUrl) {
                         const framePreview = document.getElementById("frame-preview");
@@ -886,6 +1121,7 @@
                         framePreview.style.display = 'block';
                     }
                 }
+
             } else {
                 resultBox.textContent = `Error: ${data.error || 'unknown error'}`;
                 log('Server returned error');

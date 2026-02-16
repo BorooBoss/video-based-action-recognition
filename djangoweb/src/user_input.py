@@ -44,6 +44,14 @@ class UserInput:
         },
         "OpenGVLab/InternVL3_5-2B": {
             "VQA": "",
+        },
+
+        "../train/paligemma2_weapon_detection" : {
+            "DETECT": "detect",
+            "SIMPLE CAPTION": "cap en",
+            "STANDARD CAPTION": "caption en",
+            "DETAILED CAPTION": "describe en",
+            "VQA": "answer en",
         }
     }
 

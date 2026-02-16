@@ -25,17 +25,32 @@ def initialize_model(model_id):
 
     load_dotenv()
     login(token=os.getenv("HF_TOKEN"))
+    LOCAL_LORA_PATH = os.path.join(os.path.dirname(__file__), "../train/paligemma2_weapon_detection")
+    print(LOCAL_LORA_PATH)
+    BASE_MODEL_ID   = "google/paligemma2-3b-pt-224"
 
     DEVICE = "cuda:0" if torch.cuda.is_available() else "cpu"
     DTYPE = torch.float16 if torch.cuda.is_available() else torch.float32
 
-    model = PaliGemmaForConditionalGeneration.from_pretrained(
-        model_id,
-        torch_dtype=DTYPE,
-        device_map="auto"   # 🔧 OPRAVA
-    ).eval()
+    if "weapon" in model_id.lower():
+        print("INIT TRAINING MODEL")
+        from peft import PeftModel
+        base = PaliGemmaForConditionalGeneration.from_pretrained(
+            BASE_MODEL_ID,
+            torch_dtype=DTYPE,
+            device_map="auto"
+        )
+        model = PeftModel.from_pretrained(base, LOCAL_LORA_PATH).eval()
+        processor = PaliGemmaProcessor.from_pretrained(LOCAL_LORA_PATH)
+    else:
+        print("INIT STANDARD MODEL")
+        model = PaliGemmaForConditionalGeneration.from_pretrained(
+            model_id,
+            torch_dtype=DTYPE,
+            device_map="auto"   # 🔧 OPRAVA
+        ).eval()
 
-    processor = PaliGemmaProcessor.from_pretrained(model_id)
+        processor = PaliGemmaProcessor.from_pretrained(model_id)
     cache.switch_model(model_id, model, processor, DEVICE, DTYPE)
     print(f"MODEL {model_id} LOADED SUCCESSFULLY")
 

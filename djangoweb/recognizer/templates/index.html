@@ -307,6 +307,7 @@
                                                     <option value="microsoft/Florence-2-large-ft">florence-2-large-ft</option>
                                                     <option value="Qwen/Qwen3-VL-2B-Instruct">qwen3-vl-2b-instruct</option>
                                                     <option value="OpenGVLab/InternVL3_5-2B">internvl3_5-2b</option>
+                                                    <option value="../train/paligemma2_weapon_detection">../train/paligemma2_weapon_detection</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -483,7 +484,13 @@
         },
         "OpenGVLab/InternVL3_5-2B": {
             "VQA": {needsInput: true, placeholder: "Ask model anything..."}
-        }
+        },
+        "../train/paligemma2_weapon_detection": {
+            "SIMPLE CAPTION": {needsInput: false},
+            "STANDARD CAPTION": {needsInput: false},
+            "VQA": {needsInput: true, placeholder: "Ask model anything..."},
+            "DETECT": {needsInput: true, placeholder: "example: person; car; tree..."}
+        },
     };
 
     const modelSelect = document.getElementById('model-select');

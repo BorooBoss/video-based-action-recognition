@@ -1,0 +1,53 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Help - Video Action Recognition</title>
+</head>
+<body>
+<h1>How to use the application</h1>
+
+<p>
+    The goal of this project was to develop an application capable of detecting illegal activities or anomalies in CCTV camera footage. To achieve this, we used Vision Language Models (VLMs). VLMs are models designed to process two types of inputs: images and text. By leveraging these multimodal capabilities, the system supports three different types of tasks (prompts):
+    1.	Image Captioning (CAPTION) - generates description visible from the image (IMAGE)
+    2.	Visual Question Answering (VQA) provides answer to question user gave (image)
+    3.	DETECT returns co-ordinates of objects, allowing bounding boxes to be drawn around them
+    Website :
+    The user can choose whether to upload an image or a video as input. When an image is uploaded, the model processes the image directly and generates results based on the selected prompt.
+    If we upload video, the video is first split into individual frames. Each frame is then processed independently by selected model, which generates results for every single frame.
+    The application supports standard image formats such as JPG and PNG, as well as common video formats including MP4, AVI, and MPEG.
+    We are able to pick from 6 different standard models and 2 fine-tuned models, trained on annotated crime dataset. Each model supports different types of prompts which can be run.
+    (Tabulka/obrazok)
+    Paligemma2-3b-pt-224 – pre-trained, image captioning, vqa, detect (object1; object2...)
+    Paligemma3-3b-mix-224 – fine-tuned on non-crime datasets, image captioning, vqa, detect (object1; object2...)
+    Florence2-large – pre-trained?, image captioning + detect (all visible objects)
+    Florence2-large-ft – fine-tuned so it can do vqa, image captioning + detect (all visible objects) + vqa
+    Qwen3 -  pre-trained, only vqa
+    Internvl – pre-trained, only vqa
+
+    Multiple prompts of different types can be selectedat once.
+    For CAPTION prompts, users can choose between different levels of detail. Simple caption is usually short, results may contain hallucinations. Standard and detailed caption generates longer and more accurate descriptions.
+    For VQA prompts, users can write custom questions they want the model to answer. Questions should contain question mark (“?”) at the end so the model correctly identify the end of the sentence. Multiple questions can be submitted at once, provided that each question is properly terminated with a question mark.
+    For DETECT prompts, the behavior depends on the selected model.
+    Florence2 models automatically detect every object they find, meaning the user cannot specify which objects should be detected.
+    PaliGemma2, on the other hand, requires the user to specify the object(s) to search for. Multiple objects can be provided, but they must be separated using the delimiter “;”.
+
+
+    Perforemence and speed expectations
+    These models are very demanding o results may not be returned immediately. When a model is launched for the first time, it must first be loaded into the cache. Also if there is another model in the cache it must be unloaded first – this process can cost some time.
+    To help users understand expected performance, we made this table so you can check what to expect from each model. The application interface also includes a logging tab under the output section, where users can monitor whether the server is waiting for a response or if the model has already completed its processing.
+    PALIGEMMA2 – photoprompt, photo2xprompt, videoprompt, video2xprompt
+    FLORENCE2
+    QWEN3
+    INTERNVL3.5
+    Qwen3 and InternVL are not directly integrated into the application. Instead, they use FastAPI service for communicating with server This architectural choice was necessary due to differences in the Python libraries required by these models. This caused models load little bit longer. As a result, these models may take slightly longer to load.
+    Main architecture of web
+    Running examples, Timeline,clip, finetuned modely
+
+
+
+</p>
+
+</a>
+</body>
+</html>

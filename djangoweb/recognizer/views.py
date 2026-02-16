@@ -96,6 +96,8 @@ def convert_video(request):
 def index(request):
     return render(request, 'index.html')
 
+def instructions_page(request):
+    return render(request, "instructions.html")
 
 @csrf_exempt
 def recognize(request):

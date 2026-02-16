@@ -98,7 +98,7 @@ footer.footer {
     cursor: pointer;
 }
 
-/* Track for Firefox */
+/* Track for firefox */
 #frame-slider::-moz-range-track {
     height: 8px;
     border-radius: 4px;

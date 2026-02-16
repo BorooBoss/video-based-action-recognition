@@ -1,53 +1,271 @@
-
+{% load static %}
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Help - Video Action Recognition</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Instructions — VLM Anomaly Analyzer</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
 </head>
 <body>
-<h1>How to use the application</h1>
 
-<p>
-    The goal of this project was to develop an application capable of detecting illegal activities or anomalies in CCTV camera footage. To achieve this, we used Vision Language Models (VLMs). VLMs are models designed to process two types of inputs: images and text. By leveraging these multimodal capabilities, the system supports three different types of tasks (prompts):
-    1.	Image Captioning (CAPTION) - generates description visible from the image (IMAGE)
-    2.	Visual Question Answering (VQA) provides answer to question user gave (image)
-    3.	DETECT returns co-ordinates of objects, allowing bounding boxes to be drawn around them
-    Website :
-    The user can choose whether to upload an image or a video as input. When an image is uploaded, the model processes the image directly and generates results based on the selected prompt.
-    If we upload video, the video is first split into individual frames. Each frame is then processed independently by selected model, which generates results for every single frame.
-    The application supports standard image formats such as JPG and PNG, as well as common video formats including MP4, AVI, and MPEG.
-    We are able to pick from 6 different standard models and 2 fine-tuned models, trained on annotated crime dataset. Each model supports different types of prompts which can be run.
-    (Tabulka/obrazok)
-    Paligemma2-3b-pt-224 – pre-trained, image captioning, vqa, detect (object1; object2...)
-    Paligemma3-3b-mix-224 – fine-tuned on non-crime datasets, image captioning, vqa, detect (object1; object2...)
-    Florence2-large – pre-trained?, image captioning + detect (all visible objects)
-    Florence2-large-ft – fine-tuned so it can do vqa, image captioning + detect (all visible objects) + vqa
-    Qwen3 -  pre-trained, only vqa
-    Internvl – pre-trained, only vqa
+<section class="hero is-brand">
+    <div class="hero-body">
+        <div class="container">
+            <div class="columns is-vcentered">
+                <div class="column is-8">
+                    <div class="instructions-hero-icon"><i class="fas fa-book-open"></i></div>
+                    <h1 class="title is-2">Instructions</h1>
+                    <h2 class="subtitle is-5">How to use the VLM Anomaly Analyzer</h2>
+                </div>
+                <div class="column is-4 has-text-right">
+                    <a class="navbar-instructions" href="/recognizer/">
+                        <i class="fas fa-arrow-left" style="margin-right:0.4rem;"></i>Back to App
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
-    Multiple prompts of different types can be selectedat once.
-    For CAPTION prompts, users can choose between different levels of detail. Simple caption is usually short, results may contain hallucinations. Standard and detailed caption generates longer and more accurate descriptions.
-    For VQA prompts, users can write custom questions they want the model to answer. Questions should contain question mark (“?”) at the end so the model correctly identify the end of the sentence. Multiple questions can be submitted at once, provided that each question is properly terminated with a question mark.
-    For DETECT prompts, the behavior depends on the selected model.
-    Florence2 models automatically detect every object they find, meaning the user cannot specify which objects should be detected.
-    PaliGemma2, on the other hand, requires the user to specify the object(s) to search for. Multiple objects can be provided, but they must be separated using the delimiter “;”.
+<main class="section">
+    <div class="container">
+        <div class="columns">
 
+            <!-- LEFT COLUMN -->
+            <div class="column is-8">
 
-    Perforemence and speed expectations
-    These models are very demanding o results may not be returned immediately. When a model is launched for the first time, it must first be loaded into the cache. Also if there is another model in the cache it must be unloaded first – this process can cost some time.
-    To help users understand expected performance, we made this table so you can check what to expect from each model. The application interface also includes a logging tab under the output section, where users can monitor whether the server is waiting for a response or if the model has already completed its processing.
-    PALIGEMMA2 – photoprompt, photo2xprompt, videoprompt, video2xprompt
-    FLORENCE2
-    QWEN3
-    INTERNVL3.5
-    Qwen3 and InternVL are not directly integrated into the application. Instead, they use FastAPI service for communicating with server This architectural choice was necessary due to differences in the Python libraries required by these models. This caused models load little bit longer. As a result, these models may take slightly longer to load.
-    Main architecture of web
-    Running examples, Timeline,clip, finetuned modely
+                <!-- OVERVIEW -->
+                <div class="instructions-card">
+                    <div class="instructions-section-header">
+                        <div class="instructions-section-title">How does this application work?</div>
+                    </div>
+                    <p style="color:#2d3a55; font-size:0.95rem; line-height:1.7;">
+                        The goal of this project was to develop an application capable of detecting illegal activities or anomalies in CCTV camera footage.
+                        To achieve this, we used <strong> Vision Language Models (VLMs) </strong>. These models are designed to process two types of inputs -
+                        images and text. By leveraging these multimodal capabilities, the system support various types of tasks (prompts):
+                    </p>
 
+                    <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1rem;">
+                        <div class="tip-box" style="flex:1; min-width:180px;">
+                            <strong><i class="fas fa-align-left" style="margin-right:0.3rem;"></i>CAPTION</strong><br>
+                            Generates text description visible from the image
+                        </div>
+                        <div class="tip-box" style="flex:1; min-width:180px;">
+                            <strong><i class="fas fa-question-circle" style="margin-right:0.3rem;"></i>VQA</strong><br>
+                            Provides answers to user questions based on the uploaded image
+                        </div>
+                        <div class="tip-box" style="flex:1; min-width:180px;">
+                            <strong><i class="fas fa-vector-square" style="margin-right:0.3rem;"></i>DETECT</strong><br>
+                            Returns co-ordinates of objects, allowing bounding boxes to be drawn around them
+                        </div>
+                    </div>
+                </div>
 
+                <!-- HOW TO USE -->
+                <div class="instructions-card">
+                    <div class="instructions-section-header">
+                        <div class="instructions-section-title">How to use the application</div>
+                    </div>
 
-</p>
+                    <div class="step-row"><span class="step-number">1</span><span>We are able to pick from <strong>6 different standard models</strong> and <strong>2 fine-tuned models</strong>, trained on annotated crime dataset.
+                        Each model supports different types of prompts which can be run.</span></div>
+                    <div class="step-row"><span class="step-number">2</span><span>Check one or more <strong>prompt types</strong> you want to run. You can combine multiple prompts in a single request.</span></div>
+                    <div class="step-row"><span class="step-number">3</span><span><strong>Upload</strong> an image (JPG, PNG) or video (MP4, AVI, MPEG) using the file picker.</span></div>
+                    <div class="step-row"><span class="step-number">4</span><span>Click <strong>Analyze</strong> and wait for the results to appear in the Output box.</span></div>
 
-</a>
+                    <div class="tip-box mt-4">
+                        <strong><i class="fas fa-film" style="margin-right:0.3rem;"></i>Processing images/videos : </strong>
+                        The user can choose whether to upload an image or a video as input. When an image is uploaded, the model processes the image directly and generates results based on the selected prompt. <br>
+                        If we upload video, the video is first split into individual frames. Each frame is then processed independently by selected model, result is generated for every single frame.
+
+                    </div>
+                </div>
+
+                <!-- PROMPT TYPES -->
+                <div class="instructions-card">
+                    <div class="instructions-section-header">
+                        <div class="instructions-section-title">Prompt Types Explained</div>
+                    </div>
+
+                    <p style="color:#2d3a55; font-size:0.92rem; margin-bottom:1rem;">
+                        For <strong>CAPTION</strong> prompts, users can choose between different levels of detail.
+                        <br>    Simple caption is usually short, results may contain hallucinations. Standard and detailed caption generates longer and more accurate descriptions.
+                    </p>
+                    <p style="color:#2d3a55; font-size:0.92rem; margin-bottom:1rem;">
+                        For <strong>VQA</strong> prompts accept a custom question. Questions should end with a <code>?</code> so the model correctly identifies the end of the sentence. You can submit multiple questions at once — separate them with <code>?</code> between each question, or use <code>;</code> as a delimiter.
+                    </p>
+                    <p style="color:#2d3a55; font-size:0.92rem; margin-bottom:0;">
+                        For <strong>DETECT</strong> prompt behavior depends on the model. Florence-2 automatically detects all visible objects. PaliGemma requires you to specify which objects to search for — separate multiple objects with <code>;</code> (e.g. <code>person; car; bag</code>).
+                    </p>
+
+                    <div class="tip-box" style="margin-top:1rem;">
+                        <strong><i class="fas fa-lightbulb" style="margin-right:0.3rem;"></i>Tip:</strong>
+                        When using VQA on a video, a color-coded <strong>timeline</strong> appears below the frame slider — green segments indicate frames where the answer was positive (detected), red where it was not.
+                    </div>
+                </div>
+
+                <!-- MODEL TABLE -->
+                <div class="instructions-card">
+                    <div class="instructions-section-header">
+                        <div class="instructions-section-title">Available Models & Supported Prompts</div>
+                    </div>
+
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-bordered model-table">
+                            <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>Caption</th>
+                                <th>VQA</th>
+                                <th>Detect</th>
+                                <th>Notes</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><strong>paligemma2-3b-pt-224</strong></td>
+                                <td><span class="tag is-success is-light">✓</span></td>
+                                <td><span class="tag is-success is-light">✓</span></td>
+                                <td><span class="tag is-success is-light">✓ custom</span></td>
+                                <td>Pre-trained. DETECT requires object names.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>paligemma2-3b-mix-224</strong></td>
+                                <td><span class="tag is-success is-light">✓</span></td>
+                                <td><span class="tag is-success is-light">✓</span></td>
+                                <td><span class="tag is-success is-light">✓ custom</span></td>
+                                <td>Fine-tuned on non-crime datasets. DETECT requires object names.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Florence-2-large</strong></td>
+                                <td><span class="tag is-success is-light">✓</span></td>
+                                <td><span class="tag is-danger is-light">✗</span></td>
+                                <td><span class="tag is-warning is-light">✓ auto</span></td>
+                                <td>DETECT finds all objects automatically, no input needed.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Florence-2-large-ft</strong></td>
+                                <td><span class="tag is-success is-light">✓</span></td>
+                                <td><span class="tag is-success is-light">✓</span></td>
+                                <td><span class="tag is-warning is-light">✓ auto</span></td>
+                                <td>Fine-tuned variant, adds VQA support.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Qwen3-VL-2B-Instruct</strong></td>
+                                <td><span class="tag is-danger is-light">✗</span></td>
+                                <td><span class="tag is-success is-light">✓</span></td>
+                                <td><span class="tag is-danger is-light">✗</span></td>
+                                <td>VQA only. Uses FastAPI service.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>InternVL3.5-2B</strong></td>
+                                <td><span class="tag is-danger is-light">✗</span></td>
+                                <td><span class="tag is-success is-light">✓</span></td>
+                                <td><span class="tag is-danger is-light">✗</span></td>
+                                <td>VQA only. Uses FastAPI service.</td>
+                            </tr>
+                            <tr>
+                                <td><strong>paligemma2_weapon_detection</strong></td>
+                                <td><span class="tag is-success is-light">✓</span></td>
+                                <td><span class="tag is-success is-light">✓</span></td>
+                                <td><span class="tag is-success is-light">✓ custom</span></td>
+                                <td>Fine-tuned on annotated crime dataset.</td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="column is-4">
+
+                <!-- PERFORMANCE -->
+                <div class="instructions-card">
+                    <div class="instructions-section-header">
+                        <div class="instructions-section-title">Performance & Speed</div>
+                    </div>
+                    <p style="font-size:0.88rem; color:#2d3a55; margin-bottom:0.85rem;">
+                        These models are computationally demanding. Results may not appear immediately. On first launch, the model must be loaded into cache — if another model is already loaded, it must be unloaded first.
+                    </p>
+                    <table class="table is-fullwidth is-narrow" style="font-size:0.82rem;">
+                        <thead>
+                        <tr>
+                            <th>Model</th>
+                            <th>Image</th>
+                            <th>Video (10s)</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        <tr>
+                            <td>PaliGemma2</td>
+                            <td><span class="perf-badge perf-fast">Fast</span></td>
+                            <td><span class="perf-badge perf-medium">Medium</span></td>
+                        </tr>
+                        <tr>
+                            <td>Florence-2</td>
+                            <td><span class="perf-badge perf-fast">Fast</span></td>
+                            <td><span class="perf-badge perf-medium">Medium</span></td>
+                        </tr>
+                        <tr>
+                            <td>Qwen3</td>
+                            <td><span class="perf-badge perf-medium">Medium</span></td>
+                            <td><span class="perf-badge perf-slow">Slow</span></td>
+                        </tr>
+                        <tr>
+                            <td>InternVL3.5</td>
+                            <td><span class="perf-badge perf-medium">Medium</span></td>
+                            <td><span class="perf-badge perf-slow">Slow</span></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <div class="tip-box">
+                        <strong><i class="fas fa-terminal" style="margin-right:0.3rem;"></i>Console Log</strong> at the bottom of the app shows whether the server is waiting for a response or if the model has already finished processing.
+                    </div>
+                </div>
+
+                <!-- FASTAPI NOTE -->
+                <div class="instructions-card">
+                    <div class="instructions-section-header">
+                        <div class="instructions-section-title">Qwen3 & InternVL Architecture</div>
+                    </div>
+                    <p style="font-size:0.88rem; color:#2d3a55;">
+                        Qwen3 and InternVL are not directly integrated into the Django application. Instead, they communicate through a separate <strong>FastAPI service</strong>. This was necessary due to differences in required Python libraries. As a result, these models may take slightly longer to load on first use.
+                    </p>
+                </div>
+
+                <!-- SUPPORTED FORMATS -->
+                <div class="instructions-card">
+                    <div class="instructions-section-header">
+                        <div class="instructions-section-title">Supported File Formats</div>
+                    </div>
+                    <p style="font-size:0.88rem; color:#2d3a55; margin-bottom:0.75rem;"><strong>Images:</strong></p>
+                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:1rem;">
+                        <span class="tag is-brand">JPG</span>
+                        <span class="tag is-brand">PNG</span>
+                    </div>
+                    <p style="font-size:0.88rem; color:#2d3a55; margin-bottom:0.75rem;"><strong>Videos:</strong></p>
+                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                        <span class="tag is-brand-dark">MP4</span>
+                        <span class="tag is-brand">AVI <small style="margin-left:3px;">→ auto-converted</small></span>
+                        <span class="tag is-brand">MPEG <small style="margin-left:3px;">→ auto-converted</small></span>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</main>
+
+<footer class="footer">
+    <div class="content has-text-centered">
+        <p class="is-size-7">© 2025 VLM Activity Analyzer</p>
+    </div>
+</footer>
+
 </body>
 </html>

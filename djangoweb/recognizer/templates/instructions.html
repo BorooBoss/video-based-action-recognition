@@ -87,18 +87,25 @@
                 <!-- PROMPT TYPES -->
                 <div class="instructions-card">
                     <div class="instructions-section-header">
-                        <div class="instructions-section-title">Prompt Types Explained</div>
+                        <div class="instructions-section-title">Types of prompts</div>
                     </div>
 
                     <p style="color:#2d3a55; font-size:0.92rem; margin-bottom:1rem;">
                         For <strong>CAPTION</strong> prompts, users can choose between different levels of detail.
-                        <br>    Simple caption is usually short, results may contain hallucinations. Standard and detailed caption generates longer and more accurate descriptions.
+                        <br> &nbsp; - Simple caption is usually short, results may contain hallucinations.
+                        <br> &nbsp; - Standard caption generates longer and more accurate descriptions.
+                        <br> &nbsp; - Detailed caption returns the most accurate results.
                     </p>
                     <p style="color:#2d3a55; font-size:0.92rem; margin-bottom:1rem;">
-                        For <strong>VQA</strong> prompts accept a custom question. Questions should end with a <code>?</code> so the model correctly identifies the end of the sentence. You can submit multiple questions at once — separate them with <code>?</code> between each question, or use <code>;</code> as a delimiter.
+                        For <strong>VQA</strong> prompts, users can write custom questions they want the model to answer.
+                        Questions should be ended with a <code>?</code> so the model
+                        correctly identifies the end of the sentence. Multiple questions can be submitted at once,
+                        they have to be separated with <code>?</code> after each question.
                     </p>
                     <p style="color:#2d3a55; font-size:0.92rem; margin-bottom:0;">
-                        For <strong>DETECT</strong> prompt behavior depends on the model. Florence-2 automatically detects all visible objects. PaliGemma requires you to specify which objects to search for — separate multiple objects with <code>;</code> (e.g. <code>person; car; bag</code>).
+                        For <strong>DETECT</strong> prompts, the behavior depends on the selected model.
+                        <br> &nbsp; - Florence2 models detects all visible objects, meaning the user cannot specify what objects to detect.
+                        <br> &nbsp; - PaliGemma2 models requires you to specify which objects to search for. To detect multiple objects, use <code>;</code> between them.
                     </p>
 
                     <div class="tip-box" style="margin-top:1rem;">
@@ -117,62 +124,62 @@
                         <table class="table is-fullwidth is-bordered model-table">
                             <thead>
                             <tr>
-                                <th>Model</th>
-                                <th>Caption</th>
-                                <th>VQA</th>
-                                <th>Detect</th>
-                                <th>Notes</th>
+                                <th style="color: white !important;">Model</th>
+                                <th style="color: white !important;">CAPTION</th>
+                                <th style="color: white !important;">VQA</th>
+                                <th style="color: white !important;">DETECT</th>
+                                <th style="color: white !important;">Notes</th>
                             </tr>
                             </thead>
                             <tbody>
                             <tr>
-                                <td><strong>paligemma2-3b-pt-224</strong></td>
-                                <td><span class="tag is-success is-light">✓</span></td>
-                                <td><span class="tag is-success is-light">✓</span></td>
-                                <td><span class="tag is-success is-light">✓ custom</span></td>
-                                <td>Pre-trained. DETECT requires object names.</td>
+                                <td><strong>Paligemma2-3b-pt-224</strong></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td>Pre-trained model</td>
                             </tr>
                             <tr>
-                                <td><strong>paligemma2-3b-mix-224</strong></td>
-                                <td><span class="tag is-success is-light">✓</span></td>
-                                <td><span class="tag is-success is-light">✓</span></td>
-                                <td><span class="tag is-success is-light">✓ custom</span></td>
-                                <td>Fine-tuned on non-crime datasets. DETECT requires object names.</td>
+                                <td><strong>Paligemma2-3b-mix-224</strong></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td>Fine-tuned model on non-crime datasets</td>
                             </tr>
                             <tr>
                                 <td><strong>Florence-2-large</strong></td>
-                                <td><span class="tag is-success is-light">✓</span></td>
-                                <td><span class="tag is-danger is-light">✗</span></td>
-                                <td><span class="tag is-warning is-light">✓ auto</span></td>
-                                <td>DETECT finds all objects automatically, no input needed.</td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-danger is-light">NO</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td>Pre-trained model</td>
                             </tr>
                             <tr>
                                 <td><strong>Florence-2-large-ft</strong></td>
-                                <td><span class="tag is-success is-light">✓</span></td>
-                                <td><span class="tag is-success is-light">✓</span></td>
-                                <td><span class="tag is-warning is-light">✓ auto</span></td>
-                                <td>Fine-tuned variant, adds VQA support.</td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td>Fine-tuned model for VQA support</td>
                             </tr>
                             <tr>
                                 <td><strong>Qwen3-VL-2B-Instruct</strong></td>
-                                <td><span class="tag is-danger is-light">✗</span></td>
-                                <td><span class="tag is-success is-light">✓</span></td>
-                                <td><span class="tag is-danger is-light">✗</span></td>
-                                <td>VQA only. Uses FastAPI service.</td>
+                                <td><span class="tag is-danger is-light">NO</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-danger is-light">NO</span></td>
+                                <td>Pre-trained model</td>
                             </tr>
                             <tr>
                                 <td><strong>InternVL3.5-2B</strong></td>
-                                <td><span class="tag is-danger is-light">✗</span></td>
-                                <td><span class="tag is-success is-light">✓</span></td>
-                                <td><span class="tag is-danger is-light">✗</span></td>
-                                <td>VQA only. Uses FastAPI service.</td>
+                                <td><span class="tag is-danger is-light">NO</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-danger is-light">NO</span></td>
+                                <td>Pre-trained model</td>
                             </tr>
                             <tr>
                                 <td><strong>paligemma2_weapon_detection</strong></td>
-                                <td><span class="tag is-success is-light">✓</span></td>
-                                <td><span class="tag is-success is-light">✓</span></td>
-                                <td><span class="tag is-success is-light">✓ custom</span></td>
-                                <td>Fine-tuned on annotated crime dataset.</td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td>Fine-tuned on annotated crime dataset</td>
                             </tr>
                             </tbody>
                         </table>
@@ -181,10 +188,9 @@
 
             </div>
 
-            <!-- RIGHT COLUMN -->
             <div class="column is-4">
 
-                <!-- PERFORMANCE -->
+
                 <div class="instructions-card">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">Performance & Speed</div>

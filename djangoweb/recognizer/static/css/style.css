@@ -306,6 +306,9 @@ footer.footer {
     letter-spacing: 0.03em;
 }
 
+html body table.model-table thead tr th {
+    color: white;
+}
 .model-table td {
     font-size: 0.88rem;
     vertical-align: middle;

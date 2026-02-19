@@ -32,13 +32,10 @@
 
 <main class="section">
     <div class="container">
-        <div class="columns">
 
-            <!-- LEFT COLUMN -->
-            <div class="column is-8">
-
-                <!-- OVERVIEW -->
-                <div class="instructions-card">
+        <div class="columns is-equal-height" style="align-items: stretch;">
+            <div class="column is-8" style="display:flex; flex-direction:column;">
+                <div class="instructions-card" style="flex:1; margin-bottom:0;">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">How does this application work?</div>
                     </div>
@@ -63,9 +60,37 @@
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <!-- HOW TO USE -->
-                <div class="instructions-card">
+            <div class="column is-4" style="display:flex; flex-direction:column;">
+                <div class="instructions-card" style="flex:1; margin-bottom:0;">
+                    <div class="instructions-section-header">
+                        <div class="instructions-section-title">Supported File Formats</div>
+                    </div>
+                    <p style="font-size:0.88rem; color:#2d3a55; margin-bottom:0.75rem;"><strong>Images:</strong></p>
+                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:1rem;">
+                        <span class="tag is-brand">JPG</span>
+                        <span class="tag is-brand">PNG</span>
+                    </div>
+                    <p style="font-size:0.88rem; color:#2d3a55; margin-bottom:0.75rem;"><strong>Videos:</strong></p>
+                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
+                        <span class="tag is-brand-dark">MP4</span>
+                        <span class="tag is-brand">AVI <small style="margin-left:3px;"></small></span>
+                        <span class="tag is-brand">MPEG <small style="margin-left:3px;"></small></span>
+                    </div>
+                    <div class="tip-box mt-4">
+                        <strong><i class="fas fa-film" style="margin-right:0.3rem;"></i>Video conversion : </strong>
+                        AVI and MPEG videos are automatically converted to MP4
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ROW 2: How to use + Image preview placeholder -->
+        <div class="columns is-equal-height" style="align-items: stretch;">
+            <!-- LEFT: HOW TO USE -->
+            <div class="column is-8" style="display:flex; flex-direction:column;">
+                <div class="instructions-card" style="flex:1; margin-bottom:0;">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">How to use the application</div>
                     </div>
@@ -80,11 +105,36 @@
                         <strong><i class="fas fa-film" style="margin-right:0.3rem;"></i>Processing images/videos : </strong>
                         The user can choose whether to upload an image or a video as input. When an image is uploaded, the model processes the image directly and generates results based on the selected prompt. <br>
                         If we upload video, the video is first split into individual frames. Each frame is then processed independently by selected model, result is generated for every single frame.
-
                     </div>
                 </div>
+            </div>
 
-                <!-- PROMPT TYPES -->
+            <!-- RIGHT: IMAGE PLACEHOLDER + Performance & Speed + Architecture stacked -->
+            <div class="column is-4" style="display:flex; flex-direction:column;">
+                <div class="instructions-card" style="flex:1; margin-bottom:0;">
+                    <div style="
+                        height: 100%;
+                        min-height: 220px;
+                        border-radius: 8px;
+                        border: 2px dashed rgba(10, 108, 255, 0.25);
+                        background: linear-gradient(180deg, rgba(10, 108, 255, 0.03), rgba(10, 108, 255, 0.01));
+                        display: flex;
+                        flex-direction: column;
+                        align-items: center;
+                        justify-content: center;
+                        color: rgba(10, 108, 255, 0.35);
+                        font-size: 0.85rem;
+                        gap: 0.5rem;
+                    ">
+                        <i class="fas fa-image" style="font-size: 2.5rem;"></i>
+                        <span style="font-weight: 600; letter-spacing: 0.03em;">Image preview</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="columns">
+            <div class="column is-8">
                 <div class="instructions-card">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">Types of prompts</div>
@@ -113,8 +163,12 @@
                         When using VQA on a video, a color-coded <strong>timeline</strong> appears below the frame slider — green segments indicate frames where the answer was positive (detected), red where it was not.
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- MODEL TABLE -->
+        <!-- ROW 4: Model Table (full width left) -->
+        <div class="columns">
+            <div class="column is-8">
                 <div class="instructions-card">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">Available Models & Supported Prompts</div>
@@ -185,12 +239,16 @@
                         </table>
                     </div>
                 </div>
-
             </div>
+        </div>
 
+        <!-- ROW 5: Performance & Speed + Qwen3 Architecture (below the image placeholder) -->
+        <div class="columns">
+            <div class="column is-8">
+                <!-- spacer to align with right column below image -->
+            </div>
             <div class="column is-4">
-
-
+                <!-- Performance & Speed -->
                 <div class="instructions-card">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">Performance & Speed</div>
@@ -234,7 +292,7 @@
                     </div>
                 </div>
 
-                <!-- FASTAPI NOTE -->
+                <!-- Qwen3 & InternVL Architecture -->
                 <div class="instructions-card">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">Qwen3 & InternVL Architecture</div>
@@ -243,27 +301,9 @@
                         Qwen3 and InternVL are not directly integrated into the Django application. Instead, they communicate through a separate <strong>FastAPI service</strong>. This was necessary due to differences in required Python libraries. As a result, these models may take slightly longer to load on first use.
                     </p>
                 </div>
-
-                <!-- SUPPORTED FORMATS -->
-                <div class="instructions-card">
-                    <div class="instructions-section-header">
-                        <div class="instructions-section-title">Supported File Formats</div>
-                    </div>
-                    <p style="font-size:0.88rem; color:#2d3a55; margin-bottom:0.75rem;"><strong>Images:</strong></p>
-                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap; margin-bottom:1rem;">
-                        <span class="tag is-brand">JPG</span>
-                        <span class="tag is-brand">PNG</span>
-                    </div>
-                    <p style="font-size:0.88rem; color:#2d3a55; margin-bottom:0.75rem;"><strong>Videos:</strong></p>
-                    <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
-                        <span class="tag is-brand-dark">MP4</span>
-                        <span class="tag is-brand">AVI <small style="margin-left:3px;">→ auto-converted</small></span>
-                        <span class="tag is-brand">MPEG <small style="margin-left:3px;">→ auto-converted</small></span>
-                    </div>
-                </div>
-
             </div>
         </div>
+
     </div>
 </main>
 

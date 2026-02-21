@@ -8,6 +8,28 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .perf-seconds {
+            display: inline-block;
+            font-variant-numeric: tabular-nums;
+            font-size: 0.82rem;
+            font-weight: 600;
+            color: #2d3a55;
+            background: #f0f4ff;
+            border: 1px solid #d0d9f0;
+            border-radius: 4px;
+            padding: 2px 8px;
+            letter-spacing: 0.01em;
+            min-width: 52px;
+            text-align: center;
+        }
+        .perf-na {
+            display: inline-block;
+            font-size: 0.78rem;
+            color: #aaa;
+            font-style: italic;
+        }
+    </style>
 </head>
 <body>
 
@@ -88,7 +110,6 @@
 
         <!-- ROW 2: How to use + Image preview placeholder -->
         <div class="columns is-equal-height" style="align-items: stretch;">
-            <!-- LEFT: HOW TO USE -->
             <div class="column is-8" style="display:flex; flex-direction:column;">
                 <div class="instructions-card" style="flex:1; margin-bottom:0;">
                     <div class="instructions-section-header">
@@ -109,7 +130,6 @@
                 </div>
             </div>
 
-            <!-- RIGHT: IMAGE PLACEHOLDER + Performance & Speed + Architecture stacked -->
             <div class="column is-4" style="display:flex; flex-direction:column;">
                 <div class="instructions-card" style="flex:1; margin-bottom:0;">
                     <div style="
@@ -242,57 +262,74 @@
             </div>
         </div>
 
-        <!-- ROW 5: Performance & Speed + Qwen3 Architecture (below the image placeholder) -->
+        <!-- ROW 5: Performance & Speed — full is-8 width, below Available Models -->
         <div class="columns">
             <div class="column is-8">
-                <!-- spacer to align with right column below image -->
-            </div>
-            <div class="column is-4">
-                <!-- Performance & Speed -->
                 <div class="instructions-card">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">Performance & Speed</div>
                     </div>
                     <p style="font-size:0.88rem; color:#2d3a55; margin-bottom:0.85rem;">
-                        These models are computationally demanding. Results may not appear immediately. On first launch, the model must be loaded into cache — if another model is already loaded, it must be unloaded first.
+                        The following performance table shows expectations for <strong>already loaded models </strong>.
+                        Launching model for the first time means loading model into cache memory.
+                        if another model is already active, it must be unloaded first.
+                        This <strong>caching process may add a few seconds</strong> to the benchmarks.
                     </p>
-                    <table class="table is-fullwidth is-narrow" style="font-size:0.82rem;">
-                        <thead>
-                        <tr>
-                            <th>Model</th>
-                            <th>Image</th>
-                            <th>Video (10s)</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        <tr>
-                            <td>PaliGemma2</td>
-                            <td><span class="perf-badge perf-fast">Fast</span></td>
-                            <td><span class="perf-badge perf-medium">Medium</span></td>
-                        </tr>
-                        <tr>
-                            <td>Florence-2</td>
-                            <td><span class="perf-badge perf-fast">Fast</span></td>
-                            <td><span class="perf-badge perf-medium">Medium</span></td>
-                        </tr>
-                        <tr>
-                            <td>Qwen3</td>
-                            <td><span class="perf-badge perf-medium">Medium</span></td>
-                            <td><span class="perf-badge perf-slow">Slow</span></td>
-                        </tr>
-                        <tr>
-                            <td>InternVL3.5</td>
-                            <td><span class="perf-badge perf-medium">Medium</span></td>
-                            <td><span class="perf-badge perf-slow">Slow</span></td>
-                        </tr>
-                        </tbody>
-                    </table>
-                    <div class="tip-box">
-                        <strong><i class="fas fa-terminal" style="margin-right:0.3rem;"></i>Console Log</strong> at the bottom of the app shows whether the server is waiting for a response or if the model has already finished processing.
+                    <div class="table-container">
+                        <table class="table is-fullwidth is-bordered model-table" style="font-size:0.83rem;">
+                            <thead>
+                            <tr>
+                                <th style="color: white !important; min-width:140px;">Model</th>
+                                <th style="color: white !important; text-align:center;">Image with 1 task</th>
+                                <th style="color: white !important; text-align:center;">Image with 2 tasks</th>
+                                <th style="color: white !important; text-align:center;">10s Video with 1 task</th>
+                                <th style="color: white !important; text-align:center;">10s Video with 2 tasks</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td><strong>PaliGemma2</strong></td>
+                                <td style="text-align:center;"><span class="perf-seconds"><1s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds"><1s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">6s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">6s</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Florence2</strong></td>
+                                <td style="text-align:center;"><span class="perf-seconds"><1s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds"><1s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">2s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">3s</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>Qwen3</strong></td>
+                                <td style="text-align:center;"><span class="perf-seconds">2s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">3s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">22s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">37s</span></td>
+                            </tr>
+                            <tr>
+                                <td><strong>InternVL3.5</strong></td>
+                                <td style="text-align:center;"><span class="perf-seconds">1s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">2s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">22s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">22s</span></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tip-box" style="margin-top:0.75rem;">
+                        <strong><i class="fas fa-terminal" style="margin-right:0.3rem;"></i>Console Log</strong> at the bottom of the app shows whether the server is
+                        waiting for a response or if the model has already finished processing.
                     </div>
                 </div>
+            </div>
+        </div>
 
-                <!-- Qwen3 & InternVL Architecture -->
+        <!-- ROW 6: Qwen3 & InternVL Architecture — stays in right column alignment -->
+        <div class="columns">
+            <div class="column is-8"></div>
+            <div class="column is-4">
                 <div class="instructions-card">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">Qwen3 & InternVL Architecture</div>
@@ -309,7 +346,7 @@
 
 <footer class="footer">
     <div class="content has-text-centered">
-        <p class="is-size-7">© 2025 VLM Activity Analyzer</p>
+        <p class="is-size-7">© 2026 VLM Activity Analyzer</p>
     </div>
 </footer>
 

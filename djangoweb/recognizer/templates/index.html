@@ -8,6 +8,15 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        .hero.is-brand .hero-body {
+            display: flex;
+            align-items: flex-end;
+            padding-top: 7rem;
+            padding-bottom: 2.5rem;
+            min-height: 220px;
+        }
+    </style>
 </head>
 <body>
 
@@ -16,9 +25,13 @@
         <div class="container">
             <div class="columns is-vcentered">
                 <div class="column is-8">
-                    <div class="instructions-hero-icon"><i class="fas fa-video"></i></div>
                     <h1 class="title is-2">VLM Anomaly Analyzer</h1>
                     <h2 class="subtitle is-5">Video/Image activity analysis and anomaly detection</h2>
+                </div>
+                <div class="column is-4 has-text-right">
+                    <a class="navbar-instructions" href="/recognizer/instructions/">
+                        <i class="fas fa-arrow-right" style="margin-right:0.4rem;"></i>Instructions
+                    </a>
                 </div>
             </div>
         </div>
@@ -56,8 +69,10 @@
                                         <label class="label">Fine-tuned Models</label>
                                         <div class="control">
                                             <div class="select is-fullwidth">
-                                                <select name="finetuned_model" id="finetuned-model-select" disabled>
-                                                    <option value="">not available</option>
+                                                <select name="finetuned_model" id="finetuned-model-select">
+                                                    <option value="    ">        </option>
+                                                    <option value="../train/paligemma2_weapon_detection">../train/paligemma2_weapon_detection</option>
+                                                    <option value="florence-2-ft-missing">internvl3_5-2b</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -186,7 +201,7 @@
 
 <footer class="footer">
     <div class="content has-text-centered">
-        <p class="is-size-7">© 2025 VLM Activity Analyzer</p>
+        <p class="is-size-7">© 2026 VLM Activity Analyzer</p>
     </div>
 </footer>
 
@@ -228,6 +243,7 @@
         "../train/paligemma2_weapon_detection": {
             "SIMPLE CAPTION": {needsInput: false},
             "STANDARD CAPTION": {needsInput: false},
+            "DETAILED CAPTION": {needsInput: false},
             "VQA": {needsInput: true, placeholder: "Ask model anything..."},
             "DETECT": {needsInput: true, placeholder: "example: person; car; tree..."}
         },

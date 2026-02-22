@@ -218,7 +218,8 @@ def recognize(request):
                         else:
                             result = raw_result
                         all_results.append(result)
-
+                    #print(f"DEBUG all_detections: {all_detections}")
+                    #print(f"DEBUG out_path: {out_path}")
                     if all_detections:
                         #for video: save into TEMP_FRAMES_DIR, for one frame: /tmp
                         if is_video:
@@ -227,6 +228,7 @@ def recognize(request):
                             out_path = os.path.join(TEMP_FRAMES_DIR, annotated_filename)
 
                         if "florence" in ui.model_name.lower():
+
                             draw_objects.draw_boxes_florence(current_image_path, all_detections, out_path)
                         elif "paligemma" in ui.model_name.lower():
                             draw_objects.draw_boxes_paligemma(current_image_path, all_detections, out_path)

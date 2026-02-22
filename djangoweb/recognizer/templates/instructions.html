@@ -29,6 +29,87 @@
             color: #aaa;
             font-style: italic;
         }
+
+        /* Carousel overlay */
+        #carousel-overlay {
+            display: none;
+            position: absolute;
+            inset: 0;
+            background: white;
+            border-radius: 8px;
+            z-index: 5;
+            align-items: center;
+            justify-content: center;
+        }
+        #carousel-overlay.active {
+            display: flex;
+        }
+        #carousel-overlay img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 6px;
+        }
+        .carousel-nav-btn {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #0a6cff;
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            color: white;
+            cursor: pointer;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 8px rgba(10,108,255,0.35);
+            z-index: 10;
+            transition: background 0.2s, transform 0.15s;
+        }
+        .carousel-nav-btn:hover {
+            background: #0050cc;
+            transform: translateY(-50%) scale(1.1);
+        }
+        .carousel-nav-btn.prev { left: -15px; }
+        .carousel-nav-btn.next { right: -15px; }
+
+        /* Close button */
+        #carousel-close {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(10,108,255,0.12);
+            border: none;
+            border-radius: 50%;
+            width: 26px;
+            height: 26px;
+            color: #0a6cff;
+            cursor: pointer;
+            font-size: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 11;
+            transition: background 0.2s;
+        }
+        #carousel-close:hover { background: rgba(10,108,255,0.22); }
+
+        /* Dots */
+        .carousel-dot {
+            width: 8px; height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        /* The wrapper card needs relative positioning */
+        .how-it-works-inner {
+            position: relative;
+        }
     </style>
 </head>
 <body>
@@ -58,29 +139,54 @@
         <div class="columns is-equal-height" style="align-items: stretch;">
             <div class="column is-8" style="display:flex; flex-direction:column;">
                 <div class="instructions-card" style="flex:1; margin-bottom:0;">
-                    <div class="instructions-section-header">
-                        <div class="instructions-section-title">How does this application work?</div>
-                    </div>
-                    <p style="color:#2d3a55; font-size:0.95rem; line-height:1.7;">
-                        The goal of this project was to develop an application capable of detecting illegal activities or anomalies in CCTV camera footage.
-                        To achieve this, we used <strong> Vision Language Models (VLMs) </strong>. These models are designed to process two types of inputs -
-                        images and text. By leveraging these multimodal capabilities, the system support various types of tasks (prompts):
-                    </p>
 
-                    <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1rem;">
-                        <div class="tip-box" style="flex:1; min-width:180px;">
-                            <strong><i class="fas fa-align-left" style="margin-right:0.3rem;"></i>CAPTION</strong><br>
-                            Generates text description visible from the image
+                    <!-- Inner wrapper for overlay positioning -->
+                    <div class="how-it-works-inner">
+
+                        <!-- === CAROUSEL OVERLAY (hidden by default) === -->
+                        <div id="carousel-overlay">
+                            <!-- Image -->
+                            <img id="carousel-img" src="" alt="Prompt illustration">
                         </div>
-                        <div class="tip-box" style="flex:1; min-width:180px;">
-                            <strong><i class="fas fa-question-circle" style="margin-right:0.3rem;"></i>VQA</strong><br>
-                            Provides answers to user questions based on the uploaded image
+                        <!-- === END OVERLAY === -->
+
+                        <div class="instructions-section-header">
+                            <div class="instructions-section-title">How does this application work?</div>
                         </div>
-                        <div class="tip-box" style="flex:1; min-width:180px;">
-                            <strong><i class="fas fa-vector-square" style="margin-right:0.3rem;"></i>DETECT</strong><br>
-                            Returns co-ordinates of objects, allowing bounding boxes to be drawn around them
+                        <p style="color:#2d3a55; font-size:0.95rem; line-height:1.7;">
+                            The goal of this project was to develop an application capable of detecting illegal activities or anomalies in CCTV camera footage.
+                            To achieve this, we used <strong> Vision Language Models (VLMs) </strong>. These models are designed to process two types of inputs -
+                            images and text. By leveraging these multimodal capabilities, the system support various types of tasks (prompts):
+                        </p>
+
+                        <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1rem; position:relative;">
+
+                            <!-- Prev arrow (outside left of boxes) -->
+                            <button class="carousel-nav-btn prev" style="left:-15px; top:50%; position:absolute;" onclick="carouselNav(-1)">
+                                <i class="fas fa-chevron-left"></i>
+                            </button>
+
+                            <div class="tip-box" style="flex:1; min-width:180px;">
+                                <strong><i class="fas fa-align-left" style="margin-right:0.3rem;"></i>CAPTION</strong><br>
+                                Generates text description visible from the image
+                            </div>
+                            <div class="tip-box" style="flex:1; min-width:180px;">
+                                <strong><i class="fas fa-question-circle" style="margin-right:0.3rem;"></i>VQA</strong><br>
+                                Provides answers to user questions based on the uploaded image
+                            </div>
+                            <div class="tip-box" style="flex:1; min-width:180px;">
+                                <strong><i class="fas fa-vector-square" style="margin-right:0.3rem;"></i>DETECT</strong><br>
+                                Returns co-ordinates of objects, allowing bounding boxes to be drawn around them
+                            </div>
+
+                            <!-- Next arrow (outside right of boxes) -->
+                            <button class="carousel-nav-btn next" style="right:-15px; top:50%; position:absolute;" onclick="carouselNav(1)">
+                                <i class="fas fa-chevron-right"></i>
+                            </button>
+
                         </div>
-                    </div>
+
+                    </div><!-- end how-it-works-inner -->
                 </div>
             </div>
 
@@ -289,15 +395,15 @@
                             <tbody>
                             <tr>
                                 <td><strong>PaliGemma2</strong></td>
-                                <td style="text-align:center;"><span class="perf-seconds"><1s</span></td>
-                                <td style="text-align:center;"><span class="perf-seconds"><1s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">&lt;1s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">&lt;1s</span></td>
                                 <td style="text-align:center;"><span class="perf-seconds">6s</span></td>
                                 <td style="text-align:center;"><span class="perf-seconds">6s</span></td>
                             </tr>
                             <tr>
                                 <td><strong>Florence2</strong></td>
-                                <td style="text-align:center;"><span class="perf-seconds"><1s</span></td>
-                                <td style="text-align:center;"><span class="perf-seconds"><1s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">&lt;1s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">&lt;1s</span></td>
                                 <td style="text-align:center;"><span class="perf-seconds">2s</span></td>
                                 <td style="text-align:center;"><span class="perf-seconds">3s</span></td>
                             </tr>
@@ -350,5 +456,39 @@
     </div>
 </footer>
 
+<script>
+    const carouselImages = [
+        "{% static 'images/idea_caption.png' %}",
+        "{% static 'images/idea_vqa.png' %}",
+        "{% static 'images/idea_detect.png' %}"
+    ];
+
+    let carouselIndex = -1;   // -1 = zavreté
+    const overlay  = document.getElementById('carousel-overlay');
+    const img      = document.getElementById('carousel-img');
+
+    function carouselNav(dir) {
+
+        carouselIndex += dir;
+
+        // ak sme pred prvým → zavrieť
+        if (carouselIndex < 0) {
+            carouselIndex = -1;
+            overlay.classList.remove("active");
+            return;
+        }
+
+        // ak sme za posledným → zavrieť
+        if (carouselIndex >= carouselImages.length) {
+            carouselIndex = -1;
+            overlay.classList.remove("active");
+            return;
+        }
+
+        // zobraz obrázok
+        img.src = carouselImages[carouselIndex];
+        overlay.classList.add("active");
+    }
+</script>
 </body>
 </html>

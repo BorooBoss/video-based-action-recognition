@@ -97,18 +97,38 @@
         }
         #carousel-close:hover { background: rgba(10,108,255,0.22); }
 
-        /* Dots */
-        .carousel-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            cursor: pointer;
-            transition: background 0.2s;
-        }
-
         /* The wrapper card needs relative positioning */
         .how-it-works-inner {
             position: relative;
+        }
+
+        /* Step images inside how-to-use block */
+        .step-image-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+        .step-image-block img {
+            max-width: 100%;
+            border-radius: 10px;
+            border: 1px solid rgba(10, 108, 255, 0.15);
+            box-shadow: 0 4px 16px rgba(9, 30, 66, 0.1);
+            margin-bottom: 0.85rem;
+        }
+
+        /* Cards below row 1 match full width of top row */
+        .centered-card-col .instructions-card {
+            width: 100%;
+        }
+
+        /* Push hero content to bottom while keeping hero height */
+        .hero.is-brand .hero-body {
+            display: flex;
+            align-items: flex-end;
+            padding-top: 7rem;
+            padding-bottom: 2.5rem;
+            min-height: 220px;
         }
     </style>
 </head>
@@ -119,7 +139,6 @@
         <div class="container">
             <div class="columns is-vcentered">
                 <div class="column is-8">
-                    <div class="instructions-hero-icon"><i class="fas fa-book-open"></i></div>
                     <h1 class="title is-2">Instructions</h1>
                     <h2 class="subtitle is-5">How to use the VLM Anomaly Analyzer</h2>
                 </div>
@@ -136,16 +155,15 @@
 <main class="section">
     <div class="container">
 
+        <!-- ROW 1: How does this application work? + Supported File Formats (unchanged) -->
         <div class="columns is-equal-height" style="align-items: stretch;">
             <div class="column is-8" style="display:flex; flex-direction:column;">
                 <div class="instructions-card" style="flex:1; margin-bottom:0;">
 
-                    <!-- Inner wrapper for overlay positioning -->
                     <div class="how-it-works-inner">
 
                         <!-- === CAROUSEL OVERLAY (hidden by default) === -->
                         <div id="carousel-overlay">
-                            <!-- Image -->
                             <img id="carousel-img" src="" alt="Prompt illustration">
                         </div>
                         <!-- === END OVERLAY === -->
@@ -161,7 +179,6 @@
 
                         <div style="display:flex; gap:0.75rem; flex-wrap:wrap; margin-top:1rem; position:relative;">
 
-                            <!-- Prev arrow (outside left of boxes) -->
                             <button class="carousel-nav-btn prev" style="left:-15px; top:50%; position:absolute;" onclick="carouselNav(-1)">
                                 <i class="fas fa-chevron-left"></i>
                             </button>
@@ -179,7 +196,6 @@
                                 Returns co-ordinates of objects, allowing bounding boxes to be drawn around them
                             </div>
 
-                            <!-- Next arrow (outside right of boxes) -->
                             <button class="carousel-nav-btn next" style="right:-15px; top:50%; position:absolute;" onclick="carouselNav(1)">
                                 <i class="fas fa-chevron-right"></i>
                             </button>
@@ -203,8 +219,8 @@
                     <p style="font-size:0.88rem; color:#2d3a55; margin-bottom:0.75rem;"><strong>Videos:</strong></p>
                     <div style="display:flex; gap:0.4rem; flex-wrap:wrap;">
                         <span class="tag is-brand-dark">MP4</span>
-                        <span class="tag is-brand">AVI <small style="margin-left:3px;"></small></span>
-                        <span class="tag is-brand">MPEG <small style="margin-left:3px;"></small></span>
+                        <span class="tag is-brand-dark">AVI <small style="margin-left:3px;"></small></span>
+                        <span class="tag is-brand-dark">MPEG <small style="margin-left:3px;"></small></span>
                     </div>
                     <div class="tip-box mt-4">
                         <strong><i class="fas fa-film" style="margin-right:0.3rem;"></i>Video conversion : </strong>
@@ -214,54 +230,61 @@
             </div>
         </div>
 
-        <!-- ROW 2: How to use + Image preview placeholder -->
-        <div class="columns is-equal-height" style="align-items: stretch;">
-            <div class="column is-8" style="display:flex; flex-direction:column;">
-                <div class="instructions-card" style="flex:1; margin-bottom:0;">
+        <!-- ROW 2: How to use — matches width of top row -->
+        <div class="columns">
+            <div class="column is-12 centered-card-col">
+                <div class="instructions-card" style="width:100%;">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">How to use the application</div>
                     </div>
 
-                    <div class="step-row"><span class="step-number">1</span><span>We are able to pick from <strong>6 different standard models</strong> and <strong>2 fine-tuned models</strong>, trained on annotated crime dataset.
-                        Each model supports different types of prompts which can be run.</span></div>
-                    <div class="step-row"><span class="step-number">2</span><span>Check one or more <strong>prompt types</strong> you want to run. You can combine multiple prompts in a single request.</span></div>
-                    <div class="step-row"><span class="step-number">3</span><span><strong>Upload</strong> an image (JPG, PNG) or video (MP4, AVI, MPEG) using the file picker.</span></div>
-                    <div class="step-row"><span class="step-number">4</span><span>Click <strong>Analyze</strong> and wait for the results to appear in the Output box.</span></div>
+                    <div class="step-image-block">
+                        <div class="step-row" style="width:100%;">
+                            <span class="step-number">1</span>
+                            <span>We are able to pick from <strong>6 different standard models</strong> and <strong>2 fine-tuned models</strong>, trained on annotated crime dataset.
+                                Each model supports different types of prompts which can be run.</span>
+                        </div>
+                        <img src="{% static 'images/preview1.png' %}" alt="Step 1 - Select model">
+                    </div>
 
-                    <div class="tip-box mt-4">
+                    <div class="step-image-block">
+                        <div class="step-row" style="width:100%;">
+                            <span class="step-number">2</span>
+                            <span>Check one or more <strong>prompt types</strong> you want to run. You can combine multiple prompts in a single request.</span>
+                        </div>
+                        <img src="{% static 'images/preview2.png' %}" alt="Step 2 - Select prompts">
+                    </div>
+
+                    <div class="step-image-block">
+                        <div class="step-row" style="width:100%;">
+                            <span class="step-number">3</span>
+                            <span><strong>Upload</strong> an image (JPG, PNG) or video (MP4, AVI, MPEG) using the file picker.</span>
+                        </div>
+                        <img src="{% static 'images/preview3.png' %}" alt="Step 3 - Upload file">
+                    </div>
+
+                    <div class="step-image-block" style="margin-bottom:1rem;">
+                        <div class="step-row" style="width:100%;">
+                            <span class="step-number">4</span>
+                            <span>Click <strong>Analyze</strong> and wait for the results to appear in the Output box.</span>
+                        </div>
+                        <img src="{% static 'images/preview4.png' %}" alt="Step 4 - Analyze">
+                    </div>
+
+                    <!-- Processing images/videos tip (restored after steps) -->
+                    <div class="tip-box">
                         <strong><i class="fas fa-film" style="margin-right:0.3rem;"></i>Processing images/videos : </strong>
                         The user can choose whether to upload an image or a video as input. When an image is uploaded, the model processes the image directly and generates results based on the selected prompt. <br>
                         If we upload video, the video is first split into individual frames. Each frame is then processed independently by selected model, result is generated for every single frame.
                     </div>
                 </div>
             </div>
-
-            <div class="column is-4" style="display:flex; flex-direction:column;">
-                <div class="instructions-card" style="flex:1; margin-bottom:0;">
-                    <div style="
-                        height: 100%;
-                        min-height: 220px;
-                        border-radius: 8px;
-                        border: 2px dashed rgba(10, 108, 255, 0.25);
-                        background: linear-gradient(180deg, rgba(10, 108, 255, 0.03), rgba(10, 108, 255, 0.01));
-                        display: flex;
-                        flex-direction: column;
-                        align-items: center;
-                        justify-content: center;
-                        color: rgba(10, 108, 255, 0.35);
-                        font-size: 0.85rem;
-                        gap: 0.5rem;
-                    ">
-                        <i class="fas fa-image" style="font-size: 2.5rem;"></i>
-                        <span style="font-weight: 600; letter-spacing: 0.03em;">Image preview</span>
-                    </div>
-                </div>
-            </div>
         </div>
 
+        <!-- ROW 3: Types of prompts -->
         <div class="columns">
-            <div class="column is-8">
-                <div class="instructions-card">
+            <div class="column is-12 centered-card-col">
+                <div class="instructions-card" style="width:100%;">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">Types of prompts</div>
                     </div>
@@ -286,16 +309,16 @@
 
                     <div class="tip-box" style="margin-top:1rem;">
                         <strong><i class="fas fa-lightbulb" style="margin-right:0.3rem;"></i>Tip:</strong>
-                        When using VQA on a video, a color-coded <strong>timeline</strong> appears below the frame slider — green segments indicate frames where the answer was positive (detected), red where it was not.
+                        When using <strong>VQA</strong> or <strong>DETECT</strong> on a video, a colored timeline appears below the frame slider. Green segments indicate frames where the answer was positive (detected), red where it was not.
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- ROW 4: Model Table (full width left) -->
+        <!-- ROW 4: Model Table -->
         <div class="columns">
-            <div class="column is-8">
-                <div class="instructions-card">
+            <div class="column is-12 centered-card-col">
+                <div class="instructions-card" style="width:100%;">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">Available Models & Supported Prompts</div>
                     </div>
@@ -368,10 +391,10 @@
             </div>
         </div>
 
-        <!-- ROW 5: Performance & Speed — full is-8 width, below Available Models -->
+        <!-- ROW 5: Performance & Speed -->
         <div class="columns">
-            <div class="column is-8">
-                <div class="instructions-card">
+            <div class="column is-12 centered-card-col">
+                <div class="instructions-card" style="width:100%;">
                     <div class="instructions-section-header">
                         <div class="instructions-section-title">Performance & Speed</div>
                     </div>
@@ -432,21 +455,6 @@
             </div>
         </div>
 
-        <!-- ROW 6: Qwen3 & InternVL Architecture — stays in right column alignment -->
-        <div class="columns">
-            <div class="column is-8"></div>
-            <div class="column is-4">
-                <div class="instructions-card">
-                    <div class="instructions-section-header">
-                        <div class="instructions-section-title">Qwen3 & InternVL Architecture</div>
-                    </div>
-                    <p style="font-size:0.88rem; color:#2d3a55;">
-                        Qwen3 and InternVL are not directly integrated into the Django application. Instead, they communicate through a separate <strong>FastAPI service</strong>. This was necessary due to differences in required Python libraries. As a result, these models may take slightly longer to load on first use.
-                    </p>
-                </div>
-            </div>
-        </div>
-
     </div>
 </main>
 
@@ -463,29 +471,25 @@
         "{% static 'images/idea_detect.png' %}"
     ];
 
-    let carouselIndex = -1;   // -1 = zavreté
+    let carouselIndex = -1;
     const overlay  = document.getElementById('carousel-overlay');
     const img      = document.getElementById('carousel-img');
 
     function carouselNav(dir) {
-
         carouselIndex += dir;
 
-        // ak sme pred prvým → zavrieť
         if (carouselIndex < 0) {
             carouselIndex = -1;
             overlay.classList.remove("active");
             return;
         }
 
-        // ak sme za posledným → zavrieť
         if (carouselIndex >= carouselImages.length) {
             carouselIndex = -1;
             overlay.classList.remove("active");
             return;
         }
 
-        // zobraz obrázok
         img.src = carouselImages[carouselIndex];
         overlay.classList.add("active");
     }

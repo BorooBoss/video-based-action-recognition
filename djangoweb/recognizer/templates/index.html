@@ -54,13 +54,13 @@
                                         <div class="control">
                                             <div class="select is-fullwidth">
                                                 <select name="model" id="model-select">
+                                                    <option value="" disabled selected>— Select model —</option>
                                                     <option value="google/paligemma2-3b-pt-224">paligemma2-3b-pt-224</option>
                                                     <option value="google/paligemma2-3b-mix-224">paligemma2-3b-mix-224</option>
                                                     <option value="microsoft/Florence-2-large">florence-2-large</option>
                                                     <option value="microsoft/Florence-2-large-ft">florence-2-large-ft</option>
                                                     <option value="Qwen/Qwen3-VL-2B-Instruct">qwen3-vl-2b-instruct</option>
                                                     <option value="OpenGVLab/InternVL3_5-2B">internvl3_5-2b</option>
-                                                    <option value="../train/paligemma2_weapon_detection">../train/paligemma2_weapon_detection</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -70,9 +70,9 @@
                                         <div class="control">
                                             <div class="select is-fullwidth">
                                                 <select name="finetuned_model" id="finetuned-model-select">
-                                                    <option value="    ">        </option>
+                                                    <option value="" disabled selected>— Select model —</option>
                                                     <option value="../train/paligemma2_weapon_detection">../train/paligemma2_weapon_detection</option>
-                                                    <option value="florence-2-ft-missing">internvl3_5-2b</option>
+                                                    <option value="florence-2-ft-missing">florence-2-ft-missing</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -106,7 +106,7 @@
 
                             <div class="field is-grouped">
                                 <div class="control">
-                                    <button class="button is-primary" type="submit">Analyze</button>
+                                    <button class="button is-primary" type="submit" id="analyze-btn">Analyze</button>
                                 </div>
                                 <div class="control">
                                     <button class="button is-light" type="button" id="reset-btn">Reset</button>
@@ -249,7 +249,12 @@
         },
     };
 
+    // ALL_PROMPTS — union of all prompt types across all models, shown as preview before model is selected
+    const ALL_PROMPTS = ["SIMPLE CAPTION", "STANDARD CAPTION", "DETAILED CAPTION", "VQA", "DETECT"];
+
     const modelSelect = document.getElementById('model-select');
+    const finetunedSelect = document.getElementById('finetuned-model-select');
+    const analyzeBtn = document.getElementById('analyze-btn');
     let selectedPrompts = {};
     let currentVideoFrames = [];
     let currentBaseUrl = "";
@@ -342,9 +347,10 @@
     }
 
     // generates prompt checkboxes for models
+    // ak nie je vybraný žiadny model, zobrazí preview všetkých promptov (disabled checkboxy)
     function updatePromptOptions() {
-        const selectedModel = modelSelect.value;
-        const availablePrompts = PROMPT_MAP[selectedModel] || {};
+        // ZMENENÉ: zisti aktívny model — standard alebo finetuned
+        const activeModel = modelSelect.value || finetunedSelect.value;
 
         const oldCheckboxContainer = document.getElementById('prompt-checkboxes');
         if (oldCheckboxContainer) oldCheckboxContainer.remove();
@@ -357,6 +363,54 @@
         checkboxContainer.innerHTML = '<label class="label">Prompt Types</label>';
 
         selectedPrompts = {};
+
+        // ak nie je model — zobraz všetky prompty ako preview (neklikateľné, vyblednuté)
+        if (!activeModel) {
+            ALL_PROMPTS.forEach((promptName) => {
+                const promptBox = document.createElement('div');
+                promptBox.className = 'box mb-3';
+                promptBox.style.padding = '1rem';
+                promptBox.style.backgroundColor = '#f5f9ff';
+                promptBox.style.border = '1px solid rgba(10, 108, 255, 0.12)';
+                promptBox.style.opacity = '0.45';
+
+                const checkboxLabel = document.createElement('label');
+                checkboxLabel.className = 'checkbox';
+                checkboxLabel.style.display = 'flex';
+                checkboxLabel.style.alignItems = 'center';
+                checkboxLabel.style.cursor = 'not-allowed';
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.style.marginRight = '0.5rem';
+                checkbox.disabled = true;
+
+                const labelText = document.createElement('span');
+                labelText.textContent = promptName;
+                labelText.style.fontWeight = '600';
+
+                checkboxLabel.appendChild(checkbox);
+                checkboxLabel.appendChild(labelText);
+                promptBox.appendChild(checkboxLabel);
+                checkboxContainer.appendChild(promptBox);
+            });
+
+            // NOVÉ: Analyze button je disabled kým nie je model vybraný
+            analyzeBtn.disabled = true;
+            analyzeBtn.title = 'Select a model first';
+
+            const promptTypeField = document.getElementById('prompt-type-select').closest('.field');
+            promptTypeField.style.display = 'none';
+            promptTypeField.parentNode.insertBefore(checkboxContainer, promptTypeField.nextSibling);
+            return;
+        }
+
+        // model je vybraný — vygeneruj normálne checkboxy pre daný model
+        const availablePrompts = PROMPT_MAP[activeModel] || {};
+
+        // Analyze button odblokuj
+        analyzeBtn.disabled = false;
+        analyzeBtn.title = '';
 
         Object.entries(availablePrompts).forEach(([promptName, promptConfig]) => {
             const promptBox = document.createElement('div');
@@ -416,7 +470,25 @@
         promptTypeField.parentNode.insertBefore(checkboxContainer, promptTypeField.nextSibling);
     }
 
-    modelSelect.addEventListener('change', updatePromptOptions);
+    // standard model — resetuje finetuned, potom aktualizuje prompty
+    modelSelect.addEventListener('change', () => {
+        if (modelSelect.value) {
+            finetunedSelect.value = "";
+            finetunedSelect.selectedIndex = 0;
+        }
+        updatePromptOptions();
+    });
+
+    // finetuned model — resetuje standard, potom aktualizuje prompty
+    finetunedSelect.addEventListener('change', () => {
+        if (finetunedSelect.value) {
+            modelSelect.value = "";
+            modelSelect.selectedIndex = 0;
+        }
+        updatePromptOptions();
+    });
+
+    // pri štarte zobraz preview promptov (bez vybraného modelu)
     updatePromptOptions();
 
     const form = document.getElementById('recognize-form');
@@ -634,7 +706,7 @@
         }
     });
 
-    // ===== RESET =====
+    //RESET
     resetBtn.addEventListener('click', async () => {
         form.reset();
         preview.style.display = 'block';
@@ -648,6 +720,9 @@
         currentVideoFrames = [];
         vqaTimelines = []; // clears both VQA and DETECT timelines
         renderVqaTimelineUI();
+        // obnov preview promptov
+        modelSelect.selectedIndex = 0;
+        finetunedSelect.selectedIndex = 0;
         updatePromptOptions();
 
         //clear frames on server
@@ -667,7 +742,7 @@
         const analyzeButton = document.querySelector('button[type="submit"]');
 
         if (checkedPrompts.length === 0) {
-            analyzeButton.setCustomValidity('Vyberte aspoň jeden prompt.');
+            analyzeButton.setCustomValidity('Pick at least one prompt');
             analyzeButton.reportValidity();
             return;
         }
@@ -677,7 +752,8 @@
         const formData = new FormData();
         //append image,model,prompts
         formData.append('image', imageInput.files[0]);
-        formData.append('model', modelSelect.value);
+        // posiela aktívny model (standard alebo finetuned) pod rovnakým kľúčom
+        formData.append('model', modelSelect.value || finetunedSelect.value);
 
         //add prompts to array
         checkedPrompts.forEach(promptName => {

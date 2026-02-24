@@ -192,14 +192,13 @@ def recognize(request):
                         detections_dict = None
 
 
-                        if ui.base_prompt == "detect":
-                            if isinstance(raw_result, list) and len(raw_result) > 0:
-                                detections_dict = raw_result
-                            elif isinstance(raw_result, dict):
-                                if "<OD>" in raw_result:
-                                    detections_dict = raw_result["<OD>"]
-                                elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
-                                    detections_dict = raw_result[ui.full_prompt]
+                        if isinstance(raw_result, list) and len(raw_result) > 0:
+                            detections_dict = raw_result
+                        elif isinstance(raw_result, dict):
+                            if "<OD>" in raw_result:
+                                detections_dict = raw_result["<OD>"]
+                            elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
+                                detections_dict = raw_result[ui.full_prompt]
 
                         if detections_dict:
                             if isinstance(detections_dict, list):
@@ -216,7 +215,7 @@ def recognize(request):
                         else:
                             result = raw_result
                         all_results.append(result)
-
+                    print(all_detections, "VSETKE DETEKCIE")
                     if all_detections:
                         #for video: save into TEMP_FRAMES_DIR, for one frame: /tmp
                         if is_video:

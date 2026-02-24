@@ -621,6 +621,8 @@
             if (annotatedFramesMap[frameData.file]) {
                 img.src = annotatedFramesMap[frameData.file] + '?t=' + Date.now();
                 img.style.border = "2px solid #00ff00";
+            } else {
+                img.style.border = "2px solid #ff4444";  // cerveny
             }
         });
     }

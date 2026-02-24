@@ -148,9 +148,6 @@ def recognize(request):
                     all_results = []
                     all_detections = []
 
-                    if not is_video:
-                        out_path = f"/tmp/out_{prompt_name}_{frame_name}"
-
                     #third loop - iterates multiple prompts of one type (detect person; gun)
                     for sub_input in sub_inputs:
                         ui.prompt_input = sub_input
@@ -195,13 +192,14 @@ def recognize(request):
                         detections_dict = None
 
 
-                        if isinstance(raw_result, list) and len(raw_result) > 0:
-                            detections_dict = raw_result
-                        elif isinstance(raw_result, dict):
-                            if "<OD>" in raw_result:
-                                detections_dict = raw_result["<OD>"]
-                            elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
-                                detections_dict = raw_result[ui.full_prompt]
+                        if ui.base_prompt == "detect":
+                            if isinstance(raw_result, list) and len(raw_result) > 0:
+                                detections_dict = raw_result
+                            elif isinstance(raw_result, dict):
+                                if "<OD>" in raw_result:
+                                    detections_dict = raw_result["<OD>"]
+                                elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
+                                    detections_dict = raw_result[ui.full_prompt]
 
                         if detections_dict:
                             if isinstance(detections_dict, list):
@@ -218,17 +216,17 @@ def recognize(request):
                         else:
                             result = raw_result
                         all_results.append(result)
-                    #print(f"DEBUG all_detections: {all_detections}")
-                    #print(f"DEBUG out_path: {out_path}")
+
                     if all_detections:
                         #for video: save into TEMP_FRAMES_DIR, for one frame: /tmp
                         if is_video:
                             base_name = frame_name.replace('.jpg', '')
                             annotated_filename = f"annotated_{base_name}.jpg"
                             out_path = os.path.join(TEMP_FRAMES_DIR, annotated_filename)
+                        else:
+                            out_path = f"/tmp/out_{prompt_name}_{frame_name}"
 
                         if "florence" in ui.model_name.lower():
-
                             draw_objects.draw_boxes_florence(current_image_path, all_detections, out_path)
                         elif "paligemma" in ui.model_name.lower():
                             draw_objects.draw_boxes_paligemma(current_image_path, all_detections, out_path)

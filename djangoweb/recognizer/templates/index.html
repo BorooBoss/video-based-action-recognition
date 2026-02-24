@@ -941,11 +941,14 @@
                             annotatedFramesMap[frameData.frame] = res.annotated_frame_url;
                         }
                     });
-
-                    if (!data.is_video && frameData.analysis[0]?.annotated_image) {
-                        previewVideo.style.display = 'none';
-                        preview.style.display = 'block';
-                        preview.src = frameData.analysis[0].annotated_image;
+                    // only for detect prompts, not first
+                    if (!data.is_video) {
+                        const annotatedResult = frameData.analysis.find(a => a.annotated_image);
+                        if (annotatedResult) {
+                            previewVideo.style.display = 'none';
+                            preview.style.display = 'block';
+                            preview.src = annotatedResult.annotated_image;
+                        }
                     }
                 });
 

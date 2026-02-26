@@ -608,10 +608,12 @@
             Time: ${f.time_sec}.0 |
             Frame index: ${f.frame_idx}
         `;
-
+        /* posuvanie snimkov zosynchronizovane s videom
         if (previewVideo.duration) {
             previewVideo.currentTime = time;
         }
+        */
+
     }
     //update frames with annotations if detect prompt was called
     function updateThumbnailsWithAnnotations(annotatedFramesMap) {

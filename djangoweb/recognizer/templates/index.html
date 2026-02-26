@@ -16,6 +16,69 @@
             padding-bottom: 2.5rem;
             min-height: 220px;
         }
+
+        /* Štýly pre multi-input prompt riadky (VQA a DETECT) */
+        .prompt-input-row {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            margin-top: 0.5rem;
+        }
+        .prompt-input-row input {
+            flex: 1;
+        }
+        /* Tlačidlo na pridanie nového vstupu (+) */
+        .btn-add-prompt-input {
+            background: none;
+            border: 1.5px solid rgba(10, 108, 255, 0.35);
+            color: #094bb7;
+            border-radius: 6px;
+            width: 28px;
+            height: 28px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .btn-add-prompt-input:hover {
+            background: rgba(10, 108, 255, 0.08);
+            border-color: #094bb7;
+        }
+        /* Tlačidlo na odobratie riadku (×) */
+        .btn-remove-prompt-input {
+            background: none;
+            border: 1.5px solid rgba(220, 50, 50, 0.3);
+            color: #cc3333;
+            border-radius: 6px;
+            width: 28px;
+            height: 28px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s, border-color 0.15s;
+        }
+        .btn-remove-prompt-input:hover {
+            background: rgba(220, 50, 50, 0.08);
+            border-color: #cc3333;
+        }
+        /* Kontajner so všetkými riadkami inputov pre jeden prompt */
+        .prompt-inputs-container {
+            display: flex;
+            flex-direction: column;
+            gap: 0;
+        }
+        /* Malý hint text pod inputmi */
+        .prompt-input-hint {
+            font-size: 0.72rem;
+            color: #888;
+            margin-top: 0.3rem;
+        }
     </style>
 </head>
 <body>
@@ -349,8 +412,58 @@
         slider.style.background = `linear-gradient(to right, ${gradientParts.join(', ')})`;
     }
 
+    // =====================================================================
+    // HELPER: vytvorí jeden input riadok pre multi-input prompt (VQA / DETECT)
+    // Parametry:
+    //   container   — DOM element .prompt-inputs-container
+    //   placeholder — text placeholdera
+    //   isFirst     — prvý riadok má tlačidlo "+", ostatné "×"
+    //   promptName  — napr. "VQA" alebo "DETECT"
+    // =====================================================================
+    function createPromptInputRow(container, placeholder, isFirst, promptName) {
+        const row = document.createElement('div');
+        row.className = 'prompt-input-row';
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'input';
+        input.placeholder = placeholder;
+        // unikátna trieda pre zbieranie hodnôt pri submit
+        input.classList.add(`prompt-multi-input-${promptName}`);
+
+        const btn = document.createElement('button');
+        btn.type = 'button';
+
+        if (isFirst) {
+            // Tlačidlo "+" — pridá nový riadok pod tento
+            btn.className = 'btn-add-prompt-input';
+            btn.title = 'Add another input';
+            btn.innerHTML = '<i class="fas fa-plus"></i>';
+            btn.addEventListener('click', () => {
+                // pridaj nový riadok za posledným existujúcim riadkom v kontajneri
+                const newRow = createPromptInputRow(container, placeholder, false, promptName);
+                container.appendChild(newRow);
+                newRow.querySelector('input').focus();
+            });
+        } else {
+            // Tlačidlo "×" — odstráni tento riadok
+            btn.className = 'btn-remove-prompt-input';
+            btn.title = 'Remove this input';
+            btn.innerHTML = '<i class="fas fa-times"></i>';
+            btn.addEventListener('click', () => {
+                row.remove();
+            });
+        }
+
+        row.appendChild(input);
+        row.appendChild(btn);
+        return row;
+    }
+
+    // =====================================================================
     // generates prompt checkboxes for models
     // ak nie je vybraný žiadny model, zobrazí preview všetkých promptov (disabled checkboxy)
+    // =====================================================================
     function updatePromptOptions() {
         // ZMENENÉ: zisti aktívny model — standard alebo finetuned
         const activeModel = modelSelect.value || finetunedSelect.value;
@@ -422,6 +535,7 @@
             promptBox.style.backgroundColor = '#f5f9ff';
             promptBox.style.border = '1px solid rgba(10, 108, 255, 0.12)';
 
+            // Hlavička checkboxu (názov promptu + checkbox)
             const checkboxLabel = document.createElement('label');
             checkboxLabel.className = 'checkbox';
             checkboxLabel.style.display = 'flex';
@@ -441,19 +555,41 @@
             promptBox.appendChild(checkboxLabel);
 
             if (promptConfig.needsInput) {
-                const inputField = document.createElement('input');
-                inputField.type = 'text';
-                inputField.className = 'input mt-2';
-                inputField.placeholder = promptConfig.placeholder;
-                inputField.id = `input-${promptName}`;
-                inputField.style.display = 'none';
-                promptBox.appendChild(inputField);
+                // =====================================================================
+                // NOVÉ: multi-input kontajner pre VQA a DETECT
+                // Namiesto jedného input poľa zobrazíme kontajner s viacerými riadkami,
+                // každý riadok má vlastný input + tlačidlo + / ×
+                // =====================================================================
+                const inputsContainer = document.createElement('div');
+                inputsContainer.className = 'prompt-inputs-container';
+                inputsContainer.id = `inputs-container-${promptName}`;
+                inputsContainer.style.display = 'none'; // skryté kým nie je checkbox zaškrtnutý
+
+                // Hint text pod inputmi
+                const hintText = document.createElement('div');
+                hintText.className = 'prompt-input-hint';
+                if (promptName === 'VQA') {
+                    hintText.textContent = 'Each line = one question. Click + to add more.';
+                } else if (promptName === 'DETECT') {
+                    hintText.textContent = 'Each line = one label. Click + to add more.';
+                }
+
+                // Prvý riadok (s tlačidlom +)
+                const firstRow = createPromptInputRow(inputsContainer, promptConfig.placeholder, true, promptName);
+                inputsContainer.appendChild(firstRow);
+                inputsContainer.appendChild(hintText);
+
+                promptBox.appendChild(inputsContainer);
 
                 checkbox.addEventListener('change', (e) => {
                     selectedPrompts[promptName] = e.target.checked;
-                    inputField.style.display = e.target.checked ? 'block' : 'none';
+                    inputsContainer.style.display = e.target.checked ? 'flex' : 'none';
+                    inputsContainer.style.flexDirection = 'column';
                     if (e.target.checked) {
                         document.querySelector('button[type="submit"]').setCustomValidity('');
+                        // focus na prvý input
+                        const firstInput = inputsContainer.querySelector('input');
+                        if (firstInput) firstInput.focus();
                     }
                 });
             } else {
@@ -632,6 +768,37 @@
         });
     }
 
+    // =====================================================================
+    // HELPER: zbiera všetky hodnoty z multi-input kontajnera pre daný prompt
+    // Pre VQA: spája otázky pomocou "?" separátora (pôvodný formát backendu)
+    // Pre DETECT: spája labely pomocou ";" separátora (pôvodný formát backendu)
+    // =====================================================================
+    function collectMultiInputValue(promptName) {
+        const container = document.getElementById(`inputs-container-${promptName}`);
+        if (!container) return '';
+
+        const inputs = container.querySelectorAll(`input.prompt-multi-input-${promptName}`);
+        const values = Array.from(inputs)
+                .map(inp => inp.value.trim())
+                .filter(v => v.length > 0);
+
+        if (values.length === 0) return '';
+
+        if (promptName === 'VQA') {
+            // VQA: každá otázka oddelená "?" — backend ich potom rozdeľuje podľa "?"
+            return values.map(q => {
+                // ak otázka nemá otáznik na konci, pridaj ho
+                return q.endsWith('?') ? q : q + '?';
+            }).join(' ');
+        } else if (promptName === 'DETECT') {
+            // DETECT: každý label oddelený ";" — backend ich rozdeľuje podľa ";"
+            return values.join('; ');
+        }
+
+        // fallback pre ostatné typy
+        return values.join('; ');
+    }
+
     //main javascript function - file input
     imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
@@ -765,10 +932,18 @@
         //add prompts to array
         checkedPrompts.forEach(promptName => {
             formData.append('selected_prompts[]', promptName);
-            //if prompt contains text
-            const inputField = document.getElementById(`input-${promptName}`);
-            if (inputField) {
-                formData.append(`prompt_input_${promptName}`, inputField.value);
+            // ak prompt má multi-input kontajner, zberi hodnoty z neho
+            const inputsContainer = document.getElementById(`inputs-container-${promptName}`);
+            if (inputsContainer) {
+                // zbieranie hodnôt z viacerých riadkov a ich spojenie do jedného stringu
+                const combinedValue = collectMultiInputValue(promptName);
+                formData.append(`prompt_input_${promptName}`, combinedValue);
+            } else {
+                // fallback pre prompty bez multi-inputu (štandardné jednoduché inputy)
+                const inputField = document.getElementById(`input-${promptName}`);
+                if (inputField) {
+                    formData.append(`prompt_input_${promptName}`, inputField.value);
+                }
             }
         });
 
@@ -810,10 +985,10 @@
                 const vqaPromptEntries = checkedPrompts
                         .filter(p => p.toUpperCase().includes('VQA'))
                         .map(promptName => {
-                            const inputField = document.getElementById(`input-${promptName}`);
-                            const rawQuestion = inputField ? inputField.value.trim() : '';
-                            const subQuestions = splitVqaQuestions(rawQuestion);
-                            return { promptName, subQuestions: subQuestions.length ? subQuestions : [rawQuestion || promptName] };
+                            // zbieranie hodnôt z multi-input kontajnera
+                            const combinedValue = collectMultiInputValue(promptName);
+                            const subQuestions = splitVqaQuestions(combinedValue);
+                            return { promptName, subQuestions: subQuestions.length ? subQuestions : [combinedValue || promptName] };
                         });
 
                 // Build flat list of timelines: one per sub-question
@@ -881,8 +1056,8 @@
                     const detectPromptEntries = checkedPrompts
                             .filter(p => p.toUpperCase() === 'DETECT')
                             .map(promptName => {
-                                const inputField = document.getElementById(`input-${promptName}`);
-                                const rawInput = inputField ? inputField.value.trim() : '';
+                                // zbieranie hodnôt z multi-input kontajnera
+                                const rawInput = collectMultiInputValue(promptName);
                                 // Backend splits DETECT only by ";"
                                 const subLabels = rawInput.includes(';')
                                         ? rawInput.split(';').map(s => s.trim()).filter(s => s.length > 0)

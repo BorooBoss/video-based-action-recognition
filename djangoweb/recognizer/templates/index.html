@@ -335,8 +335,11 @@
             let color; //green if detection, red if no detection
             if (results[i] === true)
                 color = '#00cc66';
+            else if (results[i] === false)
+                color = '#FF4444FF';
             else
-                color = '#ff4444';
+                color = '#323232';
+
 
 
             gradientParts.push(`${color} ${startPercent}%`);
@@ -856,7 +859,13 @@
                                     resultText.includes('none') ||
                                     resultText.includes('absent');
 
-                            tl.results[frameIndex] = isPositive && !isNegative;
+                            if (isPositive && !isNegative) {
+                                tl.results[frameIndex] = true;   // green
+                            } else if (isNegative && !isPositive) {
+                                tl.results[frameIndex] = false;  // red
+                            } else {
+                                tl.results[frameIndex] = null;   // grey for open questions
+                            }
                         });
                     });
                 });

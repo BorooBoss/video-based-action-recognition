@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Image & Video Recognizer — Blue Bulma Design</title>
+    <title>Image &amp; Video Recognizer — Blue Bulma Design</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.4/css/bulma.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
@@ -16,7 +16,6 @@
             padding-bottom: 2.5rem;
             min-height: 220px;
         }
-
         /* Štýly pre multi-input prompt riadky (VQA a DETECT) */
         .prompt-input-row {
             display: flex;
@@ -24,61 +23,102 @@
             gap: 0.4rem;
             margin-top: 0.5rem;
         }
-        .prompt-input-row input {
-            flex: 1;
-        }
+        .prompt-input-row input { flex: 1; }
         /* Tlačidlo na pridanie nového vstupu (+) */
         .btn-add-prompt-input {
             background: none;
             border: 1.5px solid rgba(10, 108, 255, 0.35);
             color: #094bb7;
             border-radius: 6px;
-            width: 28px;
-            height: 28px;
+            width: 28px; height: 28px;
             font-size: 1rem;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
             transition: background 0.15s, border-color 0.15s;
         }
-        .btn-add-prompt-input:hover {
-            background: rgba(10, 108, 255, 0.08);
-            border-color: #094bb7;
-        }
-        /* Tlačidlo na odobratie riadku (×) */
+        .btn-add-prompt-input:hover { background: rgba(10, 108, 255, 0.08); border-color: #094bb7; }
+        /* Tlačidlo na odobratie riadku (x) */
         .btn-remove-prompt-input {
             background: none;
             border: 1.5px solid rgba(220, 50, 50, 0.3);
             color: #cc3333;
             border-radius: 6px;
-            width: 28px;
-            height: 28px;
+            width: 28px; height: 28px;
             font-size: 0.85rem;
             cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex; align-items: center; justify-content: center;
             flex-shrink: 0;
             transition: background 0.15s, border-color 0.15s;
         }
-        .btn-remove-prompt-input:hover {
-            background: rgba(220, 50, 50, 0.08);
-            border-color: #cc3333;
-        }
+        .btn-remove-prompt-input:hover { background: rgba(220, 50, 50, 0.08); border-color: #cc3333; }
         /* Kontajner so všetkými riadkami inputov pre jeden prompt */
-        .prompt-inputs-container {
-            display: flex;
-            flex-direction: column;
-            gap: 0;
-        }
+        .prompt-inputs-container { display: flex; flex-direction: column; gap: 0; }
         /* Malý hint text pod inputmi */
-        .prompt-input-hint {
-            font-size: 0.72rem;
-            color: #888;
-            margin-top: 0.3rem;
+        .prompt-input-hint { font-size: 0.72rem; color: #888; margin-top: 0.3rem; }
+
+        /* =====================================================================
+           INLINE RESULT PANEL — zobrazuje sa priamo pod každým prompt-boxom
+           po dokončení analýzy
+           ===================================================================== */
+        .prompt-result-panel {
+            margin-top: 0.75rem;
+            border-top: 1px solid rgba(10, 108, 255, 0.12);
+            padding-top: 0.65rem;
+            display: none;
         }
+        /* Navigačná lišta pre časy (← Time: 0,0s → | krok X/Y) */
+        .result-time-nav {
+            display: flex; align-items: center; gap: 0.4rem;
+            margin-bottom: 0.5rem;
+        }
+        .result-time-nav-btn {
+            background: none;
+            border: 1.5px solid rgba(10, 108, 255, 0.3);
+            color: #094bb7;
+            border-radius: 6px;
+            width: 26px; height: 26px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s;
+        }
+        .result-time-nav-btn:hover:not(:disabled) { background: rgba(10, 108, 255, 0.08); }
+        .result-time-nav-btn:disabled { opacity: 0.35; cursor: default; }
+        .result-time-label {
+            font-size: 0.78rem; font-weight: 600; color: #094bb7;
+            flex: 1; text-align: center;
+        }
+        .result-time-counter { font-size: 0.72rem; color: #888; white-space: nowrap; }
+        /* Samotné výsledkové pole */
+        .result-content-box {
+            background: #fff;
+            border: 1px solid rgba(10, 108, 255, 0.1);
+            border-radius: 6px;
+            padding: 0.6rem 0.75rem;
+            font-size: 0.8rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+            max-height: 180px;
+            overflow-y: auto;
+            color: #222;
+            line-height: 1.45;
+        }
+        /* Indikátor výsledku pre VQA (yes/no farebný badge) */
+        .result-badge {
+            display: inline-block;
+            padding: 0.15rem 0.55rem;
+            border-radius: 4px;
+            font-size: 0.75rem; font-weight: 700;
+            margin-bottom: 0.35rem;
+        }
+        .result-badge.yes  { background: #e6fff2; color: #00883f; border: 1px solid #00cc66; }
+        .result-badge.no   { background: #fff0f0; color: #bb2222; border: 1px solid #ff4444; }
+        .result-badge.open { background: #f0f4ff; color: #094bb7; border: 1px solid rgba(10,108,255,0.25); }
+        /* Počet detekcií badge (pre DETECT) */
+        .result-badge.count { background: #f0f4ff; color: #094bb7; border: 1px solid rgba(10,108,255,0.25); }
     </style>
 </head>
 <body>
@@ -181,10 +221,11 @@
 
                 <div class="has-divider mt-4"></div>
 
+                <!-- Raw output box — zostáva ako fallback/debug view -->
                 <div class="card mt-4">
                     <div class="card-content">
-                        <h4 class="title is-6">Output</h4>
-                        <pre id="result-box">No Result.</pre>
+                        <h4 class="title is-6">Raw Output</h4>
+                        <pre id="result-box" style="font-size:0.72rem; max-height:220px; overflow:auto;">No Result.</pre>
                     </div>
                 </div>
             </div>
@@ -327,6 +368,16 @@
     let vqaTimelines = [];
     let activeTimelineIndex = 0;
 
+    // =====================================================================
+    // INLINE RESULT STATE
+    // inlineResults = {
+    //   "VQA": { frames: [{timestamp, result}, ...], currentIndex: 0 },
+    //   "DETECT": { frames: [...], currentIndex: 0 },
+    //   ...
+    // }
+    // =====================================================================
+    let inlineResults = {};
+
     // timelines switch
     function switchTimeline(index) {
         if (index < 0 || index >= vqaTimelines.length) return;
@@ -342,7 +393,7 @@
         }
 
         document.getElementById('timeline-question-text').textContent =
-                q.length > 52 ? q.substring(0, 49) + '…' : q;
+                q.length > 52 ? q.substring(0, 49) + '...' : q;
 
         document.getElementById('timeline-counter').textContent =
                 `${index + 1} / ${vqaTimelines.length}`;
@@ -403,8 +454,6 @@
             else
                 color = '#323232';
 
-
-
             gradientParts.push(`${color} ${startPercent}%`);
             gradientParts.push(`${color} ${endPercent}%`);
         }
@@ -417,7 +466,7 @@
     // Parametry:
     //   container   — DOM element .prompt-inputs-container
     //   placeholder — text placeholdera
-    //   isFirst     — prvý riadok má tlačidlo "+", ostatné "×"
+    //   isFirst     — prvy riadok ma tlacidlo "+", ostatne "x"
     //   promptName  — napr. "VQA" alebo "DETECT"
     // =====================================================================
     function createPromptInputRow(container, placeholder, isFirst, promptName) {
@@ -428,36 +477,220 @@
         input.type = 'text';
         input.className = 'input';
         input.placeholder = placeholder;
-        // unikátna trieda pre zbieranie hodnôt pri submit
+        // unikatna trieda pre zbieranie hodnot pri submit
         input.classList.add(`prompt-multi-input-${promptName}`);
 
         const btn = document.createElement('button');
         btn.type = 'button';
 
         if (isFirst) {
-            // Tlačidlo "+" — pridá nový riadok pod tento
+            // Tlacidlo "+" — prida novy riadok pod tento
             btn.className = 'btn-add-prompt-input';
             btn.title = 'Add another input';
             btn.innerHTML = '<i class="fas fa-plus"></i>';
             btn.addEventListener('click', () => {
-                // pridaj nový riadok za posledným existujúcim riadkom v kontajneri
+                // pridaj novy riadok pred hint text (posledny element v kontajneri)
+                const hint = container.querySelector('.prompt-input-hint');
                 const newRow = createPromptInputRow(container, placeholder, false, promptName);
-                container.appendChild(newRow);
+                container.insertBefore(newRow, hint);
                 newRow.querySelector('input').focus();
             });
         } else {
-            // Tlačidlo "×" — odstráni tento riadok
+            // Tlacidlo "x" — odstrani tento riadok
             btn.className = 'btn-remove-prompt-input';
             btn.title = 'Remove this input';
             btn.innerHTML = '<i class="fas fa-times"></i>';
-            btn.addEventListener('click', () => {
-                row.remove();
-            });
+            btn.addEventListener('click', () => { row.remove(); });
         }
 
         row.appendChild(input);
         row.appendChild(btn);
         return row;
+    }
+
+    // =====================================================================
+    // INLINE RESULT PANEL — vytvorí a vloží panel s výsledkami pod prompt-box
+    // Volá sa po dokončení analýzy pre každý prompt
+    //
+    // promptName   — napr. "VQA", "DETECT", "SIMPLE CAPTION"
+    // framesData   — pole objektov { timestamp, result }
+    //                pre obrázok (nie video) = [ { timestamp: null, result: "..." } ]
+    // isVideo      — či ide o video (zobrazuje časovú navigáciu)
+    // =====================================================================
+    function renderInlineResultPanel(promptName, framesData, isVideo) {
+        // nájdi prompt-box podľa promptName (hľadáme cez data atribút)
+        const promptBox = document.querySelector(`.prompt-box[data-prompt="${promptName}"]`);
+        if (!promptBox) return;
+
+        // odober starý panel ak existuje
+        const oldPanel = promptBox.querySelector('.prompt-result-panel');
+        if (oldPanel) oldPanel.remove();
+
+        if (!framesData || framesData.length === 0) return;
+
+        // uložíme stav pre navigáciu
+        inlineResults[promptName] = { frames: framesData, currentIndex: 0 };
+
+        const panel = document.createElement('div');
+        panel.className = 'prompt-result-panel';
+        panel.style.display = 'block';
+
+        if (isVideo && framesData.length > 1) {
+            // ---- Navigačná lišta pre časy ----
+            const nav = document.createElement('div');
+            nav.className = 'result-time-nav';
+
+            const btnPrev = document.createElement('button');
+            btnPrev.type = 'button';
+            btnPrev.className = 'result-time-nav-btn';
+            btnPrev.innerHTML = '<i class="fas fa-chevron-left"></i>';
+            btnPrev.disabled = true;
+
+            const timeLabel = document.createElement('div');
+            timeLabel.className = 'result-time-label';
+            timeLabel.textContent = `Time: ${framesData[0].timestamp}s`;
+
+            const counter = document.createElement('div');
+            counter.className = 'result-time-counter';
+            counter.textContent = `1 / ${framesData.length}`;
+
+            const btnNext = document.createElement('button');
+            btnNext.type = 'button';
+            btnNext.className = 'result-time-nav-btn';
+            btnNext.innerHTML = '<i class="fas fa-chevron-right"></i>';
+            btnNext.disabled = framesData.length <= 1;
+
+            nav.appendChild(btnPrev);
+            nav.appendChild(timeLabel);
+            nav.appendChild(counter);
+            nav.appendChild(btnNext);
+            panel.appendChild(nav);
+
+            const contentBox = document.createElement('div');
+            contentBox.className = 'result-content-box';
+            panel.appendChild(contentBox);
+
+            // funkcia na aktualizáciu obsahu pri navigácii
+            function updateContent(idx) {
+                const state = inlineResults[promptName];
+                state.currentIndex = idx;
+                const frame = framesData[idx];
+                timeLabel.textContent = `Time: ${frame.timestamp}s`;
+                counter.textContent = `${idx + 1} / ${framesData.length}`;
+                btnPrev.disabled = idx === 0;
+                btnNext.disabled = idx === framesData.length - 1;
+                renderResultContent(contentBox, frame.result, promptName);
+            }
+
+            btnPrev.addEventListener('click', () => {
+                const idx = inlineResults[promptName].currentIndex;
+                if (idx > 0) updateContent(idx - 1);
+            });
+            btnNext.addEventListener('click', () => {
+                const idx = inlineResults[promptName].currentIndex;
+                if (idx < framesData.length - 1) updateContent(idx + 1);
+            });
+
+            updateContent(0);
+
+        } else {
+            // ---- Jednoduchý výsledok (obrázok alebo jeden frame) ----
+            const contentBox = document.createElement('div');
+            contentBox.className = 'result-content-box';
+            renderResultContent(contentBox, framesData[0].result, promptName);
+            panel.appendChild(contentBox);
+        }
+
+        promptBox.appendChild(panel);
+    }
+
+    // =====================================================================
+    // HELPER: vyplní contentBox správnym obsahom podľa typu výsledku
+    // Pre VQA: yes/no badge + text
+    // Pre DETECT: počet detekcií + zoznam
+    // Pre Caption: plain text
+    // =====================================================================
+    function renderResultContent(contentBox, result, promptName) {
+        contentBox.innerHTML = '';
+
+        if (promptName === 'VQA') {
+            // VQA výsledok môže byť string alebo pole stringov (viac otázok)
+            const results = Array.isArray(result) ? result : [result];
+            results.forEach(res => {
+                const text = (typeof res === 'string' ? res : JSON.stringify(res)).trim();
+                const lc = text.toLowerCase();
+
+                let badgeClass = 'open';
+                const isYes = lc.startsWith('yes') || lc.includes('detected') || lc.includes('present') || lc.includes('visible');
+                const isNo  = lc.startsWith('no')  || (lc.includes('not') && !lc.startsWith('note'));
+                if (isYes && !isNo) badgeClass = 'yes';
+                else if (isNo && !isYes) badgeClass = 'no';
+
+                const badge = document.createElement('span');
+                badge.className = `result-badge ${badgeClass}`;
+                badge.textContent = badgeClass === 'yes' ? '✓ YES' : badgeClass === 'no' ? '✗ NO' : '◌ OPEN';
+                contentBox.appendChild(badge);
+                contentBox.appendChild(document.createTextNode(' '));
+
+                const textNode = document.createElement('span');
+                textNode.textContent = text;
+                textNode.style.fontSize = '0.78rem';
+                contentBox.appendChild(textNode);
+
+                if (results.length > 1) {
+                    contentBox.appendChild(document.createElement('br'));
+                    contentBox.appendChild(document.createElement('br'));
+                }
+            });
+
+        } else if (promptName === 'DETECT') {
+            // DETECT výsledok = pole objektov alebo pole polí
+            let subArrays = [];
+            if (Array.isArray(result) && result.length > 0 && Array.isArray(result[0])) {
+                subArrays = result;
+            } else if (Array.isArray(result)) {
+                subArrays = [result];
+            }
+
+            subArrays.forEach((subArr, subIdx) => {
+                if (subArrays.length > 1) {
+                    const subLabel = document.createElement('div');
+                    subLabel.style.cssText = 'font-size:0.7rem;font-weight:700;color:#555;margin-bottom:2px;';
+                    subLabel.textContent = `Sub-query ${subIdx + 1}:`;
+                    contentBox.appendChild(subLabel);
+                }
+
+                if (!Array.isArray(subArr) || subArr.length === 0) {
+                    const badge = document.createElement('span');
+                    badge.className = 'result-badge no';
+                    badge.textContent = '✗ NOT DETECTED';
+                    contentBox.appendChild(badge);
+                } else {
+                    const badge = document.createElement('span');
+                    badge.className = 'result-badge count';
+                    badge.textContent = `✓ ${subArr.length} detection${subArr.length > 1 ? 's' : ''}`;
+                    contentBox.appendChild(badge);
+
+                    const list = document.createElement('div');
+                    list.style.cssText = 'margin-top:0.3rem;font-size:0.72rem;';
+                    subArr.forEach((det, i) => {
+                        const item = document.createElement('div');
+                        const bbox = det.bbox ? det.bbox.map(v => v.toFixed(3)).join(', ') : '';
+                        item.textContent = `#${i+1} ${det.label}  [${bbox}]`;
+                        item.style.color = '#444';
+                        list.appendChild(item);
+                    });
+                    contentBox.appendChild(list);
+                }
+
+                if (subArrays.length > 1) contentBox.appendChild(document.createElement('br'));
+            });
+
+        } else {
+            // Caption / iný textový výsledok
+            const text = typeof result === 'object' ? JSON.stringify(result, null, 2) : result;
+            contentBox.textContent = text;
+        }
     }
 
     // =====================================================================
@@ -472,6 +705,9 @@
         if (oldCheckboxContainer) oldCheckboxContainer.remove();
         const oldError = document.getElementById('prompt-error');
         if (oldError) oldError.remove();
+
+        // reset inline výsledkov pri zmene modelu
+        inlineResults = {};
 
         const checkboxContainer = document.createElement('div');
         checkboxContainer.id = 'prompt-checkboxes';
@@ -530,7 +766,9 @@
 
         Object.entries(availablePrompts).forEach(([promptName, promptConfig]) => {
             const promptBox = document.createElement('div');
-            promptBox.className = 'box mb-3';
+            promptBox.className = 'box mb-3 prompt-box';
+            // data atribút pre identifikáciu pri renderInlineResultPanel
+            promptBox.dataset.prompt = promptName;
             promptBox.style.padding = '1rem';
             promptBox.style.backgroundColor = '#f5f9ff';
             promptBox.style.border = '1px solid rgba(10, 108, 255, 0.12)';
@@ -569,9 +807,9 @@
                 const hintText = document.createElement('div');
                 hintText.className = 'prompt-input-hint';
                 if (promptName === 'VQA') {
-                    hintText.textContent = 'Each line = one question. Click + to add more.';
+                    hintText.textContent = 'Each question has to be ended with "?" ';
                 } else if (promptName === 'DETECT') {
-                    hintText.textContent = 'Each line = one label. Click + to add more.';
+                    hintText.textContent = 'Each object has to be ended with ";"';
                 }
 
                 // Prvý riadok (s tlačidlom +)
@@ -591,12 +829,22 @@
                         const firstInput = inputsContainer.querySelector('input');
                         if (firstInput) firstInput.focus();
                     }
+                    // odober výsledkový panel ak odškrtíme checkbox
+                    if (!e.target.checked) {
+                        const oldPanel = promptBox.querySelector('.prompt-result-panel');
+                        if (oldPanel) oldPanel.remove();
+                    }
                 });
             } else {
                 checkbox.addEventListener('change', (e) => {
                     selectedPrompts[promptName] = e.target.checked;
                     if (e.target.checked) {
                         document.querySelector('button[type="submit"]').setCustomValidity('');
+                    }
+                    // odober výsledkový panel ak odškrtíme checkbox
+                    if (!e.target.checked) {
+                        const oldPanel = promptBox.querySelector('.prompt-result-panel');
+                        if (oldPanel) oldPanel.remove();
                     }
                 });
             }
@@ -749,7 +997,6 @@
             previewVideo.currentTime = time;
         }
         */
-
     }
     //update frames with annotations if detect prompt was called
     function updateThumbnailsWithAnnotations(annotatedFramesMap) {
@@ -893,6 +1140,7 @@
         document.getElementById("frames-container").style.display = "none";
         currentVideoFrames = [];
         vqaTimelines = []; // clears both VQA and DETECT timelines
+        inlineResults = {};
         renderVqaTimelineUI();
         // obnov preview promptov
         modelSelect.selectedIndex = 0;
@@ -951,6 +1199,10 @@
         progress.style.display = 'block';
         progress.value = 10;
 
+        // odober staré inline výsledky z promptov
+        inlineResults = {};
+        document.querySelectorAll('.prompt-result-panel').forEach(p => p.remove());
+
         try {
             //send POST request to backend
             log(`Sending ${checkedPrompts.length} prompts to /recognizer/recognize/`);
@@ -967,6 +1219,13 @@
             if (data.results) {
                 let displayText = `Model: ${data.model}\n`;
                 const annotatedFramesMap = {};
+
+                // =====================================================================
+                // INLINE RESULTS: zbierame výsledky pre každý prompt naprieč všetkými framami
+                // perPromptFrames = { "VQA": [{timestamp, result}, ...], "DETECT": [...], ... }
+                // =====================================================================
+                const perPromptFrames = {};
+                checkedPrompts.forEach(p => { perPromptFrames[p] = []; });
 
                 // BUILD VQA TIMELINE
                 function splitVqaQuestions(rawQuestion) {
@@ -1001,7 +1260,19 @@
 
                 // Fill results: iterate frames, find VQA analysis items
                 data.results.forEach((frameData, frameIndex) => {
+                    const timestamp = data.is_video
+                            ? parseFloat(frameData.timestamp).toFixed(1).replace('.', ',')
+                            : null;
+
                     frameData.analysis.forEach((res) => {
+                        // zbieranie do per-prompt inline výsledkov
+                        if (perPromptFrames[res.prompt_name] !== undefined) {
+                            perPromptFrames[res.prompt_name].push({
+                                timestamp: timestamp,
+                                result: res.result
+                            });
+                        }
+
                         if (!res.prompt_name || !res.prompt_name.toUpperCase().includes('VQA')) return;
 
                         // result may be a single string OR an array (one item per sub-question)
@@ -1111,7 +1382,16 @@
 
                 renderVqaTimelineUI();
 
-                // build display text and annotations
+                // =====================================================================
+                // RENDER INLINE RESULTS — pod každý prompt-box vloží panel s výsledkami
+                // =====================================================================
+                Object.entries(perPromptFrames).forEach(([promptName, frames]) => {
+                    if (frames.length > 0) {
+                        renderInlineResultPanel(promptName, frames, data.is_video);
+                    }
+                });
+
+                // build display text and annotations (raw output box zostáva)
                 data.results.forEach((frameData) => {
                     if (data.is_video) {
                         const timeLabel = parseFloat(frameData.timestamp).toFixed(1).replace('.', ',');

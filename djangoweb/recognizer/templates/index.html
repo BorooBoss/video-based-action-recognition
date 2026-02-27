@@ -1319,7 +1319,9 @@
                 });
 
                 // Only keep timelines that received data
-                vqaTimelines = newTimelines.filter(t => Object.keys(t.results).length > 0);
+                vqaTimelines = newTimelines.filter(t =>
+                        Object.values(t.results).some(v => v === true || v === false)
+                );
 
                 // BUILD DETECT TIMELINES
                 const modelName = data.model ? data.model.toLowerCase() : '';
@@ -1376,7 +1378,9 @@
                     });
 
                     // Merge detect timelines into vqaTimelines (shared switcher)
-                    const filledDetect = detectTimelines.filter(t => Object.keys(t.results).length > 0);
+                    const filledDetect = detectTimelines.filter(t =>
+                            Object.values(t.results).some(v => v === true || v === false)
+                    );
                     vqaTimelines = vqaTimelines.concat(filledDetect);
                 }
 

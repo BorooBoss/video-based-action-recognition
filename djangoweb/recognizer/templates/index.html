@@ -67,30 +67,12 @@
             padding-top: 0.65rem;
             display: none;
         }
-        /* Navigačná lišta pre časy (← Time: 0,0s → | krok X/Y) */
-        .result-time-nav {
-            display: flex; align-items: center; gap: 0.4rem;
-            margin-bottom: 0.5rem;
-        }
-        .result-time-nav-btn {
-            background: none;
-            border: 1.5px solid rgba(10, 108, 255, 0.3);
-            color: #094bb7;
-            border-radius: 6px;
-            width: 26px; height: 26px;
-            font-size: 0.75rem;
-            cursor: pointer;
-            display: flex; align-items: center; justify-content: center;
-            flex-shrink: 0;
-            transition: background 0.15s;
-        }
-        .result-time-nav-btn:hover:not(:disabled) { background: rgba(10, 108, 255, 0.08); }
-        .result-time-nav-btn:disabled { opacity: 0.35; cursor: default; }
+        /* Timestamp label nad výsledkovým poľom */
         .result-time-label {
             font-size: 0.78rem; font-weight: 600; color: #094bb7;
-            flex: 1; text-align: center;
+            margin-bottom: 0.25rem;
         }
-        .result-time-counter { font-size: 0.72rem; color: #888; white-space: nowrap; }
+        .result-time-counter { font-size: 0.72rem; color: #888; margin-bottom: 0.35rem; }
         /* Samotné výsledkové pole */
         .result-content-box {
             background: #fff;
@@ -119,6 +101,39 @@
         .result-badge.open { background: #f0f4ff; color: #094bb7; border: 1px solid rgba(10,108,255,0.25); }
         /* Počet detekcií badge (pre DETECT) */
         .result-badge.count { background: #f0f4ff; color: #094bb7; border: 1px solid rgba(10,108,255,0.25); }
+
+        /* =====================================================================
+           GLOBAL FRAME NAVIGATOR — jeden prepínač pre všetky prompt-boxy
+           ===================================================================== */
+        #global-frame-nav {
+            display: none;
+            align-items: center;
+            gap: 0.5rem;
+            justify-content: center;
+            margin-bottom: 1rem;
+            padding: 0.6rem 1rem;
+            background: #f0f4ff;
+            border: 1px solid rgba(10, 108, 255, 0.15);
+            border-radius: 8px;
+        }
+        .global-frame-nav-btn {
+            background: none;
+            border: 1.5px solid rgba(10, 108, 255, 0.3);
+            color: #094bb7;
+            border-radius: 6px;
+            width: 30px; height: 30px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+            transition: background 0.15s;
+        }
+        .global-frame-nav-btn:hover:not(:disabled) { background: rgba(10, 108, 255, 0.08); }
+        .global-frame-nav-btn:disabled { opacity: 0.35; cursor: default; }
+        #global-frame-label {
+            font-size: 0.8rem; font-weight: 600; color: #094bb7;
+            min-width: 90px; text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -192,6 +207,18 @@
                                 </div>
                             </div>
 
+                            <!-- GLOBAL FRAME NAVIGATOR — jeden prepínač synchronizuje všetky inline výsledky -->
+                            <!-- pozícia sa nastavuje dynamicky cez JS (insertBefore fileField) -->
+                            <div id="global-frame-nav">
+                                <button type="button" id="global-frame-prev" class="global-frame-nav-btn">
+                                    <i class="fas fa-chevron-left"></i>
+                                </button>
+                                <span id="global-frame-label">Frame 1 / 1</span>
+                                <button type="button" id="global-frame-next" class="global-frame-nav-btn">
+                                    <i class="fas fa-chevron-right"></i>
+                                </button>
+                            </div>
+
                             <div class="field">
                                 <label class="label">Select Image or Video</label>
                                 <div class="file file-is-info">
@@ -216,16 +243,7 @@
                                 </div>
                             </div>
                         </form>
-                    </div>
-                </div>
 
-                <div class="has-divider mt-4"></div>
-
-                <!-- Raw output box — zostáva ako fallback/debug view -->
-                <div class="card mt-4">
-                    <div class="card-content">
-                        <h4 class="title is-6">Raw Output</h4>
-                        <pre id="result-box" style="font-size:0.72rem; max-height:220px; overflow:auto;">No Result.</pre>
                     </div>
                 </div>
             </div>
@@ -378,6 +396,12 @@
     // =====================================================================
     let inlineResults = {};
 
+    // =====================================================================
+    // GLOBAL FRAME NAVIGATOR STATE
+    // =====================================================================
+    let globalFrameIndex = 0;
+    let globalFrameTotal = 0;
+
     // timelines switch
     function switchTimeline(index) {
         if (index < 0 || index >= vqaTimelines.length) return;
@@ -446,13 +470,13 @@
             const startPercent = (i / totalFrames) * 100;
             const endPercent = ((i + 1) / totalFrames) * 100;
 
-            let color; //green if detection, red if no detection
+            let color; //green if detection, red if no detection, transparent if null/open
             if (results[i] === true)
                 color = '#00cc66';
             else if (results[i] === false)
                 color = '#FF4444FF';
             else
-                color = '#323232';
+                color = 'transparent';
 
             gradientParts.push(`${color} ${startPercent}%`);
             gradientParts.push(`${color} ${endPercent}%`);
@@ -536,62 +560,22 @@
         panel.style.display = 'block';
 
         if (isVideo && framesData.length > 1) {
-            // ---- Navigačná lišta pre časy ----
-            const nav = document.createElement('div');
-            nav.className = 'result-time-nav';
-
-            const btnPrev = document.createElement('button');
-            btnPrev.type = 'button';
-            btnPrev.className = 'result-time-nav-btn';
-            btnPrev.innerHTML = '<i class="fas fa-chevron-left"></i>';
-            btnPrev.disabled = true;
-
+            // ---- Timestamp label — navigáciu zabezpečuje globálny prepínač ----
             const timeLabel = document.createElement('div');
             timeLabel.className = 'result-time-label';
             timeLabel.textContent = `Time: ${framesData[0].timestamp}s`;
+            panel.appendChild(timeLabel);
 
             const counter = document.createElement('div');
             counter.className = 'result-time-counter';
             counter.textContent = `1 / ${framesData.length}`;
-
-            const btnNext = document.createElement('button');
-            btnNext.type = 'button';
-            btnNext.className = 'result-time-nav-btn';
-            btnNext.innerHTML = '<i class="fas fa-chevron-right"></i>';
-            btnNext.disabled = framesData.length <= 1;
-
-            nav.appendChild(btnPrev);
-            nav.appendChild(timeLabel);
-            nav.appendChild(counter);
-            nav.appendChild(btnNext);
-            panel.appendChild(nav);
+            panel.appendChild(counter);
 
             const contentBox = document.createElement('div');
             contentBox.className = 'result-content-box';
             panel.appendChild(contentBox);
 
-            // funkcia na aktualizáciu obsahu pri navigácii
-            function updateContent(idx) {
-                const state = inlineResults[promptName];
-                state.currentIndex = idx;
-                const frame = framesData[idx];
-                timeLabel.textContent = `Time: ${frame.timestamp}s`;
-                counter.textContent = `${idx + 1} / ${framesData.length}`;
-                btnPrev.disabled = idx === 0;
-                btnNext.disabled = idx === framesData.length - 1;
-                renderResultContent(contentBox, frame.result, promptName);
-            }
-
-            btnPrev.addEventListener('click', () => {
-                const idx = inlineResults[promptName].currentIndex;
-                if (idx > 0) updateContent(idx - 1);
-            });
-            btnNext.addEventListener('click', () => {
-                const idx = inlineResults[promptName].currentIndex;
-                if (idx < framesData.length - 1) updateContent(idx + 1);
-            });
-
-            updateContent(0);
+            renderResultContent(contentBox, framesData[0].result, promptName);
 
         } else {
             // ---- Jednoduchý výsledok (obrázok alebo jeden frame) ----
@@ -603,6 +587,57 @@
 
         promptBox.appendChild(panel);
     }
+
+    // =====================================================================
+    // GLOBAL FRAME NAVIGATOR — posúva všetky inline výsledky synchrónne
+    // =====================================================================
+    function updateGlobalFrameNav() {
+        const nav = document.getElementById('global-frame-nav');
+        const totals = Object.values(inlineResults).map(r => r.frames.length);
+        globalFrameTotal = totals.length > 0 ? Math.max(...totals) : 0;
+
+        if (globalFrameTotal <= 1) { nav.style.display = 'none'; return; }
+
+        nav.style.display = 'flex';
+        document.getElementById('global-frame-label').textContent =
+                `Frame ${globalFrameIndex + 1} / ${globalFrameTotal}`;
+        document.getElementById('global-frame-prev').disabled = globalFrameIndex === 0;
+        document.getElementById('global-frame-next').disabled = globalFrameIndex === globalFrameTotal - 1;
+    }
+
+    function syncAllPanelsToFrame(idx) {
+        globalFrameIndex = idx;
+
+        Object.entries(inlineResults).forEach(([promptName, state]) => {
+            const clampedIdx = Math.min(idx, state.frames.length - 1);
+            state.currentIndex = clampedIdx;
+
+            const promptBox = document.querySelector(`.prompt-box[data-prompt="${promptName}"]`);
+            if (!promptBox) return;
+            const panel = promptBox.querySelector('.prompt-result-panel');
+            if (!panel) return;
+
+            const contentBox = panel.querySelector('.result-content-box');
+            const timeLabel = panel.querySelector('.result-time-label');
+            const counter = panel.querySelector('.result-time-counter');
+
+            const frame = state.frames[clampedIdx];
+            if (!frame) return;
+
+            if (timeLabel) timeLabel.textContent = `Time: ${frame.timestamp}s`;
+            if (counter) counter.textContent = `${clampedIdx + 1} / ${state.frames.length}`;
+            if (contentBox) renderResultContent(contentBox, frame.result, promptName);
+        });
+
+        updateGlobalFrameNav();
+    }
+
+    document.getElementById('global-frame-prev').addEventListener('click', () => {
+        if (globalFrameIndex > 0) syncAllPanelsToFrame(globalFrameIndex - 1);
+    });
+    document.getElementById('global-frame-next').addEventListener('click', () => {
+        if (globalFrameIndex < globalFrameTotal - 1) syncAllPanelsToFrame(globalFrameIndex + 1);
+    });
 
     // =====================================================================
     // HELPER: vyplní contentBox správnym obsahom podľa typu výsledku
@@ -628,7 +663,7 @@
 
                 const badge = document.createElement('span');
                 badge.className = `result-badge ${badgeClass}`;
-                badge.textContent = badgeClass === 'yes' ? '✓ YES' : badgeClass === 'no' ? '✗ NO' : '◌ OPEN';
+                badge.textContent = badgeClass === 'yes' ? 'YES' : badgeClass === 'no' ? 'NO' : 'OPEN';
                 contentBox.appendChild(badge);
                 contentBox.appendChild(document.createTextNode(' '));
 
@@ -663,12 +698,12 @@
                 if (!Array.isArray(subArr) || subArr.length === 0) {
                     const badge = document.createElement('span');
                     badge.className = 'result-badge no';
-                    badge.textContent = '✗ NOT DETECTED';
+                    badge.textContent = 'NOT DETECTED';
                     contentBox.appendChild(badge);
                 } else {
                     const badge = document.createElement('span');
                     badge.className = 'result-badge count';
-                    badge.textContent = `✓ ${subArr.length} detection${subArr.length > 1 ? 's' : ''}`;
+                    badge.textContent = `${subArr.length} detection${subArr.length > 1 ? 's' : ''}`;
                     contentBox.appendChild(badge);
 
                     const list = document.createElement('div');
@@ -879,7 +914,6 @@
     updatePromptOptions();
 
     const form = document.getElementById('recognize-form');
-    const resultBox = document.getElementById('result-box');
     const imageInput = document.getElementById('image-input');
     const preview = document.getElementById('preview');
     const previewVideo = document.getElementById('preview-video');
@@ -1060,6 +1094,9 @@
             document.getElementById("frame-slider").value = 0;
             currentVideoFrames = [];
             vqaTimelines = [];
+            globalFrameIndex = 0;
+            globalFrameTotal = 0;
+            document.getElementById('global-frame-nav').style.display = 'none';
 
             //clear frames on server
             try {
@@ -1135,12 +1172,14 @@
         preview.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>No image selected</text></svg>";
         previewVideo.src = '';
         fileName.textContent = 'No file selected.';
-        resultBox.textContent = 'No output available.';
         consoleLog.textContent = 'Cleared.';
         document.getElementById("frames-container").style.display = "none";
         currentVideoFrames = [];
         vqaTimelines = []; // clears both VQA and DETECT timelines
         inlineResults = {};
+        globalFrameIndex = 0;
+        globalFrameTotal = 0;
+        document.getElementById('global-frame-nav').style.display = 'none';
         renderVqaTimelineUI();
         // obnov preview promptov
         modelSelect.selectedIndex = 0;
@@ -1195,12 +1234,13 @@
             }
         });
 
-        resultBox.textContent = 'Processing...';
         progress.style.display = 'block';
         progress.value = 10;
 
         // odober staré inline výsledky z promptov
         inlineResults = {};
+        globalFrameIndex = 0;
+        document.getElementById('global-frame-nav').style.display = 'none';
         document.querySelectorAll('.prompt-result-panel').forEach(p => p.remove());
 
         try {
@@ -1217,7 +1257,6 @@
             console.log('Full response:', data);
 
             if (data.results) {
-                let displayText = `Model: ${data.model}\n`;
                 const annotatedFramesMap = {};
 
                 // =====================================================================
@@ -1318,7 +1357,7 @@
                     });
                 });
 
-                // Only keep timelines that received data
+                // Only keep timelines that have at least one true/false — open-only timelines are skipped
                 vqaTimelines = newTimelines.filter(t =>
                         Object.values(t.results).some(v => v === true || v === false)
                 );
@@ -1395,20 +1434,13 @@
                     }
                 });
 
-                // build display text and annotations (raw output box zostáva)
+                // Inicializuj globálny frame navigator po vykreslení všetkých panelov
+                globalFrameIndex = 0;
+                updateGlobalFrameNav();
+
+                // build annotations map and update annotated image preview
                 data.results.forEach((frameData) => {
-                    if (data.is_video) {
-                        const timeLabel = parseFloat(frameData.timestamp).toFixed(1).replace('.', ',');
-                        displayText += `>>> Time: ${timeLabel}s <<<\n`;
-                    }
-
                     frameData.analysis.forEach((res) => {
-                        displayText += `[${res.prompt_name}]\n`;
-                        const resultOutput = (typeof res.result === 'object')
-                                ? JSON.stringify(res.result, null, 2)
-                                : res.result;
-                        displayText += `${resultOutput}\n\n`;
-
                         if (res.annotated_frame_url && data.is_video) {
                             annotatedFramesMap[frameData.frame] = res.annotated_frame_url;
                         }
@@ -1424,8 +1456,6 @@
                     }
                 });
 
-                resultBox.textContent = displayText;
-
                 if (data.is_video && Object.keys(annotatedFramesMap).length > 0) {
                     updateThumbnailsWithAnnotations(annotatedFramesMap);
                     const firstAnnotatedUrl = Object.values(annotatedFramesMap)[0];
@@ -1437,15 +1467,13 @@
                 }
 
             } else {
-                resultBox.textContent = `Error: ${data.error || 'unknown error'}`;
-                log('Server returned error');
+                log('Server returned error: ' + (data.error || 'unknown error'));
             }
 
             progress.value = 100;
             setTimeout(() => progress.style.display = 'none', 600);
 
         } catch (err) {
-            resultBox.textContent = `Request failed: ${err}`;
             log('Request failed: ' + err);
             progress.style.display = 'none';
         }

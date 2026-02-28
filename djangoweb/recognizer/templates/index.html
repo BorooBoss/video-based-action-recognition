@@ -87,7 +87,7 @@
         .result-badge.yes  { background: #e6fff2; color: #00883f; border: 1px solid #00cc66; }
         .result-badge.no   { background: #fff0f0; color: #bb2222; border: 1px solid #ff4444; }
         .result-badge.open { background: #f0f4ff; color: #094bb7; border: 1px solid rgba(10,108,255,0.25); }
-        .result-badge.count { background: #f0f4ff; color: #094bb7; border: 1px solid rgba(10,108,255,0.25); }
+        .result-badge.count { background: #e6fff2; color: #00883f; border: 1px solid #00cc66; }
 
         #global-frame-nav {
             display: none;
@@ -641,8 +641,18 @@
         document.getElementById('global-frame-next').disabled = globalFrameIndex === globalFrameTotal - 1;
     }
 
-    function syncAllPanelsToFrame(idx) {
+    function syncAllPanelsToFrame(idx, skipPreviewUpdate) {
         globalFrameIndex = idx;
+
+        if (!skipPreviewUpdate) {
+            const slider = document.getElementById("frame-slider");
+            if (slider && currentVideoFrames.length > 0) {
+                const clampedIdx = Math.min(idx, currentVideoFrames.length - 1);
+                slider.value = clampedIdx;
+                updateFrameWithInfo(clampedIdx);
+                updateSliderColors();
+            }
+        }
 
         Object.entries(inlineResults).forEach(([promptName, state]) => {
             const clampedIdx = Math.min(idx, state.frames.length - 1);
@@ -762,7 +772,6 @@
                 if (subArrays.length > 1) {
                     const subLabel = document.createElement('div');
                     subLabel.style.cssText = 'font-size:0.7rem;font-weight:700;color:#555;margin-bottom:2px;';
-                    //subLabel.textContent = `Sub-query ${subIdx + 1}:`;
                     contentBox.appendChild(subLabel);
                 }
 
@@ -1004,6 +1013,13 @@
             slider.value = 0;
             slider.max = data.frames.length - 1;
 
+            // ── SLIDER oninput: aktualizuje preview aj výsledky v promptoch ──
+            slider.oninput = () => {
+                const i = parseInt(slider.value);
+                updateFrameWithInfo(i);
+                syncAllPanelsToFrame(i, true); // true = skip preview update (already done above)
+            };
+
             if (rightPlaceholder) rightPlaceholder.style.display = 'none';
             framePreviewMain.src = base + data.frames[0].file + '?t=' + Date.now();
             framePreviewMain.style.display = 'block';
@@ -1023,6 +1039,7 @@
                 img.onclick = () => {
                     slider.value = i;
                     updateFrameWithInfo(i);
+                    syncAllPanelsToFrame(i, true); // preview already updated by updateFrameWithInfo
                 };
 
                 const label = document.createElement("div");
@@ -1032,8 +1049,6 @@
                 wrapper.appendChild(label);
                 thumbs.appendChild(wrapper);
             });
-
-            slider.oninput = () => { updateFrameWithInfo(slider.value); };
 
             vqaTimelines = [];
             renderVqaTimelineUI();
@@ -1052,7 +1067,6 @@
 
         const framePreviewMain = document.getElementById("frame-preview-main");
         const frameInfo = document.getElementById("frame-info");
-        const time = f.time_sec ?? f.time;
 
         const annotatedFilename = `annotated_frame_${String(f.index).padStart(5, '0')}.jpg`;
         const annotatedUrl = currentBaseUrl + annotatedFilename;
@@ -1086,9 +1100,13 @@
         });
     }
 
+    // ── ZMENA: ak model nemá input pre DETECT (Florence), vrátime 'detect objects' ako fallback label ──
     function collectMultiInputValue(promptName) {
         const container = document.getElementById(`inputs-container-${promptName}`);
-        if (!container) return '';
+        if (!container) {
+            // Florence DETECT — žiadny input container, použijeme generický label
+            return promptName === 'DETECT' ? 'objects' : '';
+        }
 
         const inputs = container.querySelectorAll(`input.prompt-multi-input-${promptName}`);
         const values = Array.from(inputs)
@@ -1366,23 +1384,31 @@
                         Object.values(t.results).some(v => v === true || v === false)
                 );
 
+                // ── DETECT TIMELINES: paligemma (so subLabels) aj florence (univerzálny label) ──
                 const modelName = data.model ? data.model.toLowerCase() : '';
-                if (modelName.includes('paligemma')) {
+                if (modelName.includes('paligemma') || modelName.includes('florence')) {
                     const detectPromptEntries = checkedPrompts
                             .filter(p => p.toUpperCase() === 'DETECT')
                             .map(promptName => {
                                 const rawInput = collectMultiInputValue(promptName);
-                                const subLabels = rawInput.includes(';')
+                                // Paligemma: rozdeľ podľa ";" na individuálne labely
+                                // Florence: rawInput = 'detect objects', použijeme ako jeden label
+                                const subLabels = rawInput && rawInput.includes(';')
                                         ? rawInput.split(';').map(s => s.trim()).filter(s => s.length > 0)
-                                        : [rawInput || 'object'];
+                                        : [rawInput || 'detect objects'];
                                 return { promptName, subLabels };
                             });
 
                     const detectTimelines = [];
                     detectPromptEntries.forEach(entry => {
                         entry.subLabels.forEach(label => {
+                            // Paligemma: zobraz "detect: person" atď.
+                            // Florence: zobraz len "detect objects" (genericky)
+                            const displayLabel = modelName.includes('florence')
+                                    ? 'objects'
+                                    : `${label}`;
                             detectTimelines.push({
-                                question: `detect: ${label}`,
+                                question: displayLabel,
                                 promptName: entry.promptName,
                                 isDetect: true,
                                 detectLabel: label.toLowerCase(),
@@ -1407,7 +1433,7 @@
 
                             detectTimelines.forEach((tl, tlIdx) => {
                                 if (tl.promptName !== res.prompt_name) return;
-                                const subArr = subResults[tlIdx];
+                                const subArr = subResults[tlIdx] !== undefined ? subResults[tlIdx] : subResults[0];
                                 tl.results[frameIndex] = Array.isArray(subArr) && subArr.length > 0;
                             });
                         });

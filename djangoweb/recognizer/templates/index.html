@@ -389,7 +389,7 @@
     // =====================================================================
     // INLINE RESULT STATE
     // inlineResults = {
-    //   "VQA": { frames: [{timestamp, result}, ...], currentIndex: 0 },
+    //   "VQA": { frames: [{timestamp, result}, ...], currentIndex: 0, questions: [...] },
     //   "DETECT": { frames: [...], currentIndex: 0 },
     //   ...
     // }
@@ -540,8 +540,9 @@
     // framesData   — pole objektov { timestamp, result }
     //                pre obrázok (nie video) = [ { timestamp: null, result: "..." } ]
     // isVideo      — či ide o video (zobrazuje časovú navigáciu)
+    // questions    — pole otázok pre VQA (pre správne badge renderovanie)
     // =====================================================================
-    function renderInlineResultPanel(promptName, framesData, isVideo) {
+    function renderInlineResultPanel(promptName, framesData, isVideo, questions) {
         // nájdi prompt-box podľa promptName (hľadáme cez data atribút)
         const promptBox = document.querySelector(`.prompt-box[data-prompt="${promptName}"]`);
         if (!promptBox) return;
@@ -552,8 +553,8 @@
 
         if (!framesData || framesData.length === 0) return;
 
-        // uložíme stav pre navigáciu
-        inlineResults[promptName] = { frames: framesData, currentIndex: 0 };
+        // uložíme stav pre navigáciu vrátane otázok pre VQA badge rendering
+        inlineResults[promptName] = { frames: framesData, currentIndex: 0, questions: questions || [] };
 
         const panel = document.createElement('div');
         panel.className = 'prompt-result-panel';
@@ -575,13 +576,13 @@
             contentBox.className = 'result-content-box';
             panel.appendChild(contentBox);
 
-            renderResultContent(contentBox, framesData[0].result, promptName);
+            renderResultContent(contentBox, framesData[0].result, promptName, questions);
 
         } else {
             // ---- Jednoduchý výsledok (obrázok alebo jeden frame) ----
             const contentBox = document.createElement('div');
             contentBox.className = 'result-content-box';
-            renderResultContent(contentBox, framesData[0].result, promptName);
+            renderResultContent(contentBox, framesData[0].result, promptName, questions);
             panel.appendChild(contentBox);
         }
 
@@ -626,7 +627,7 @@
 
             if (timeLabel) timeLabel.textContent = `Time: ${frame.timestamp}s`;
             if (counter) counter.textContent = `${clampedIdx + 1} / ${state.frames.length}`;
-            if (contentBox) renderResultContent(contentBox, frame.result, promptName);
+            if (contentBox) renderResultContent(contentBox, frame.result, promptName, state.questions);
         });
 
         updateGlobalFrameNav();
@@ -640,26 +641,88 @@
     });
 
     // =====================================================================
+    // HELPER: detekuje "open" otázky kde binárna yes/no odpoveď nedáva zmysel
+    // Ak otázka začína na "how many", "what", "who", "describe" atď. → vždy OPEN
+    // =====================================================================
+    function isOpenQuestion(questionText) {
+        if (!questionText) return false;
+        const q = questionText.toLowerCase().trim();
+        const openPrefixes = [
+            'how many', 'how much', 'how often', 'how long', 'how far',
+            'what', 'which', 'who', 'whose', 'where', 'when', 'why', 'how',
+            'describe', 'explain', 'list', 'count',
+        ];
+        return openPrefixes.some(prefix => q.startsWith(prefix));
+    }
+
+    // =====================================================================
+    // CORE HELPER: klasifikuje odpoveď modelu ako 'yes' / 'no' / 'open'
+    // NO má VŽDY prednosť pred YES — rieši prípady ako:
+    //   "there is no gun visible"  → no  (obsahuje "no" aj "visible")
+    //   "no firearms present"      → no  (obsahuje "no" aj "present")
+    //   "yes, a gun is present"    → yes
+    //   "cannot determine"         → no  (obsahuje "cannot")
+    // Táto funkcia sa používa na OBOCH miestach: badge rendering aj timeline building
+    // =====================================================================
+    function classifyAnswer(text) {
+        const lc = (typeof text === 'string' ? text : JSON.stringify(text)).toLowerCase().trim();
+
+        // NO signály — word-boundary regex zabraňuje false positives ako "notable", "northern"
+        const isNo = /\bno\b/.test(lc)      ||
+                /\bnot\b/.test(lc)     ||
+                /\bnone\b/.test(lc)    ||
+                /\babsent\b/.test(lc)  ||
+                /\bwithout\b/.test(lc) ||
+                /\bcannot\b/.test(lc)  ||
+                /\bcan't\b/.test(lc);
+
+        // NO má prednosť — ak je akýkoľvek NO signál, vrátime 'no' bez kontroly YES
+        if (isNo) return 'no';
+
+        // YES signály — kontrolujeme až po vylúčení NO
+        const isYes = lc.startsWith('yes')       ||
+                /\bdetected\b/.test(lc)     ||
+                /\bpresent\b/.test(lc)      ||
+                /\bvisible\b/.test(lc)      ||
+                /\bgun\b/.test(lc)          ||
+                /\bweapon\b/.test(lc)       ||
+                /\bpistol\b/.test(lc)       ||
+                /\bfirearm\b/.test(lc)      ||
+                /\bknife\b/.test(lc);
+
+        if (isYes) return 'yes';
+
+        return 'open';
+    }
+
+    // =====================================================================
     // HELPER: vyplní contentBox správnym obsahom podľa typu výsledku
     // Pre VQA: yes/no badge + text
     // Pre DETECT: počet detekcií + zoznam
     // Pre Caption: plain text
+    // questions — pole otázok pre VQA (index zodpovedá indexu výsledku v poli)
     // =====================================================================
-    function renderResultContent(contentBox, result, promptName) {
+    function renderResultContent(contentBox, result, promptName, questions) {
         contentBox.innerHTML = '';
 
         if (promptName === 'VQA') {
-            // VQA výsledok môže byť string alebo pole stringov (viac otázok)
             const results = Array.isArray(result) ? result : [result];
-            results.forEach(res => {
-                const text = (typeof res === 'string' ? res : JSON.stringify(res)).trim();
-                const lc = text.toLowerCase();
+            // Ak máme pole otázok (multi-input), questions sú tiež pole
+            const qs = Array.isArray(questions) ? questions : (questions ? [questions] : []);
 
-                let badgeClass = 'open';
-                const isYes = lc.startsWith('yes') || lc.includes('detected') || lc.includes('present') || lc.includes('visible');
-                const isNo  = lc.startsWith('no')  || (lc.includes('not') && !lc.startsWith('note'));
-                if (isYes && !isNo) badgeClass = 'yes';
-                else if (isNo && !isYes) badgeClass = 'no';
+            results.forEach((res, idx) => {
+                const text = (typeof res === 'string' ? res : JSON.stringify(res)).trim();
+                const thisQuestion = qs[idx] || qs[0] || '';
+
+                let badgeClass;
+
+                // Ak otázka je open (how many, what, who, atď.) → vždy OPEN badge, preskočíme keyword matching
+                if (isOpenQuestion(thisQuestion)) {
+                    badgeClass = 'open';
+                } else {
+                    // classifyAnswer — NO má prednosť, rovnaká logika ako v timeline buildingu
+                    badgeClass = classifyAnswer(res);
+                }
 
                 const badge = document.createElement('span');
                 badge.className = `result-badge ${badgeClass}`;
@@ -1080,6 +1143,21 @@
         return values.join('; ');
     }
 
+    // =====================================================================
+    // HELPER: zbiera pole jednotlivých otázok z multi-input kontajnera pre VQA
+    // Vracia pole stringov (každá otázka zvlášť) — používa sa pre badge rendering
+    // =====================================================================
+    function collectVqaQuestionsArray(promptName) {
+        const container = document.getElementById(`inputs-container-${promptName}`);
+        if (!container) return [];
+
+        const inputs = container.querySelectorAll(`input.prompt-multi-input-${promptName}`);
+        return Array.from(inputs)
+                .map(inp => inp.value.trim())
+                .filter(v => v.length > 0)
+                .map(q => q.endsWith('?') ? q : q + '?');
+    }
+
     //main javascript function - file input
     imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
@@ -1308,8 +1386,10 @@
                         if (perPromptFrames[res.prompt_name] !== undefined) {
                             perPromptFrames[res.prompt_name].push({
                                 timestamp: timestamp,
-                                result: res.result
+                                result: res.result,
+                                subIdx: perPromptFrames[res.prompt_name].length  // poradie výsledku v rámci promptu
                             });
+                        }
                         }
 
                         if (!res.prompt_name || !res.prompt_name.toUpperCase().includes('VQA')) return;
@@ -1325,30 +1405,17 @@
                             const tl = matchingTimelines[subIdx];
                             if (!tl) return;
 
-                            const resultText = (typeof singleResult === 'string'
-                                            ? singleResult
-                                            : JSON.stringify(singleResult)
-                            ).toLowerCase().trim();
+                            // Ak je otázka open (how many, what, atď.) → null, timeline sa nevykresli
+                            if (isOpenQuestion(tl.question)) {
+                                tl.results[frameIndex] = null;
+                                return;
+                            }
 
-                            const isPositive =
-                                    resultText.startsWith('yes') ||
-                                    resultText.includes('gun') ||
-                                    resultText.includes('weapon') ||
-                                    resultText.includes('pistol') ||
-                                    resultText.includes('firearm') ||
-                                    resultText.includes('detected') ||
-                                    resultText.includes('present') ||
-                                    resultText.includes('visible');
-
-                            const isNegative =
-                                    resultText.startsWith('no') ||
-                                    resultText.includes('not') ||
-                                    resultText.includes('none') ||
-                                    resultText.includes('absent');
-
-                            if (isPositive && !isNegative) {
+                            // classifyAnswer — rovnaká logika ako v badge renderingu, NO má prednosť
+                            const verdict = classifyAnswer(singleResult);
+                            if (verdict === 'yes') {
                                 tl.results[frameIndex] = true;   // green
-                            } else if (isNegative && !isPositive) {
+                            } else if (verdict === 'no') {
                                 tl.results[frameIndex] = false;  // red
                             } else {
                                 tl.results[frameIndex] = null;   // grey for open questions
@@ -1427,10 +1494,15 @@
 
                 // =====================================================================
                 // RENDER INLINE RESULTS — pod každý prompt-box vloží panel s výsledkami
+                // Pre VQA odovzdáme aj pole otázok pre správne badge renderovanie
                 // =====================================================================
                 Object.entries(perPromptFrames).forEach(([promptName, frames]) => {
                     if (frames.length > 0) {
-                        renderInlineResultPanel(promptName, frames, data.is_video);
+                        // Pre VQA zbierieme pole otázok pre badge rendering (isOpenQuestion check)
+                        const questions = promptName === 'VQA'
+                                ? collectVqaQuestionsArray(promptName)
+                                : [];
+                        renderInlineResultPanel(promptName, frames, data.is_video, questions);
                     }
                 });
 

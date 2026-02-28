@@ -16,7 +16,6 @@
             padding-bottom: 2.5rem;
             min-height: 220px;
         }
-        /* Štýly pre multi-input prompt riadky (VQA a DETECT) */
         .prompt-input-row {
             display: flex;
             align-items: center;
@@ -24,7 +23,6 @@
             margin-top: 0.5rem;
         }
         .prompt-input-row input { flex: 1; }
-        /* Tlačidlo na pridanie nového vstupu (+) */
         .btn-add-prompt-input {
             background: none;
             border: 1.5px solid rgba(10, 108, 255, 0.35);
@@ -38,7 +36,6 @@
             transition: background 0.15s, border-color 0.15s;
         }
         .btn-add-prompt-input:hover { background: rgba(10, 108, 255, 0.08); border-color: #094bb7; }
-        /* Tlačidlo na odobratie riadku (x) */
         .btn-remove-prompt-input {
             background: none;
             border: 1.5px solid rgba(220, 50, 50, 0.3);
@@ -52,28 +49,20 @@
             transition: background 0.15s, border-color 0.15s;
         }
         .btn-remove-prompt-input:hover { background: rgba(220, 50, 50, 0.08); border-color: #cc3333; }
-        /* Kontajner so všetkými riadkami inputov pre jeden prompt */
         .prompt-inputs-container { display: flex; flex-direction: column; gap: 0; }
-        /* Malý hint text pod inputmi */
         .prompt-input-hint { font-size: 0.72rem; color: #888; margin-top: 0.3rem; }
 
-        /* =====================================================================
-           INLINE RESULT PANEL — zobrazuje sa priamo pod každým prompt-boxom
-           po dokončení analýzy
-           ===================================================================== */
         .prompt-result-panel {
             margin-top: 0.75rem;
             border-top: 1px solid rgba(10, 108, 255, 0.12);
             padding-top: 0.65rem;
             display: none;
         }
-        /* Timestamp label nad výsledkovým poľom */
         .result-time-label {
             font-size: 0.78rem; font-weight: 600; color: #094bb7;
             margin-bottom: 0.25rem;
         }
         .result-time-counter { font-size: 0.72rem; color: #888; margin-bottom: 0.35rem; }
-        /* Samotné výsledkové pole */
         .result-content-box {
             background: #fff;
             border: 1px solid rgba(10, 108, 255, 0.1);
@@ -88,7 +77,6 @@
             color: #222;
             line-height: 1.45;
         }
-        /* Indikátor výsledku pre VQA (yes/no farebný badge) */
         .result-badge {
             display: inline-block;
             padding: 0.15rem 0.55rem;
@@ -99,12 +87,8 @@
         .result-badge.yes  { background: #e6fff2; color: #00883f; border: 1px solid #00cc66; }
         .result-badge.no   { background: #fff0f0; color: #bb2222; border: 1px solid #ff4444; }
         .result-badge.open { background: #f0f4ff; color: #094bb7; border: 1px solid rgba(10,108,255,0.25); }
-        /* Počet detekcií badge (pre DETECT) */
         .result-badge.count { background: #f0f4ff; color: #094bb7; border: 1px solid rgba(10,108,255,0.25); }
 
-        /* =====================================================================
-           GLOBAL FRAME NAVIGATOR — jeden prepínač pre všetky prompt-boxy
-           ===================================================================== */
         #global-frame-nav {
             display: none;
             align-items: center;
@@ -129,10 +113,84 @@
             transition: background 0.15s;
         }
         .global-frame-nav-btn:hover:not(:disabled) { background: rgba(10, 108, 255, 0.08); }
-        .global-frame-nav-btn:disabled { opacity: 0.35; cursor: default; }
+        .global-frame-nav-btn:disabled { opacity: 0.35; cursor: not-allowed; }
         #global-frame-label {
             font-size: 0.8rem; font-weight: 600; color: #094bb7;
             min-width: 90px; text-align: center;
+        }
+
+        /* Visual Preview inline (v lavom stlpci) */
+        #inline-visual-preview {
+            margin-bottom: 1.25rem;
+        }
+        #inline-visual-preview .preview-label {
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.4rem;
+        }
+        #inline-visual-preview .preview-wrap {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            background: #f5f9ff;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid rgba(10,108,255,0.12);
+        }
+        #inline-visual-preview .preview-wrap img,
+        #inline-visual-preview .preview-wrap video {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: contain;
+        }
+
+        /* Pravý stĺpec — veľký preview navrchu */
+        #right-preview-wrap {
+            position: relative;
+            width: 100%;
+            padding-top: 56.25%;
+            background: #f5f9ff;
+            border-radius: 8px;
+            overflow: hidden;
+            margin-bottom: 0.75rem;
+        }
+        #right-preview-wrap img,
+        #right-preview-wrap video {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            object-fit: contain;
+        }
+
+        /* Console log — celá šírka, collapsible */
+        #console-section {
+            margin-top: 1.5rem;
+        }
+        #console-toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #094bb7;
+            font-size: 0.82rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0;
+            margin-bottom: 0.4rem;
+        }
+        #console-toggle-btn i {
+            font-size: 0.7rem;
+            transition: transform 0.2s;
+        }
+        #console-toggle-btn.open i { transform: rotate(90deg); }
+        #console-body {
+            display: none;
+        }
+        #console-body.visible {
+            display: block;
         }
     </style>
 </head>
@@ -159,6 +217,8 @@
 <main class="section">
     <div class="container">
         <div class="columns">
+
+            <!-- ==================== ĽAVÝ STĹPEC ==================== -->
             <div class="column is-6 left-col">
                 <div class="card">
                     <div class="card-content">
@@ -207,8 +267,6 @@
                                 </div>
                             </div>
 
-                            <!-- GLOBAL FRAME NAVIGATOR — jeden prepínač synchronizuje všetky inline výsledky -->
-                            <!-- pozícia sa nastavuje dynamicky cez JS (insertBefore fileField) -->
                             <div id="global-frame-nav">
                                 <button type="button" id="global-frame-prev" class="global-frame-nav-btn">
                                     <i class="fas fa-chevron-left"></i>
@@ -217,6 +275,18 @@
                                 <button type="button" id="global-frame-next" class="global-frame-nav-btn">
                                     <i class="fas fa-chevron-right"></i>
                                 </button>
+                            </div>
+
+                            <!-- VISUAL PREVIEW — medzi promptami a výberom súboru -->
+                            <div id="inline-visual-preview" class="field">
+                                <h3 class="title is-5">Visual Preview</h3>
+                                <div class="preview-wrap">
+                                    <img id="preview" alt="Preview image"
+                                         src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>No image or video selected</text></svg>">
+                                    <video id="preview-video" controls style="display:none;">
+                                        Your browser does not support the video tag.
+                                    </video>
+                                </div>
                             </div>
 
                             <div class="field">
@@ -248,24 +318,31 @@
                 </div>
             </div>
 
+            <!-- ==================== PRAVÝ STĹPEC ==================== -->
             <div class="column is-6">
                 <div class="card">
                     <div class="card-content">
-                        <h3 class="title is-5">Visual Preview</h3>
-                        <div style="position: relative; width: 100%; padding-top: 56.25%; background: #f5f9ff; border-radius: 8px; overflow: hidden;">
-                            <img id="preview" class="preview-image" alt="Preview image"
-                                 style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: contain;"
-                                 src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>No image selected</text></svg>">
-                            <video id="preview-video" class="preview-video" controls
-                                   style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none;">
-                                Your browser does not support the video tag.
-                            </video>
+                        <h3 class="title is-5">Frames &amp; Preview</h3>
+
+                        <!-- Veľký náhľad snímky/videa -->
+                        <div id="right-preview-wrap">
+                            <img id="frame-preview-main"
+                                 style="position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;display:none;"
+                                 alt="Frame preview">
+                            <div id="right-placeholder"
+                                 style="position:absolute;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;color:#094bb7;font-size:0.9rem;">
+                                No frames extracted yet
+                            </div>
                         </div>
 
+                        <!-- Thumbnaily -->
+                        <div id="thumbnails"
+                             style="display:flex; gap:6px; overflow-x:auto; margin-bottom:0.75rem;"></div>
+
+                        <!-- Individual Frames box s timelinami a sliderom -->
                         <div id="frames-container" style="display:none;">
                             <h5 class="title is-6" style="margin-bottom: 0.5rem;">Individual Frames</h5>
 
-                            <!-- VQA TIMELINE SWITCHER - shown only when there are VQA results -->
                             <div id="vqa-timeline-wrapper">
                                 <div class="timeline-nav">
                                     <button class="timeline-nav-btn" id="timeline-prev" title="Previous question">
@@ -284,7 +361,6 @@
 
                             <input id="frame-slider" type="range" min="0" max="0" value="0">
 
-                            <!-- Legend below slider, only visible when timelines exist -->
                             <div class="timeline-legend" id="timeline-legend" style="display:none;">
                                 <div class="legend-item">
                                     <div class="legend-swatch" style="background:#00cc66;"></div>
@@ -295,29 +371,36 @@
                                     <span>Not Detected</span>
                                 </div>
                             </div>
-                            <img id="frame-preview"
-                                 style="width:100%; margin-top:0.5rem; border-radius:6px; display:none;">
+
                             <div id="frame-info" class="is-size-7 has-text-grey mt-1"></div>
-                            <div id="thumbnails"
-                                 style="display:flex; gap:6px; overflow-x:auto; margin-top:0.5rem;"></div>
                         </div>
 
-                        <div class="content mt-4">
+                        <div class="content mt-3">
                             <progress id="progress" class="progress is-primary" value="0" max="100"
                                       style="display:none"></progress>
                         </div>
                     </div>
                 </div>
+            </div>
 
-                <div class="card mt-4">
-                    <div class="card-content">
-                        <h4 class="title is-6">Console Log</h4>
+        </div>
+
+        <!-- ==================== CONSOLE LOG — celá šírka, collapsible ==================== -->
+        <div id="console-section">
+            <button type="button" id="console-toggle-btn">
+                <i class="fas fa-chevron-right"></i>
+                Console Log
+            </button>
+            <div id="console-body">
+                <div class="card">
+                    <div class="card-content" style="padding: 0.75rem 1rem;">
                         <pre id="console-log"
-                             style="max-height:160px; overflow:auto; background:#fff; padding:0.75rem; border-radius:6px; border:1px solid rgba(10,108,255,0.05);">Ready.</pre>
+                             style="max-height:160px; overflow:auto; background:#fff; padding:0.75rem; border-radius:6px; border:1px solid rgba(10,108,255,0.05); margin:0;">Ready.</pre>
                     </div>
                 </div>
             </div>
         </div>
+
     </div>
 </main>
 
@@ -371,7 +454,6 @@
         },
     };
 
-    // ALL_PROMPTS — union of all prompt types across all models, shown as preview before model is selected
     const ALL_PROMPTS = ["SIMPLE CAPTION", "STANDARD CAPTION", "DETAILED CAPTION", "VQA", "DETECT"];
 
     const modelSelect = document.getElementById('model-select');
@@ -381,28 +463,14 @@
     let currentVideoFrames = [];
     let currentBaseUrl = "";
 
-    // multi-vqa TIMELINE STATE =====
-    // vqaTimelines = [ { question: "is there a gun?", results: {0: true, 1: false, ...} }, ... ]
     let vqaTimelines = [];
     let activeTimelineIndex = 0;
 
-    // =====================================================================
-    // INLINE RESULT STATE
-    // inlineResults = {
-    //   "VQA": { frames: [{timestamp, result}, ...], currentIndex: 0, questions: [...] },
-    //   "DETECT": { frames: [...], currentIndex: 0 },
-    //   ...
-    // }
-    // =====================================================================
     let inlineResults = {};
 
-    // =====================================================================
-    // GLOBAL FRAME NAVIGATOR STATE
-    // =====================================================================
     let globalFrameIndex = 0;
     let globalFrameTotal = 0;
 
-    // timelines switch
     function switchTimeline(index) {
         if (index < 0 || index >= vqaTimelines.length) return;
         activeTimelineIndex = index;
@@ -410,7 +478,6 @@
         const tl = vqaTimelines[index];
         const q = tl.question;
 
-        // header label: DETECT TIMELINE or VQA TIMELINE
         const headerEl = document.querySelector('.timeline-label-vqa');
         if (headerEl) {
             headerEl.textContent = tl.isDetect ? 'DETECT TIMELINE' : 'VQA TIMELINE';
@@ -451,7 +518,6 @@
         switchTimeline(activeTimelineIndex + 1);
     });
 
-    // update slider colors based on current timeline
     function updateSliderColors() {
         const slider = document.getElementById("frame-slider");
         if (!slider || currentVideoFrames.length === 0) return;
@@ -465,12 +531,11 @@
         const totalFrames = currentVideoFrames.length;
         let gradientParts = [];
 
-        //build gradient for each frame segment
         for (let i = 0; i < totalFrames; i++) {
             const startPercent = (i / totalFrames) * 100;
             const endPercent = ((i + 1) / totalFrames) * 100;
 
-            let color; //green if detection, red if no detection, transparent if null/open
+            let color;
             if (results[i] === true)
                 color = '#00cc66';
             else if (results[i] === false)
@@ -485,14 +550,6 @@
         slider.style.background = `linear-gradient(to right, ${gradientParts.join(', ')})`;
     }
 
-    // =====================================================================
-    // HELPER: vytvorí jeden input riadok pre multi-input prompt (VQA / DETECT)
-    // Parametry:
-    //   container   — DOM element .prompt-inputs-container
-    //   placeholder — text placeholdera
-    //   isFirst     — prvy riadok ma tlacidlo "+", ostatne "x"
-    //   promptName  — napr. "VQA" alebo "DETECT"
-    // =====================================================================
     function createPromptInputRow(container, placeholder, isFirst, promptName) {
         const row = document.createElement('div');
         row.className = 'prompt-input-row';
@@ -501,26 +558,22 @@
         input.type = 'text';
         input.className = 'input';
         input.placeholder = placeholder;
-        // unikatna trieda pre zbieranie hodnot pri submit
         input.classList.add(`prompt-multi-input-${promptName}`);
 
         const btn = document.createElement('button');
         btn.type = 'button';
 
         if (isFirst) {
-            // Tlacidlo "+" — prida novy riadok pod tento
             btn.className = 'btn-add-prompt-input';
             btn.title = 'Add another input';
             btn.innerHTML = '<i class="fas fa-plus"></i>';
             btn.addEventListener('click', () => {
-                // pridaj novy riadok pred hint text (posledny element v kontajneri)
                 const hint = container.querySelector('.prompt-input-hint');
                 const newRow = createPromptInputRow(container, placeholder, false, promptName);
                 container.insertBefore(newRow, hint);
                 newRow.querySelector('input').focus();
             });
         } else {
-            // Tlacidlo "x" — odstrani tento riadok
             btn.className = 'btn-remove-prompt-input';
             btn.title = 'Remove this input';
             btn.innerHTML = '<i class="fas fa-times"></i>';
@@ -532,28 +585,15 @@
         return row;
     }
 
-    // =====================================================================
-    // INLINE RESULT PANEL — vytvorí a vloží panel s výsledkami pod prompt-box
-    // Volá sa po dokončení analýzy pre každý prompt
-    //
-    // promptName   — napr. "VQA", "DETECT", "SIMPLE CAPTION"
-    // framesData   — pole objektov { timestamp, result }
-    //                pre obrázok (nie video) = [ { timestamp: null, result: "..." } ]
-    // isVideo      — či ide o video (zobrazuje časovú navigáciu)
-    // questions    — pole otázok pre VQA (pre správne badge renderovanie)
-    // =====================================================================
     function renderInlineResultPanel(promptName, framesData, isVideo, questions) {
-        // nájdi prompt-box podľa promptName (hľadáme cez data atribút)
         const promptBox = document.querySelector(`.prompt-box[data-prompt="${promptName}"]`);
         if (!promptBox) return;
 
-        // odober starý panel ak existuje
         const oldPanel = promptBox.querySelector('.prompt-result-panel');
         if (oldPanel) oldPanel.remove();
 
         if (!framesData || framesData.length === 0) return;
 
-        // uložíme stav pre navigáciu vrátane otázok pre VQA badge rendering
         inlineResults[promptName] = { frames: framesData, currentIndex: 0, questions: questions || [] };
 
         const panel = document.createElement('div');
@@ -561,7 +601,6 @@
         panel.style.display = 'block';
 
         if (isVideo && framesData.length > 1) {
-            // ---- Timestamp label — navigáciu zabezpečuje globálny prepínač ----
             const timeLabel = document.createElement('div');
             timeLabel.className = 'result-time-label';
             timeLabel.textContent = `Time: ${framesData[0].timestamp}s`;
@@ -579,7 +618,6 @@
             renderResultContent(contentBox, framesData[0].result, promptName, questions);
 
         } else {
-            // ---- Jednoduchý výsledok (obrázok alebo jeden frame) ----
             const contentBox = document.createElement('div');
             contentBox.className = 'result-content-box';
             renderResultContent(contentBox, framesData[0].result, promptName, questions);
@@ -589,9 +627,6 @@
         promptBox.appendChild(panel);
     }
 
-    // =====================================================================
-    // GLOBAL FRAME NAVIGATOR — posúva všetky inline výsledky synchrónne
-    // =====================================================================
     function updateGlobalFrameNav() {
         const nav = document.getElementById('global-frame-nav');
         const totals = Object.values(inlineResults).map(r => r.frames.length);
@@ -640,10 +675,6 @@
         if (globalFrameIndex < globalFrameTotal - 1) syncAllPanelsToFrame(globalFrameIndex + 1);
     });
 
-    // =====================================================================
-    // HELPER: detekuje "open" otázky kde binárna yes/no odpoveď nedáva zmysel
-    // Ak otázka začína na "how many", "what", "who", "describe" atď. → vždy OPEN
-    // =====================================================================
     function isOpenQuestion(questionText) {
         if (!questionText) return false;
         const q = questionText.toLowerCase().trim();
@@ -655,19 +686,9 @@
         return openPrefixes.some(prefix => q.startsWith(prefix));
     }
 
-    // =====================================================================
-    // CORE HELPER: klasifikuje odpoveď modelu ako 'yes' / 'no' / 'open'
-    // NO má VŽDY prednosť pred YES — rieši prípady ako:
-    //   "there is no gun visible"  → no  (obsahuje "no" aj "visible")
-    //   "no firearms present"      → no  (obsahuje "no" aj "present")
-    //   "yes, a gun is present"    → yes
-    //   "cannot determine"         → no  (obsahuje "cannot")
-    // Táto funkcia sa používa na OBOCH miestach: badge rendering aj timeline building
-    // =====================================================================
     function classifyAnswer(text) {
         const lc = (typeof text === 'string' ? text : JSON.stringify(text)).toLowerCase().trim();
 
-        // NO signály — word-boundary regex zabraňuje false positives ako "notable", "northern"
         const isNo = /\bno\b/.test(lc)      ||
                 /\bnot\b/.test(lc)     ||
                 /\bnone\b/.test(lc)    ||
@@ -676,10 +697,8 @@
                 /\bcannot\b/.test(lc)  ||
                 /\bcan't\b/.test(lc);
 
-        // NO má prednosť — ak je akýkoľvek NO signál, vrátime 'no' bez kontroly YES
         if (isNo) return 'no';
 
-        // YES signály — kontrolujeme až po vylúčení NO
         const isYes = lc.startsWith('yes')       ||
                 /\bdetected\b/.test(lc)     ||
                 /\bpresent\b/.test(lc)      ||
@@ -695,19 +714,11 @@
         return 'open';
     }
 
-    // =====================================================================
-    // HELPER: vyplní contentBox správnym obsahom podľa typu výsledku
-    // Pre VQA: yes/no badge + text
-    // Pre DETECT: počet detekcií + zoznam
-    // Pre Caption: plain text
-    // questions — pole otázok pre VQA (index zodpovedá indexu výsledku v poli)
-    // =====================================================================
     function renderResultContent(contentBox, result, promptName, questions) {
         contentBox.innerHTML = '';
 
         if (promptName === 'VQA') {
             const results = Array.isArray(result) ? result : [result];
-            // Ak máme pole otázok (multi-input), questions sú tiež pole
             const qs = Array.isArray(questions) ? questions : (questions ? [questions] : []);
 
             results.forEach((res, idx) => {
@@ -716,11 +727,9 @@
 
                 let badgeClass;
 
-                // Ak otázka je open (how many, what, who, atď.) → vždy OPEN badge, preskočíme keyword matching
                 if (isOpenQuestion(thisQuestion)) {
                     badgeClass = 'open';
                 } else {
-                    // classifyAnswer — NO má prednosť, rovnaká logika ako v timeline buildingu
                     badgeClass = classifyAnswer(res);
                 }
 
@@ -742,7 +751,6 @@
             });
 
         } else if (promptName === 'DETECT') {
-            // DETECT výsledok = pole objektov alebo pole polí
             let subArrays = [];
             if (Array.isArray(result) && result.length > 0 && Array.isArray(result[0])) {
                 subArrays = result;
@@ -754,7 +762,7 @@
                 if (subArrays.length > 1) {
                     const subLabel = document.createElement('div');
                     subLabel.style.cssText = 'font-size:0.7rem;font-weight:700;color:#555;margin-bottom:2px;';
-                    subLabel.textContent = `Sub-query ${subIdx + 1}:`;
+                    //subLabel.textContent = `Sub-query ${subIdx + 1}:`;
                     contentBox.appendChild(subLabel);
                 }
 
@@ -766,7 +774,7 @@
                 } else {
                     const badge = document.createElement('span');
                     badge.className = 'result-badge count';
-                    badge.textContent = `${subArr.length} detection${subArr.length > 1 ? 's' : ''}`;
+                    badge.textContent = `${subArr.length} DETECTION${subArr.length > 1 ? 'S' : ''}`;
                     contentBox.appendChild(badge);
 
                     const list = document.createElement('div');
@@ -785,18 +793,12 @@
             });
 
         } else {
-            // Caption / iný textový výsledok
             const text = typeof result === 'object' ? JSON.stringify(result, null, 2) : result;
             contentBox.textContent = text;
         }
     }
 
-    // =====================================================================
-    // generates prompt checkboxes for models
-    // ak nie je vybraný žiadny model, zobrazí preview všetkých promptov (disabled checkboxy)
-    // =====================================================================
     function updatePromptOptions() {
-        // ZMENENÉ: zisti aktívny model — standard alebo finetuned
         const activeModel = modelSelect.value || finetunedSelect.value;
 
         const oldCheckboxContainer = document.getElementById('prompt-checkboxes');
@@ -804,7 +806,6 @@
         const oldError = document.getElementById('prompt-error');
         if (oldError) oldError.remove();
 
-        // reset inline výsledkov pri zmene modelu
         inlineResults = {};
 
         const checkboxContainer = document.createElement('div');
@@ -814,7 +815,6 @@
 
         selectedPrompts = {};
 
-        // ak nie je model — zobraz všetky prompty ako preview (neklikateľné, vyblednuté)
         if (!activeModel) {
             ALL_PROMPTS.forEach((promptName) => {
                 const promptBox = document.createElement('div');
@@ -845,7 +845,6 @@
                 checkboxContainer.appendChild(promptBox);
             });
 
-            // NOVÉ: Analyze button je disabled kým nie je model vybraný
             analyzeBtn.disabled = true;
             analyzeBtn.title = 'Select a model first';
 
@@ -855,23 +854,19 @@
             return;
         }
 
-        // model je vybraný — vygeneruj normálne checkboxy pre daný model
         const availablePrompts = PROMPT_MAP[activeModel] || {};
 
-        // Analyze button odblokuj
         analyzeBtn.disabled = false;
         analyzeBtn.title = '';
 
         Object.entries(availablePrompts).forEach(([promptName, promptConfig]) => {
             const promptBox = document.createElement('div');
             promptBox.className = 'box mb-3 prompt-box';
-            // data atribút pre identifikáciu pri renderInlineResultPanel
             promptBox.dataset.prompt = promptName;
             promptBox.style.padding = '1rem';
             promptBox.style.backgroundColor = '#f5f9ff';
             promptBox.style.border = '1px solid rgba(10, 108, 255, 0.12)';
 
-            // Hlavička checkboxu (názov promptu + checkbox)
             const checkboxLabel = document.createElement('label');
             checkboxLabel.className = 'checkbox';
             checkboxLabel.style.display = 'flex';
@@ -891,17 +886,11 @@
             promptBox.appendChild(checkboxLabel);
 
             if (promptConfig.needsInput) {
-                // =====================================================================
-                // NOVÉ: multi-input kontajner pre VQA a DETECT
-                // Namiesto jedného input poľa zobrazíme kontajner s viacerými riadkami,
-                // každý riadok má vlastný input + tlačidlo + / ×
-                // =====================================================================
                 const inputsContainer = document.createElement('div');
                 inputsContainer.className = 'prompt-inputs-container';
                 inputsContainer.id = `inputs-container-${promptName}`;
-                inputsContainer.style.display = 'none'; // skryté kým nie je checkbox zaškrtnutý
+                inputsContainer.style.display = 'none';
 
-                // Hint text pod inputmi
                 const hintText = document.createElement('div');
                 hintText.className = 'prompt-input-hint';
                 if (promptName === 'VQA') {
@@ -910,7 +899,6 @@
                     hintText.textContent = 'Each object has to be ended with ";"';
                 }
 
-                // Prvý riadok (s tlačidlom +)
                 const firstRow = createPromptInputRow(inputsContainer, promptConfig.placeholder, true, promptName);
                 inputsContainer.appendChild(firstRow);
                 inputsContainer.appendChild(hintText);
@@ -923,11 +911,9 @@
                     inputsContainer.style.flexDirection = 'column';
                     if (e.target.checked) {
                         document.querySelector('button[type="submit"]').setCustomValidity('');
-                        // focus na prvý input
                         const firstInput = inputsContainer.querySelector('input');
                         if (firstInput) firstInput.focus();
                     }
-                    // odober výsledkový panel ak odškrtíme checkbox
                     if (!e.target.checked) {
                         const oldPanel = promptBox.querySelector('.prompt-result-panel');
                         if (oldPanel) oldPanel.remove();
@@ -939,7 +925,6 @@
                     if (e.target.checked) {
                         document.querySelector('button[type="submit"]').setCustomValidity('');
                     }
-                    // odober výsledkový panel ak odškrtíme checkbox
                     if (!e.target.checked) {
                         const oldPanel = promptBox.querySelector('.prompt-result-panel');
                         if (oldPanel) oldPanel.remove();
@@ -955,7 +940,6 @@
         promptTypeField.parentNode.insertBefore(checkboxContainer, promptTypeField.nextSibling);
     }
 
-    // standard model — resetuje finetuned, potom aktualizuje prompty
     modelSelect.addEventListener('change', () => {
         if (modelSelect.value) {
             finetunedSelect.value = "";
@@ -964,7 +948,6 @@
         updatePromptOptions();
     });
 
-    // finetuned model — resetuje standard, potom aktualizuje prompty
     finetunedSelect.addEventListener('change', () => {
         if (finetunedSelect.value) {
             modelSelect.value = "";
@@ -973,7 +956,6 @@
         updatePromptOptions();
     });
 
-    // pri štarte zobraz preview promptov (bez vybraného modelu)
     updatePromptOptions();
 
     const form = document.getElementById('recognize-form');
@@ -989,12 +971,11 @@
         const time = new Date().toLocaleTimeString();
         consoleLog.textContent = `[${time}] ${msg}\n` + consoleLog.textContent;
     }
-    //check if the media is video
+
     function isVideoFile(file) {
         return file.type.startsWith('video/');
     }
 
-    //extract frames from video
     async function loadFrames(file) {
         log('Extracting frames from video...');
         const fd = new FormData();
@@ -1014,19 +995,18 @@
             log(`Extracted ${data.total} frames`);
 
             const slider = document.getElementById("frame-slider");
-            const framePreview = document.getElementById("frame-preview");
+            const framePreviewMain = document.getElementById("frame-preview-main");
+            const rightPlaceholder = document.getElementById("right-placeholder");
             const thumbs = document.getElementById("thumbnails");
 
-            //clear old thumbnails completely
             thumbs.innerHTML = "";
 
-            //reset slider
             slider.value = 0;
             slider.max = data.frames.length - 1;
 
-            //load first frame
-            framePreview.src = base + data.frames[0].file + '?t=' + Date.now();
-            framePreview.style.display = 'block';
+            if (rightPlaceholder) rightPlaceholder.style.display = 'none';
+            framePreviewMain.src = base + data.frames[0].file + '?t=' + Date.now();
+            framePreviewMain.style.display = 'block';
             currentBaseUrl = base;
 
             data.frames.forEach((f, i) => {
@@ -1055,7 +1035,6 @@
 
             slider.oninput = () => { updateFrameWithInfo(slider.value); };
 
-            // Reset timelines for new video
             vqaTimelines = [];
             renderVqaTimelineUI();
             updateSliderColors();
@@ -1066,12 +1045,12 @@
             console.error(err);
         }
     }
-    //add info under every frame
+
     function updateFrameWithInfo(i) {
         const f = currentVideoFrames[i];
         if (!f) return;
 
-        const framePreview = document.getElementById("frame-preview");
+        const framePreviewMain = document.getElementById("frame-preview-main");
         const frameInfo = document.getElementById("frame-info");
         const time = f.time_sec ?? f.time;
 
@@ -1079,23 +1058,18 @@
         const annotatedUrl = currentBaseUrl + annotatedFilename;
 
         const testImg = new Image();
-        testImg.onload = () => { framePreview.src = annotatedUrl + '?t=' + Date.now(); };
-        testImg.onerror = () => { framePreview.src = currentBaseUrl + f.file + '?t=' + Date.now(); };
+        testImg.onload = () => { framePreviewMain.src = annotatedUrl + '?t=' + Date.now(); };
+        testImg.onerror = () => { framePreviewMain.src = currentBaseUrl + f.file + '?t=' + Date.now(); };
         testImg.src = annotatedUrl;
 
-        framePreview.style.display = "block";
+        framePreviewMain.style.display = "block";
         frameInfo.innerHTML = `
             <b>Capture #${f.index}</b> |
             Time: ${f.time_sec}.0 |
             Frame index: ${f.frame_idx}
         `;
-        /* posuvanie snimkov zosynchronizovane s videom
-        if (previewVideo.duration) {
-            previewVideo.currentTime = time;
-        }
-        */
     }
-    //update frames with annotations if detect prompt was called
+
     function updateThumbnailsWithAnnotations(annotatedFramesMap) {
         const thumbs = document.getElementById("thumbnails");
         const thumbImages = thumbs.querySelectorAll("img");
@@ -1107,16 +1081,11 @@
                 img.src = annotatedFramesMap[frameData.file] + '?t=' + Date.now();
                 img.style.border = "2px solid #00ff00";
             } else {
-                img.style.border = "2px solid #ff4444";  // cerveny
+                img.style.border = "2px solid #ff4444";
             }
         });
     }
 
-    // =====================================================================
-    // HELPER: zbiera všetky hodnoty z multi-input kontajnera pre daný prompt
-    // Pre VQA: spája otázky pomocou "?" separátora (pôvodný formát backendu)
-    // Pre DETECT: spája labely pomocou ";" separátora (pôvodný formát backendu)
-    // =====================================================================
     function collectMultiInputValue(promptName) {
         const container = document.getElementById(`inputs-container-${promptName}`);
         if (!container) return '';
@@ -1129,24 +1098,16 @@
         if (values.length === 0) return '';
 
         if (promptName === 'VQA') {
-            // VQA: každá otázka oddelená "?" — backend ich potom rozdeľuje podľa "?"
             return values.map(q => {
-                // ak otázka nemá otáznik na konci, pridaj ho
                 return q.endsWith('?') ? q : q + '?';
             }).join(' ');
         } else if (promptName === 'DETECT') {
-            // DETECT: každý label oddelený ";" — backend ich rozdeľuje podľa ";"
             return values.join('; ');
         }
 
-        // fallback pre ostatné typy
         return values.join('; ');
     }
 
-    // =====================================================================
-    // HELPER: zbiera pole jednotlivých otázok z multi-input kontajnera pre VQA
-    // Vracia pole stringov (každá otázka zvlášť) — používa sa pre badge rendering
-    // =====================================================================
     function collectVqaQuestionsArray(promptName) {
         const container = document.getElementById(`inputs-container-${promptName}`);
         if (!container) return [];
@@ -1158,17 +1119,18 @@
                 .map(q => q.endsWith('?') ? q : q + '?');
     }
 
-    //main javascript function - file input
     imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (file) {
             fileName.textContent = file.name;
 
-            //clear previous frames completely
             document.getElementById("frames-container").style.display = "none";
             document.getElementById("thumbnails").innerHTML = "";
-            document.getElementById("frame-preview").src = "";
-            document.getElementById("frame-preview").style.display = "none";
+            const framePreviewMain = document.getElementById("frame-preview-main");
+            framePreviewMain.src = "";
+            framePreviewMain.style.display = "none";
+            const rightPlaceholder = document.getElementById("right-placeholder");
+            if (rightPlaceholder) rightPlaceholder.style.display = 'flex';
             document.getElementById("frame-slider").value = 0;
             currentVideoFrames = [];
             vqaTimelines = [];
@@ -1176,7 +1138,6 @@
             globalFrameTotal = 0;
             document.getElementById('global-frame-nav').style.display = 'none';
 
-            //clear frames on server
             try {
                 await fetch('/recognizer/clear_frames/', {method: 'POST'});
                 log('Cleared previous frames from server.');
@@ -1188,7 +1149,6 @@
                 preview.style.display = 'none';
                 previewVideo.style.display = 'block';
 
-                //check if format is .avi/.mpeg/.mpg -> will call conversion
                 const needsConversion = file.name.toLowerCase().endsWith('.avi') ||
                         file.name.toLowerCase().endsWith('.mpeg') ||
                         file.name.toLowerCase().endsWith('.mpg');
@@ -1207,7 +1167,6 @@
                             previewVideo.src = URL.createObjectURL(blob);
                             log('Video converted to MP4 successfully.');
 
-                            //extract frames after conversion
                             const convertedFile = new File([blob], file.name.replace(/\.(avi|mpeg|mpg)$/i, '.mp4'), {type: 'video/mp4'});
                             await loadFrames(convertedFile);
                         } else {
@@ -1242,7 +1201,6 @@
         }
     });
 
-    //RESET
     resetBtn.addEventListener('click', async () => {
         form.reset();
         preview.style.display = 'block';
@@ -1252,19 +1210,23 @@
         fileName.textContent = 'No file selected.';
         consoleLog.textContent = 'Cleared.';
         document.getElementById("frames-container").style.display = "none";
+        document.getElementById("thumbnails").innerHTML = "";
+        const framePreviewMain = document.getElementById("frame-preview-main");
+        framePreviewMain.src = "";
+        framePreviewMain.style.display = "none";
+        const rightPlaceholder = document.getElementById("right-placeholder");
+        if (rightPlaceholder) rightPlaceholder.style.display = 'flex';
         currentVideoFrames = [];
-        vqaTimelines = []; // clears both VQA and DETECT timelines
+        vqaTimelines = [];
         inlineResults = {};
         globalFrameIndex = 0;
         globalFrameTotal = 0;
         document.getElementById('global-frame-nav').style.display = 'none';
         renderVqaTimelineUI();
-        // obnov preview promptov
         modelSelect.selectedIndex = 0;
         finetunedSelect.selectedIndex = 0;
         updatePromptOptions();
 
-        //clear frames on server
         try {
             await fetch('/recognizer/clear_frames/', {method: 'POST'});
             log('Cleared server frames.');
@@ -1273,7 +1235,6 @@
         }
     });
 
-    // form submit
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -1287,24 +1248,17 @@
         }
         analyzeButton.setCustomValidity('');
 
-        //create FormData object for sending data to backend
         const formData = new FormData();
-        //append image,model,prompts
         formData.append('image', imageInput.files[0]);
-        // posiela aktívny model (standard alebo finetuned) pod rovnakým kľúčom
         formData.append('model', modelSelect.value || finetunedSelect.value);
 
-        //add prompts to array
         checkedPrompts.forEach(promptName => {
             formData.append('selected_prompts[]', promptName);
-            // ak prompt má multi-input kontajner, zberi hodnoty z neho
             const inputsContainer = document.getElementById(`inputs-container-${promptName}`);
             if (inputsContainer) {
-                // zbieranie hodnôt z viacerých riadkov a ich spojenie do jedného stringu
                 const combinedValue = collectMultiInputValue(promptName);
                 formData.append(`prompt_input_${promptName}`, combinedValue);
             } else {
-                // fallback pre prompty bez multi-inputu (štandardné jednoduché inputy)
                 const inputField = document.getElementById(`input-${promptName}`);
                 if (inputField) {
                     formData.append(`prompt_input_${promptName}`, inputField.value);
@@ -1315,14 +1269,12 @@
         progress.style.display = 'block';
         progress.value = 10;
 
-        // odober staré inline výsledky z promptov
         inlineResults = {};
         globalFrameIndex = 0;
         document.getElementById('global-frame-nav').style.display = 'none';
         document.querySelectorAll('.prompt-result-panel').forEach(p => p.remove());
 
         try {
-            //send POST request to backend
             log(`Sending ${checkedPrompts.length} prompts to /recognizer/recognize/`);
             const response = await fetch('/recognizer/recognize/', {
                 method: 'POST',
@@ -1337,14 +1289,9 @@
             if (data.results) {
                 const annotatedFramesMap = {};
 
-                // =====================================================================
-                // INLINE RESULTS: zbierame výsledky pre každý prompt naprieč všetkými framami
-                // perPromptFrames = { "VQA": [{timestamp, result}, ...], "DETECT": [...], ... }
-                // =====================================================================
                 const perPromptFrames = {};
                 checkedPrompts.forEach(p => { perPromptFrames[p] = []; });
 
-                // BUILD VQA TIMELINE
                 function splitVqaQuestions(rawQuestion) {
                     const trimmed = rawQuestion.trim();
                     if (!trimmed) return [trimmed];
@@ -1361,13 +1308,11 @@
                 const vqaPromptEntries = checkedPrompts
                         .filter(p => p.toUpperCase().includes('VQA'))
                         .map(promptName => {
-                            // zbieranie hodnôt z multi-input kontajnera
                             const combinedValue = collectMultiInputValue(promptName);
                             const subQuestions = splitVqaQuestions(combinedValue);
                             return { promptName, subQuestions: subQuestions.length ? subQuestions : [combinedValue || promptName] };
                         });
 
-                // Build flat list of timelines: one per sub-question
                 const newTimelines = [];
                 vqaPromptEntries.forEach(entry => {
                     entry.subQuestions.forEach(q => {
@@ -1375,69 +1320,58 @@
                     });
                 });
 
-                // Fill results: iterate frames, find VQA analysis items
                 data.results.forEach((frameData, frameIndex) => {
                     const timestamp = data.is_video
                             ? parseFloat(frameData.timestamp).toFixed(1).replace('.', ',')
                             : null;
 
                     frameData.analysis.forEach((res) => {
-                        // zbieranie do per-prompt inline výsledkov
                         if (perPromptFrames[res.prompt_name] !== undefined) {
                             perPromptFrames[res.prompt_name].push({
                                 timestamp: timestamp,
                                 result: res.result,
-                                subIdx: perPromptFrames[res.prompt_name].length  // poradie výsledku v rámci promptu
+                                subIdx: perPromptFrames[res.prompt_name].length
                             });
-                        }
                         }
 
                         if (!res.prompt_name || !res.prompt_name.toUpperCase().includes('VQA')) return;
 
-                        // result may be a single string OR an array (one item per sub-question)
                         const rawResult = res.result;
                         const resultsArray = Array.isArray(rawResult) ? rawResult : [rawResult];
 
-                        // Find the timelines that belong to this prompt
                         const matchingTimelines = newTimelines.filter(t => t.promptName === res.prompt_name);
 
                         resultsArray.forEach((singleResult, subIdx) => {
                             const tl = matchingTimelines[subIdx];
                             if (!tl) return;
 
-                            // Ak je otázka open (how many, what, atď.) → null, timeline sa nevykresli
                             if (isOpenQuestion(tl.question)) {
                                 tl.results[frameIndex] = null;
                                 return;
                             }
 
-                            // classifyAnswer — rovnaká logika ako v badge renderingu, NO má prednosť
                             const verdict = classifyAnswer(singleResult);
                             if (verdict === 'yes') {
-                                tl.results[frameIndex] = true;   // green
+                                tl.results[frameIndex] = true;
                             } else if (verdict === 'no') {
-                                tl.results[frameIndex] = false;  // red
+                                tl.results[frameIndex] = false;
                             } else {
-                                tl.results[frameIndex] = null;   // grey for open questions
+                                tl.results[frameIndex] = null;
                             }
                         });
                     });
                 });
 
-                // Only keep timelines that have at least one true/false — open-only timelines are skipped
                 vqaTimelines = newTimelines.filter(t =>
                         Object.values(t.results).some(v => v === true || v === false)
                 );
 
-                // BUILD DETECT TIMELINES
                 const modelName = data.model ? data.model.toLowerCase() : '';
                 if (modelName.includes('paligemma')) {
                     const detectPromptEntries = checkedPrompts
                             .filter(p => p.toUpperCase() === 'DETECT')
                             .map(promptName => {
-                                // zbieranie hodnôt z multi-input kontajnera
                                 const rawInput = collectMultiInputValue(promptName);
-                                // Backend splits DETECT only by ";"
                                 const subLabels = rawInput.includes(';')
                                         ? rawInput.split(';').map(s => s.trim()).filter(s => s.length > 0)
                                         : [rawInput || 'object'];
@@ -1462,13 +1396,10 @@
                             if (!res.prompt_name || res.prompt_name.toUpperCase() !== 'DETECT') return;
 
                             const rawResult = res.result;
-                            // Normalize to array of arrays
                             let subResults;
                             if (Array.isArray(rawResult) && rawResult.length > 0 && Array.isArray(rawResult[0])) {
-                                // Already array of arrays
                                 subResults = rawResult;
                             } else if (Array.isArray(rawResult)) {
-                                // Single sub-input — wrap in outer array
                                 subResults = [rawResult];
                             } else {
                                 subResults = [[]];
@@ -1477,13 +1408,11 @@
                             detectTimelines.forEach((tl, tlIdx) => {
                                 if (tl.promptName !== res.prompt_name) return;
                                 const subArr = subResults[tlIdx];
-                                // Found = sub-array exists and has at least one detection
                                 tl.results[frameIndex] = Array.isArray(subArr) && subArr.length > 0;
                             });
                         });
                     });
 
-                    // Merge detect timelines into vqaTimelines (shared switcher)
                     const filledDetect = detectTimelines.filter(t =>
                             Object.values(t.results).some(v => v === true || v === false)
                     );
@@ -1492,13 +1421,8 @@
 
                 renderVqaTimelineUI();
 
-                // =====================================================================
-                // RENDER INLINE RESULTS — pod každý prompt-box vloží panel s výsledkami
-                // Pre VQA odovzdáme aj pole otázok pre správne badge renderovanie
-                // =====================================================================
                 Object.entries(perPromptFrames).forEach(([promptName, frames]) => {
                     if (frames.length > 0) {
-                        // Pre VQA zbierieme pole otázok pre badge rendering (isOpenQuestion check)
                         const questions = promptName === 'VQA'
                                 ? collectVqaQuestionsArray(promptName)
                                 : [];
@@ -1506,18 +1430,15 @@
                     }
                 });
 
-                // Inicializuj globálny frame navigator po vykreslení všetkých panelov
                 globalFrameIndex = 0;
                 updateGlobalFrameNav();
 
-                // build annotations map and update annotated image preview
                 data.results.forEach((frameData) => {
                     frameData.analysis.forEach((res) => {
                         if (res.annotated_frame_url && data.is_video) {
                             annotatedFramesMap[frameData.frame] = res.annotated_frame_url;
                         }
                     });
-                    // only for detect prompts, not first
                     if (!data.is_video) {
                         const annotatedResult = frameData.analysis.find(a => a.annotated_image);
                         if (annotatedResult) {
@@ -1532,9 +1453,9 @@
                     updateThumbnailsWithAnnotations(annotatedFramesMap);
                     const firstAnnotatedUrl = Object.values(annotatedFramesMap)[0];
                     if (firstAnnotatedUrl) {
-                        const framePreview = document.getElementById("frame-preview");
-                        framePreview.src = firstAnnotatedUrl + '?t=' + Date.now();
-                        framePreview.style.display = 'block';
+                        const framePreviewMain = document.getElementById("frame-preview-main");
+                        framePreviewMain.src = firstAnnotatedUrl + '?t=' + Date.now();
+                        framePreviewMain.style.display = 'block';
                     }
                 }
 
@@ -1549,6 +1470,14 @@
             log('Request failed: ' + err);
             progress.style.display = 'none';
         }
+    });
+
+    // Console toggle
+    const consoleToggleBtn = document.getElementById('console-toggle-btn');
+    const consoleBody = document.getElementById('console-body');
+    consoleToggleBtn.addEventListener('click', () => {
+        const isOpen = consoleBody.classList.toggle('visible');
+        consoleToggleBtn.classList.toggle('open', isOpen);
     });
 </script>
 </body>

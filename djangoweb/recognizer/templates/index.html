@@ -287,7 +287,7 @@
                                         Your browser does not support the video tag.
                                     </video>
                                 </div>
-                                <p class="prompt-input-hint" style="margin-top:0.3rem;">Maximum file size is 200 MB</p>
+                                <p class="prompt-input-hint" style="margin-top:0.3rem;">Maximum size of file is 200 MB</p>
                             </div>
 
                             <div class="field">
@@ -1296,7 +1296,13 @@
         });
 
         progress.style.display = 'block';
-        progress.value = 10;
+        progress.value = 5;
+        let fakeProgress = 5;
+        const fakeTimer = setInterval(() => {
+            const step = fakeProgress < 30 ? 3 : fakeProgress < 60 ? 1.5 : fakeProgress < 85 ? 0.5 : 0;
+            fakeProgress = Math.min(fakeProgress + step, 90);
+            progress.value = fakeProgress;
+        }, 400);
 
         inlineResults = {};
         globalFrameIndex = 0;
@@ -1310,7 +1316,7 @@
                 body: formData
             });
 
-            progress.value = 50;
+            //progress.value = 50;
             const data = await response.json();
             log('Response from server received.');
             console.log('Full response:', data);
@@ -1500,8 +1506,15 @@
                 log('Server returned error: ' + (data.error || 'unknown error'));
             }
 
-            progress.value = 100;
-            setTimeout(() => progress.style.display = 'none', 600);
+            //progress.value = 100;
+            clearInterval(fakeTimer);
+            const fillTimer = setInterval(() => {
+                fakeProgress = Math.min(fakeProgress + 2, 100);
+                progress.value = fakeProgress;
+                if (fakeProgress >= 100) clearInterval(fillTimer);
+            }, 20);
+
+            setTimeout(() => progress.style.display = 'none', 1100);
 
         } catch (err) {
             log('Request failed: ' + err);

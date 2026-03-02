@@ -607,11 +607,6 @@
             timeLabel.textContent = `Time: ${framesData[0].timestamp}s`;
             panel.appendChild(timeLabel);
 
-            const counter = document.createElement('div');
-            counter.className = 'result-time-counter';
-            counter.textContent = `1 / ${framesData.length}`;
-            panel.appendChild(counter);
-
             const contentBox = document.createElement('div');
             contentBox.className = 'result-content-box';
             panel.appendChild(contentBox);
@@ -955,6 +950,7 @@
             finetunedSelect.value = "";
             finetunedSelect.selectedIndex = 0;
         }
+        document.getElementById('global-frame-nav').style.display = 'none';
         updatePromptOptions();
     });
 
@@ -963,6 +959,7 @@
             modelSelect.value = "";
             modelSelect.selectedIndex = 0;
         }
+        document.getElementById('global-frame-nav').style.display = 'none';
         updatePromptOptions();
     });
 
@@ -1014,11 +1011,10 @@
             slider.value = 0;
             slider.max = data.frames.length - 1;
 
-            // ── SLIDER oninput: aktualizuje preview aj výsledky v promptoch ──
             slider.oninput = () => {
                 const i = parseInt(slider.value);
                 updateFrameWithInfo(i);
-                syncAllPanelsToFrame(i, true); // true = skip preview update (already done above)
+                syncAllPanelsToFrame(i, true);
             };
 
             if (rightPlaceholder) rightPlaceholder.style.display = 'none';
@@ -1040,7 +1036,7 @@
                 img.onclick = () => {
                     slider.value = i;
                     updateFrameWithInfo(i);
-                    syncAllPanelsToFrame(i, true); // preview already updated by updateFrameWithInfo
+                    syncAllPanelsToFrame(i, true);
                 };
 
                 const label = document.createElement("div");
@@ -1101,11 +1097,9 @@
         });
     }
 
-    // ── ZMENA: ak model nemá input pre DETECT (Florence), vrátime 'detect objects' ako fallback label ──
     function collectMultiInputValue(promptName) {
         const container = document.getElementById(`inputs-container-${promptName}`);
         if (!container) {
-            // Florence DETECT — žiadny input container, použijeme generický label
             return promptName === 'DETECT' ? 'objects' : '';
         }
 
@@ -1148,7 +1142,7 @@
                 log(`File too large: ${(file.size / 1024 / 1024).toFixed(1)} MB — limit is ${MAX_SIZE_MB} MB. Upload cancelled.`);
                 imageInput.value = "";
                 fileName.textContent = 'No File Selected';
-                return;                         // zastaví všetko ďalšie
+                return;
             }
 
             fileName.textContent = file.name;
@@ -1295,14 +1289,25 @@
             }
         });
 
+        // ── PROGRESS BAR SETUP ──
+        progress.value = 0;
         progress.style.display = 'block';
-        progress.value = 5;
-        let fakeProgress = 5;
+        let fakeProgress = 0;
+        let timerDone = false;
+
+        // Fázy: rýchlo do 50%, potom stále pomalšie až do 94% kde sa plazí
         const fakeTimer = setInterval(() => {
-            const step = fakeProgress < 30 ? 3 : fakeProgress < 60 ? 1.5 : fakeProgress < 85 ? 0.5 : 0;
-            fakeProgress = Math.min(fakeProgress + step, 90);
+            if (timerDone) return;
+            let step;
+            if (fakeProgress < 40) step = 0.4;
+            else if (fakeProgress < 60) step = 0.25;
+            else if (fakeProgress < 75) step = 0.15;
+            else if (fakeProgress < 94) step = 0.08;
+            else if (fakeProgress < 96) step = 0.05;
+            else                         step = 0.03;
+            fakeProgress = Math.min(fakeProgress + step, 99);
             progress.value = fakeProgress;
-        }, 400);
+        }, 80);
 
         inlineResults = {};
         globalFrameIndex = 0;
@@ -1316,7 +1321,6 @@
                 body: formData
             });
 
-            //progress.value = 50;
             const data = await response.json();
             log('Response from server received.');
             console.log('Full response:', data);
@@ -1401,15 +1405,12 @@
                         Object.values(t.results).some(v => v === true || v === false)
                 );
 
-                // ── DETECT TIMELINES: paligemma (so subLabels) aj florence (univerzálny label) ──
                 const modelName = data.model ? data.model.toLowerCase() : '';
                 if (modelName.includes('paligemma') || modelName.includes('florence')) {
                     const detectPromptEntries = checkedPrompts
                             .filter(p => p.toUpperCase() === 'DETECT')
                             .map(promptName => {
                                 const rawInput = collectMultiInputValue(promptName);
-                                // Paligemma: rozdeľ podľa ";" na individuálne labely
-                                // Florence: rawInput = 'detect objects', použijeme ako jeden label
                                 const subLabels = rawInput && rawInput.includes(';')
                                         ? rawInput.split(';').map(s => s.trim()).filter(s => s.length > 0)
                                         : [rawInput || 'detect objects'];
@@ -1419,8 +1420,6 @@
                     const detectTimelines = [];
                     detectPromptEntries.forEach(entry => {
                         entry.subLabels.forEach(label => {
-                            // Paligemma: zobraz "detect: person" atď.
-                            // Florence: zobraz len "detect objects" (genericky)
                             const displayLabel = modelName.includes('florence')
                                     ? 'objects'
                                     : `${label}`;
@@ -1506,19 +1505,37 @@
                 log('Server returned error: ' + (data.error || 'unknown error'));
             }
 
-            //progress.value = 100;
+            // ── FILL TO 100% plynulo cez requestAnimationFrame — žiadne blikanie ──
+            timerDone = true;
             clearInterval(fakeTimer);
-            const fillTimer = setInterval(() => {
-                fakeProgress = Math.min(fakeProgress + 2, 100);
-                progress.value = fakeProgress;
-                if (fakeProgress >= 100) clearInterval(fillTimer);
-            }, 20);
 
-            setTimeout(() => progress.style.display = 'none', 1100);
+            const startVal = fakeProgress;
+            const startTime = performance.now();
+            const FILL_DURATION = 1000; // 1 sekunda na dobehnutie do 100%
+
+            function fillStep(now) {
+                const elapsed = now - startTime;
+                const t = Math.min(elapsed / FILL_DURATION, 1);
+                const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+                progress.value = startVal + (100 - startVal) * eased;
+                if (t < 1) {
+                    requestAnimationFrame(fillStep);
+                } else {
+                    progress.value = 100;
+                    setTimeout(() => {
+                        progress.style.display = 'none';
+                        progress.value = 0;
+                    }, 600);
+                }
+            }
+            requestAnimationFrame(fillStep);
 
         } catch (err) {
             log('Request failed: ' + err);
+            timerDone = true;
+            clearInterval(fakeTimer);
             progress.style.display = 'none';
+            progress.value = 0;
         }
     });
 

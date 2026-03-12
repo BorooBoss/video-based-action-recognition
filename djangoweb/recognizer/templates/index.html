@@ -649,7 +649,9 @@
     }
 
     function renderInlineResultPanel(promptName, framesData, isVideo, questions) {
+        console.log('renderInlineResultPanel called:', promptName, framesData, questions);
         const promptBox = document.querySelector(`.prompt-box[data-prompt="${promptName}"]`);
+        console.log('promptBox found:', promptBox);
         if (!promptBox) return;
 
         const oldPanel = promptBox.querySelector('.prompt-result-panel');
@@ -792,13 +794,16 @@
             results.forEach((res, idx) => {
                 const text = (typeof res === 'string' ? res : JSON.stringify(res)).trim();
                 const thisQuestion = qs[idx] || qs[0] || '';
+                //console.log('thisQuestion:', thisQuestion, '| isOpen:', isOpenQuestion(thisQuestion));
 
                 let badgeClass;
 
                 if (isOpenQuestion(thisQuestion)) {
                     badgeClass = 'open';
                 } else {
-                    badgeClass = classifyAnswer(res);
+                    const v = classifyAnswer(res);
+                    console.log('Q:', thisQuestion, '| answer:', text.substring(0,50), '| verdict:', v);
+                    badgeClass = (v === 'open') ? 'no' : v;
                 }
 
                 const badge = document.createElement('span');
@@ -1482,12 +1487,10 @@
                             const verdict = classifyAnswer(singleResult);
                             if (verdict === 'yes') {
                                 tl.results[frameIndex] = true;
-                            } else if (verdict === 'no') {
+                            } else { //verdict can be only true or false
                                 tl.results[frameIndex] = false;
-                            } else {
-                                tl.results[frameIndex] = null;
                             }
-                        });
+                        })
                     });
                 });
 

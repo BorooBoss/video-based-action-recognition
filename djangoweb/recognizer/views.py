@@ -10,6 +10,7 @@ from src.video.ffmpeg_convert import convert_to_mp4
 from src.vision_adapter import normalize_output
 from src.adapters.paligemma_adapter import apply_nms
 from src.video.frames import clear_temp_frames, ensure_temp_frames_dir, video_to_frames, TEMP_FRAMES_DIR
+from src.classification import classify_image, classify_frames
 
 
 @csrf_exempt #load video and return temp frames
@@ -106,6 +107,8 @@ def recognize(request):
         selected_prompts = request.POST.getlist("selected_prompts[]")
         print(f"DEBUG: selected_prompts = {selected_prompts}")
         prompt_inputs = {p: request.POST.get(f"prompt_input_{p}", "").strip() for p in selected_prompts}
+        run_clip = request.POST.get("run_clip") == "1"
+
 
         ui = user_input.UserInput()
         ui.model_name = request.POST.get("model")
@@ -261,13 +264,23 @@ def recognize(request):
                     "analysis": current_frame_results
                 })
 
+            clip_result = None
+            if run_clip:
+                if is_video:
+                    clip_result = classify_frames(frames_to_process)
+                else:
+                    clip_result = classify_image(frames_to_process[0])
+                print(f"CLIP result: {clip_result}")
+
+
             if not is_video and os.path.exists(tmp_path):
                 os.remove(tmp_path)
 
             return JsonResponse({
                 "model": ui.model_name,
                 "is_video": is_video,
-                "results": video_results #return array of results for every screen
+                "results": video_results, #return array of results for every screen
+                "clip": clip_result,
             })
 
         except Exception as e:

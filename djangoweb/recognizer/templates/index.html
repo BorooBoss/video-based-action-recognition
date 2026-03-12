@@ -192,6 +192,48 @@
         #console-body.visible {
             display: block;
         }
+
+        /* CLIP Classification */
+        #clip-checkbox-box {
+            background: linear-gradient(135deg, rgba(53, 85, 255, 0.08) 0%, rgba(5, 59, 138, 0.12) 100%);
+            border: 1.5px solid rgba(53, 148, 253, 0.25);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.25rem;
+        }
+        #clip-checkbox-box label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #1a2e5a;
+        }
+        #clip-result-panel {
+            display: none;
+            margin-top: 0.75rem;
+            border-top: 1px solid rgba(10, 108, 255, 0.12);
+            padding-top: 0.65rem;
+        }
+        #clip-result-box {
+            background: #fff;
+            border: 1px solid rgba(10, 108, 255, 0.1);
+            border-radius: 6px;
+            padding: 0.6rem 0.75rem;
+            font-size: 0.85rem;
+            font-family: monospace;
+            white-space: pre-wrap;
+            word-break: break-word;
+            color: #222;
+            line-height: 1.5;
+        }
+        .clip-result-label {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: #094bb7;
+            margin-bottom: 0.3rem;
+        }
     </style>
 </head>
 <body>
@@ -250,6 +292,7 @@
                                                 <select name="finetuned_model" id="finetuned-model-select">
                                                     <option value="" disabled selected>— Select model —</option>
                                                     <option value="../train/paligemma2_weapon_detection">../train/paligemma2_weapon_detection</option>
+                                                    <option value="../train/paligemma2_weapon_finetune2">../train/paligemma2_weapon_finetune2</option>
                                                     <option value="florence-2-ft-missing">florence-2-ft-missing</option>
                                                 </select>
                                             </div>
@@ -276,7 +319,13 @@
                                     <i class="fas fa-chevron-right"></i>
                                 </button>
                             </div>
-
+                            <!-- CLIP Classification checkbox -->
+                            <div id="clip-checkbox-box" class="field">
+                                <label>
+                                    <input type="checkbox" id="clip-checkbox">
+                                    CLIP Classification
+                                </label>
+                            </div>
                             <!-- VISUAL PREVIEW — medzi promptami a výberom súboru -->
                             <div id="inline-visual-preview" class="field">
                                 <h3 class="title is-5">Visual Preview</h3>
@@ -375,7 +424,13 @@
 
                             <div id="frame-info" class="is-size-7 has-text-grey mt-1"></div>
                         </div>
-
+                        <!-- CLIP result panel -->
+                        <div id="clip-result-panel">
+                            <div class="clip-result-label">
+                                <i class="fas fa-tags" style="margin-right:0.3rem;"></i>CLIP Classification
+                            </div>
+                            <div id="clip-result-box">—</div>
+                        </div>
                         <div class="content mt-3">
                             <progress id="progress" class="progress is-primary" value="0" max="100"
                                       style="display:none"></progress>
@@ -447,6 +502,13 @@
             "VQA": {needsInput: true, placeholder: "Ask model anything..."}
         },
         "../train/paligemma2_weapon_detection": {
+            "SIMPLE CAPTION": {needsInput: false},
+            "STANDARD CAPTION": {needsInput: false},
+            "DETAILED CAPTION": {needsInput: false},
+            "VQA": {needsInput: true, placeholder: "Ask model anything..."},
+            "DETECT": {needsInput: true, placeholder: "example: person; car; tree..."}
+        },
+        "../train/paligemma2_weapon_finetune2": {
             "SIMPLE CAPTION": {needsInput: false},
             "STANDARD CAPTION": {needsInput: false},
             "DETAILED CAPTION": {needsInput: false},
@@ -856,6 +918,8 @@
             const promptTypeField = document.getElementById('prompt-type-select').closest('.field');
             promptTypeField.style.display = 'none';
             promptTypeField.parentNode.insertBefore(checkboxContainer, promptTypeField.nextSibling);
+            document.getElementById('clip-checkbox-box').style.opacity = '0.45';
+            document.getElementById('clip-checkbox-box').style.pointerEvents = 'none';
             return;
         }
 
@@ -864,6 +928,8 @@
         analyzeBtn.disabled = false;
         analyzeBtn.title = '';
 
+        document.getElementById('clip-checkbox-box').style.opacity = '1';
+        document.getElementById('clip-checkbox-box').style.pointerEvents = 'auto';
         Object.entries(availablePrompts).forEach(([promptName, promptConfig]) => {
             const promptBox = document.createElement('div');
             promptBox.className = 'box mb-3 prompt-box';
@@ -1260,6 +1326,9 @@
 
     form.addEventListener('submit', async (e) => {
         e.preventDefault();
+        // Reset CLIP output
+        document.getElementById('clip-result-panel').style.display = 'none';
+        document.getElementById('clip-result-box').textContent = '—';
 
         const checkedPrompts = Object.keys(selectedPrompts).filter(key => selectedPrompts[key]);
         const analyzeButton = document.querySelector('button[type="submit"]');
@@ -1289,6 +1358,8 @@
             }
         });
 
+        formData.append('run_clip', document.getElementById('clip-checkbox').checked ? '1' : '0');
+
         // ── PROGRESS BAR SETUP ──
         progress.value = 0;
         progress.style.display = 'block';
@@ -1313,6 +1384,8 @@
         globalFrameIndex = 0;
         document.getElementById('global-frame-nav').style.display = 'none';
         document.querySelectorAll('.prompt-result-panel').forEach(p => p.remove());
+        document.getElementById('clip-result-panel').style.display = 'none';
+        document.getElementById('clip-result-box').textContent = '—';
 
         try {
             log(`Sending ${checkedPrompts.length} prompts to /recognizer/recognize/`);
@@ -1323,6 +1396,16 @@
 
             const data = await response.json();
             log('Response from server received.');
+
+            // Show CLIP result if checked
+            if (data.clip) {
+                document.getElementById('clip-result-panel').style.display = 'block';
+                const top3 = data.clip.top3.map(([label, score]) =>
+                        `${(score * 100).toFixed(1)}%  ${label}`
+                ).join('\n');
+                document.getElementById('clip-result-box').textContent = top3;
+            }
+
             console.log('Full response:', data);
 
             if (data.results) {

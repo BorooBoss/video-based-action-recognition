@@ -427,7 +427,7 @@
                         <!-- CLIP result panel -->
                         <div id="clip-result-panel">
                             <div class="clip-result-label">
-                                <i class="fas fa-tags" style="margin-right:0.3rem;"></i>CLIP Classification
+                                CLIP Classification
                             </div>
                             <div id="clip-result-box">—</div>
                         </div>
@@ -1051,6 +1051,7 @@
 
     async function loadFrames(file) {
         log('Extracting frames from video...');
+        document.getElementById('inline-visual-preview').style.display = 'block';
         const fd = new FormData();
         fd.append("video", file);
         fd.append("every_n_seconds", "1");
@@ -1277,10 +1278,15 @@
                 }
             } else {
                 previewVideo.style.display = 'none';
-                preview.style.display = 'block';
+                preview.style.display = 'none';
+                document.getElementById('inline-visual-preview').style.display = 'none';
                 const reader = new FileReader();
                 reader.onload = (event) => {
-                    preview.src = event.target.result;
+                    const framePreviewMain = document.getElementById("frame-preview-main");
+                    const rightPlaceholder = document.getElementById("right-placeholder");
+                    framePreviewMain.src = event.target.result;
+                    framePreviewMain.style.display = 'block';
+                    if (rightPlaceholder) rightPlaceholder.style.display = 'none';
                     log('Uploaded local image preview.');
                 };
                 reader.readAsDataURL(file);
@@ -1295,6 +1301,7 @@
         preview.style.display = 'block';
         previewVideo.style.display = 'none';
         preview.src = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>No image selected</text></svg>";
+        document.getElementById('inline-visual-preview').style.display = 'block';
         previewVideo.src = '';
         fileName.textContent = 'No file selected.';
         consoleLog.textContent = 'Cleared.';

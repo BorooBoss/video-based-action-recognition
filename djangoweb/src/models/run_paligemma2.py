@@ -62,7 +62,7 @@ def predict(image_path, prompt, model_id=None):
     image = Image.open(image_path).convert("RGB")
 
     inputs = cache.processor(
-        text=prompt,
+        text="<image>" + prompt,
         images=image,
         return_tensors="pt"
     )

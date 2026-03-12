@@ -52,6 +52,14 @@ class UserInput:
             "STANDARD CAPTION": "caption en",
             "DETAILED CAPTION": "describe en",
             "VQA": "answer en",
+        },
+
+        "../train/paligemma2_weapon_finetune2" : {
+            "DETECT": "detect",
+            "SIMPLE CAPTION": "cap en",
+            "STANDARD CAPTION": "caption en",
+            "DETAILED CAPTION": "describe en",
+            "VQA": "answer en",
         }
     }
 

@@ -8,6 +8,7 @@ from recognizer import subprocess
 from src import draw_objects, user_input
 from src.video.ffmpeg_convert import convert_to_mp4
 from src.vision_adapter import normalize_output
+from src.adapters.paligemma_adapter import apply_nms
 from src.video.frames import clear_temp_frames, ensure_temp_frames_dir, video_to_frames, TEMP_FRAMES_DIR
 
 
@@ -217,6 +218,10 @@ def recognize(request):
                         all_results.append(result)
                     print(all_detections, "VSETKE DETEKCIE")
                     if all_detections:
+                        #vela objektov naraz
+                        if "paligemma" in ui.model_name.lower():
+                            all_detections = apply_nms(all_detections, iou_threshold=0.4)
+                        #print(all_detections, "PO NMS")
                         #for video: save into TEMP_FRAMES_DIR, for one frame: /tmp
                         if is_video:
                             base_name = frame_name.replace('.jpg', '')

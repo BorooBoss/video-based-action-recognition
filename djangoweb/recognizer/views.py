@@ -1,3 +1,4 @@
+import _json
 import os, base64, subprocess, tempfile
 from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
@@ -10,7 +11,7 @@ from src.video.ffmpeg_convert import convert_to_mp4
 from src.vision_adapter import normalize_output
 from src.adapters.paligemma_adapter import apply_nms
 from src.video.frames import clear_temp_frames, ensure_temp_frames_dir, video_to_frames, TEMP_FRAMES_DIR
-from src.classification import classify_image, classify_frames
+from src.classification import classify_image, classify_frames, classify_text
 
 
 @csrf_exempt #load video and return temp frames
@@ -65,6 +66,30 @@ def clear_frames(request):
         return JsonResponse({"status": "cleared"})
     return JsonResponse({"error": "Invalid request"}, status=400)
 
+@csrf_exempt
+def classify_text_view(request):
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request"}, status=400)
+
+    try:
+        body = _json.loads(request.body)
+        descriptions = body.get("descriptions", [])
+        print(f"DEBUG classify_text_view: received {len(descriptions)} descriptions")
+        print(f"DEBUG first 2: {descriptions[:2]}")
+    except Exception as e:
+        print(f"DEBUG JSON parse error: {e}")
+        return JsonResponse({"error": "Invalid JSON body"}, status=400)
+
+    if not descriptions:
+        print("DEBUG: descriptions is empty!")
+        return JsonResponse({"error": "No descriptions provided"}, status=400)
+
+    try:
+        result = classify_text(descriptions)
+        return JsonResponse(result)
+    except Exception as e:
+        print(f"DEBUG classify_text error: {e}")
+        return JsonResponse({"error": str(e)}, status=500)
 
 @csrf_exempt #convert videos to MP4
 def convert_video(request):

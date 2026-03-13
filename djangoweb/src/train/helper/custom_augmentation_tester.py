@@ -2,8 +2,8 @@
 import cv2, os, random
 from matplotlib import pyplot as plt
 
-IMAGES = r"/mnt/c/Users/boris/Desktop/5.semester/bp/weapon_aug/train/images_aug"
-LABELS = r"/mnt/c/Users/boris/Desktop/5.semester/bp/weapon_aug/train/labels_aug"
+IMAGES = r"/mnt/c/Users/boris/Desktop/D_V2/collections/train/images_aug"
+LABELS = r"/mnt/c/Users/boris/Desktop/D_V2/collections/train/labels_aug"
 
 samples = random.sample(os.listdir(IMAGES), 20)
 

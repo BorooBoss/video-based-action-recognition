@@ -66,6 +66,7 @@ def clear_frames(request):
         return JsonResponse({"status": "cleared"})
     return JsonResponse({"error": "Invalid request"}, status=400)
 
+"""
 @csrf_exempt
 def classify_text_view(request):
     if request.method != "POST":
@@ -90,7 +91,7 @@ def classify_text_view(request):
     except Exception as e:
         print(f"DEBUG classify_text error: {e}")
         return JsonResponse({"error": str(e)}, status=500)
-
+"""
 @csrf_exempt #convert videos to MP4
 def convert_video(request):
     if request.method != "POST":
@@ -130,10 +131,8 @@ def instructions_page(request):
 def recognize(request):
     if request.method == 'POST':
         selected_prompts = request.POST.getlist("selected_prompts[]")
-        print(f"DEBUG: selected_prompts = {selected_prompts}")
         prompt_inputs = {p: request.POST.get(f"prompt_input_{p}", "").strip() for p in selected_prompts}
         run_clip = request.POST.get("run_clip") == "1"
-
 
         ui = user_input.UserInput()
         ui.model_name = request.POST.get("model")
@@ -141,17 +140,15 @@ def recognize(request):
 
         if not ui.model_name:
             return JsonResponse({"error": "Missing model name"}, status=400)
-        #was video uploaded?
+
         is_video = uploaded_file and uploaded_file.content_type.startswith('video/')
 
         frames_to_process = []
         if is_video:
-            #get array of all .jpg temp_frames
             frame_files = sorted([f for f in os.listdir(TEMP_FRAMES_DIR) if f.endswith('.jpg') and not f.startswith('annotated_')])
             for f in frame_files:
                 frames_to_process.append(os.path.join(TEMP_FRAMES_DIR, f))
         else:
-            #one image
             tmp_path = "/tmp/uploaded_image.jpg"
             with open(tmp_path, "wb") as f:
                 for chunk in uploaded_file.chunks():
@@ -161,11 +158,10 @@ def recognize(request):
         try:
             video_results = []
 
-            #first loop - iterates each frame
             for current_image_path in frames_to_process:
                 frame_name = os.path.basename(current_image_path)
                 current_frame_results = []
-                #second loop - iterates each prompt (detect/caption/vqa)
+
                 for prompt_name in selected_prompts:
                     ui.prompt_type = prompt_name
                     raw_input = prompt_inputs.get(prompt_name, "")
@@ -177,23 +173,15 @@ def recognize(request):
                     all_results = []
                     all_detections = []
 
-                    #third loop - iterates multiple prompts of one type (detect person; gun)
                     for sub_input in sub_inputs:
                         ui.prompt_input = sub_input
                         ui.set_base_prompt()
 
-                        print(f"\n=== Processing prompt: {prompt_name} ===")
-                        print(f"Base prompt: {ui.base_prompt}")
-                        print(f"Full prompt: {ui.full_prompt}")
-                        print(f"Model name: {ui.model_name}")
+                        result = None
+                        raw_result = None
 
-                        result = None #USED FOR DESCRIBE/VQA PROMPTS
-                        raw_result = None #USED FOR DETECT PROMPTS NORMALIZATION
-
-                        #choose model with current_image_path
                         if "paligemma" in ui.model_name.lower():
                             raw_result = run_paligemma2.predict(current_image_path, ui.full_prompt, ui.model_name)
-                            #raw_result = subprocess.call_paligemma2(current_image_path, ui.full_prompt, ui.model_name)
                             if ui.base_prompt == "detect":
                                 result = normalize_output(raw_result, "paligemma")
                             else:
@@ -220,7 +208,6 @@ def recognize(request):
 
                         detections_dict = None
 
-
                         if isinstance(raw_result, list) and len(raw_result) > 0:
                             detections_dict = raw_result
                         elif isinstance(raw_result, dict):
@@ -228,6 +215,31 @@ def recognize(request):
                                 detections_dict = raw_result["<OD>"]
                             elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
                                 detections_dict = raw_result[ui.full_prompt]
+
+                        # ==============================================================
+                        # OPRAVENÝ FILTER: Aktualizuje aj premenné odosielané do frontendu!
+                        # ==============================================================
+                        if detections_dict and "paligemma" in ui.model_name.lower() and ui.base_prompt == "detect":
+                            target_labels = [t.strip().lower() for t in sub_input.split(";") if t.strip()]
+
+                            filtered_dict = []
+                            if isinstance(detections_dict, list):
+                                for det in detections_dict:
+                                    det_label = det.get('label', det.get('class', det.get('name', ''))).lower()
+                                    if det_label in target_labels:
+                                        filtered_dict.append(det)
+
+                                detections_dict = filtered_dict
+                                result = filtered_dict      # <-- TOTO TU CHÝBALO (Aktualizuje textový výpis na webe)
+                                raw_result = filtered_dict  # <-- TOTO TU CHÝBALO
+
+                            elif isinstance(detections_dict, dict):
+                                det_label = detections_dict.get('label', detections_dict.get('class', detections_dict.get('name', ''))).lower()
+                                if det_label not in target_labels:
+                                    detections_dict = None
+                                    result = []             # <-- TOTO TU CHÝBALO
+                                    raw_result = []         # <-- TOTO TU CHÝBALO
+                        # ==============================================================
 
                         if detections_dict:
                             if isinstance(detections_dict, list):
@@ -244,13 +256,11 @@ def recognize(request):
                         else:
                             result = raw_result
                         all_results.append(result)
-                    print(all_detections, "VSETKE DETEKCIE")
+
                     if all_detections:
-                        #vela objektov naraz
                         if "paligemma" in ui.model_name.lower():
                             all_detections = apply_nms(all_detections, iou_threshold=0.4)
-                        #print(all_detections, "PO NMS")
-                        #for video: save into TEMP_FRAMES_DIR, for one frame: /tmp
+
                         if is_video:
                             base_name = frame_name.replace('.jpg', '')
                             annotated_filename = f"annotated_{base_name}.jpg"
@@ -279,8 +289,7 @@ def recognize(request):
                         "annotated_image": f"data:image/jpeg;base64,{annotated_image_base64}" if annotated_image_base64 else None,
                         "annotated_frame_url": annotated_frame_url
                     })
-                #save result for one exact frame
-                #should work like frame_00005.jpg -> 00005
+
                 timestamp_val = frame_name.split('_')[-1].replace('.jpg', '') if '_' in frame_name else "0"
 
                 video_results.append({
@@ -295,8 +304,6 @@ def recognize(request):
                     clip_result = classify_frames(frames_to_process)
                 else:
                     clip_result = classify_image(frames_to_process[0])
-                print(f"CLIP result: {clip_result}")
-
 
             if not is_video and os.path.exists(tmp_path):
                 os.remove(tmp_path)
@@ -304,7 +311,7 @@ def recognize(request):
             return JsonResponse({
                 "model": ui.model_name,
                 "is_video": is_video,
-                "results": video_results, #return array of results for every screen
+                "results": video_results,
                 "clip": clip_result,
             })
 

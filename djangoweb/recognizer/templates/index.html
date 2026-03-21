@@ -234,6 +234,34 @@
             color: #094bb7;
             margin-bottom: 0.3rem;
         }
+
+        /* ── CLIP TEXT button box ── */
+        #clip-text-btn-box {
+            background: linear-gradient(135deg, rgba(124,58,237,0.08) 0%, rgba(79,20,180,0.12) 100%);
+            border: 1.5px solid rgba(124,58,237,0.25);
+            border-radius: 6px;
+            padding: 0.75rem 1rem;
+            margin-bottom: 1.25rem;
+            display: none;
+        }
+        #clip-text-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: #5b21b6;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0;
+        }
+        #clip-text-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        #clip-text-btn-hint {
+            font-size: 0.72rem;
+            color: #7c3aed;
+            margin-top: 0.25rem;
+        }
     </style>
 </head>
 <body>
@@ -293,6 +321,7 @@
                                                     <option value="" disabled selected>— Select model —</option>
                                                     <option value="../train/paligemma2_weapon_detection">../train/paligemma2_weapon_detection</option>
                                                     <option value="../train/paligemma2_weapon_finetune2">../train/paligemma2_weapon_finetune2</option>
+                                                    <option value="../train/paligemma2_weapon_det_suffix_fixed">../train/paligemma2_weapon_det_suffix_fixed</option>
                                                     <option value="florence-2-ft-missing">florence-2-ft-missing</option>
                                                 </select>
                                             </div>
@@ -319,13 +348,27 @@
                                     <i class="fas fa-chevron-right"></i>
                                 </button>
                             </div>
-                            <!-- CLIP Classification checkbox -->
+
+                            <!-- CLIP Image Classification checkbox -->
                             <div id="clip-checkbox-box" class="field">
                                 <label>
                                     <input type="checkbox" id="clip-checkbox">
                                     CLIP Classification
                                 </label>
                             </div>
+
+                            <!-- ▼▼▼ NOVÉ: CLIP Text Classification tlačidlo ▼▼▼ -->
+                            <div id="clip-text-btn-box" class="field">
+                                <button type="button" id="clip-text-btn">
+                                    <i class="fas fa-brain"></i>
+                                    CLIP Text Classification
+                                </button>
+                                <div id="clip-text-btn-hint">
+                                    Analyzes all VQA / Caption results from every frame
+                                </div>
+                            </div>
+                            <!-- ▲▲▲ KONIEC NOVÉHO BLOKU ▲▲▲ -->
+
                             <!-- VISUAL PREVIEW — medzi promptami a výberom súboru -->
                             <div id="inline-visual-preview" class="field">
                                 <h3 class="title is-5">Visual Preview</h3>
@@ -424,13 +467,36 @@
 
                             <div id="frame-info" class="is-size-7 has-text-grey mt-1"></div>
                         </div>
-                        <!-- CLIP result panel -->
+
+                        <!-- CLIP Image result panel -->
                         <div id="clip-result-panel">
                             <div class="clip-result-label">
                                 CLIP Classification
                             </div>
                             <div id="clip-result-box">—</div>
                         </div>
+
+                        <!-- ▼▼▼ NOVÉ: CLIP Text result panel ▼▼▼ -->
+                        <div id="clip-text-result-panel" style="display:none; margin-top:0.75rem;">
+                            <div class="clip-result-label" style="color:#7c3aed;">
+                                CLIP Text Classification
+                            </div>
+                            <div id="clip-text-result-box"
+                                 style="background:#fff;
+                                        border:1px solid rgba(124,58,237,0.18);
+                                        border-radius:6px;
+                                        padding:0.6rem 0.75rem;
+                                        font-size:0.85rem;
+                                        font-family:monospace;
+                                        white-space:pre-wrap;
+                                        word-break:break-word;
+                                        color:#222;
+                                        line-height:1.5;">—</div>
+                            <div id="clip-text-desc-count"
+                                 style="font-size:0.7rem; color:#888; margin-top:0.3rem;"></div>
+                        </div>
+                        <!-- ▲▲▲ KONIEC NOVÉHO BLOKU ▲▲▲ -->
+
                         <div class="content mt-3">
                             <progress id="progress" class="progress is-primary" value="0" max="100"
                                       style="display:none"></progress>
@@ -515,6 +581,13 @@
             "VQA": {needsInput: true, placeholder: "Ask model anything..."},
             "DETECT": {needsInput: true, placeholder: "example: person; car; tree..."}
         },
+        "../train/paligemma2_weapon_det_suffix_fixed": {
+            "SIMPLE CAPTION": {needsInput: false},
+            "STANDARD CAPTION": {needsInput: false},
+            "DETAILED CAPTION": {needsInput: false},
+            "VQA": {needsInput: true, placeholder: "Ask model anything..."},
+            "DETECT": {needsInput: true, placeholder: "example: person; car; tree..."}
+        },
     };
 
     const ALL_PROMPTS = ["SIMPLE CAPTION", "STANDARD CAPTION", "DETAILED CAPTION", "VQA", "DETECT"];
@@ -533,6 +606,86 @@
 
     let globalFrameIndex = 0;
     let globalFrameTotal = 0;
+
+    // ── CLIP TEXT: uloženie poslednej serverovej odpovede ─────────────────────
+    window._lastServerData = null;
+
+    // ── CLIP TEXT: zbieranie textových popisov zo serverovej odpovede ─────────
+    function collectDescriptionsFromResults(serverData) {
+        if (!serverData || !serverData.results) return [];
+
+        const TEXT_PROMPTS = ['SIMPLE CAPTION', 'STANDARD CAPTION', 'DETAILED CAPTION', 'VQA'];
+        const descriptions = [];
+
+        serverData.results.forEach(frameData => {
+            const parts = [];
+            frameData.analysis.forEach(res => {
+                if (!TEXT_PROMPTS.includes(res.prompt_name)) return;
+                const raw = res.result;
+                if (Array.isArray(raw)) {
+                    raw.forEach(r => {
+                        if (r && typeof r === 'string' && r.trim()) parts.push(r.trim());
+                    });
+                } else if (raw && typeof raw === 'string' && raw.trim()) {
+                    parts.push(raw.trim());
+                } else if (raw && typeof raw === 'object') {
+                    const s = JSON.stringify(raw);
+                    if (s && s !== '{}') parts.push(s);
+                }
+            });
+            if (parts.length > 0) descriptions.push(parts.join(' | '));
+        });
+
+        return descriptions;
+    }
+
+    // ── CLIP TEXT: button handler ─────────────────────────────────────────────
+    document.getElementById('clip-text-btn').addEventListener('click', async () => {
+        const btn       = document.getElementById('clip-text-btn');
+        const panel     = document.getElementById('clip-text-result-panel');
+        const resultBox = document.getElementById('clip-text-result-box');
+        const countBox  = document.getElementById('clip-text-desc-count');
+
+        const descriptions = collectDescriptionsFromResults(window._lastServerData);
+
+        if (descriptions.length === 0) {
+            resultBox.textContent = 'No text results available. Run Caption or VQA first.';
+            panel.style.display = 'block';
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Classifying…';
+        resultBox.textContent = '…';
+        panel.style.display = 'block';
+
+        try {
+            const resp = await fetch('/recognizer/classify_text/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ descriptions })
+            });
+
+            if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+            const data = await resp.json();
+
+            if (data.error) {
+                resultBox.textContent = 'Error: ' + data.error;
+            } else {
+                const top3 = data.top3.map(([label, score]) =>
+                        `${(score * 100).toFixed(1).padStart(5)}%  ${label}`
+                ).join('\n');
+                resultBox.textContent = top3;
+                countBox.textContent  = `Based on ${descriptions.length} frame description${descriptions.length > 1 ? 's' : ''}`;
+            }
+        } catch (err) {
+            resultBox.textContent = 'Request failed: ' + err;
+            log('CLIP Text error: ' + err);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-brain"></i> CLIP Text Classification';
+        }
+    });
 
     function switchTimeline(index) {
         if (index < 0 || index >= vqaTimelines.length) return;
@@ -794,7 +947,6 @@
             results.forEach((res, idx) => {
                 const text = (typeof res === 'string' ? res : JSON.stringify(res)).trim();
                 const thisQuestion = qs[idx] || qs[0] || '';
-                //console.log('thisQuestion:', thisQuestion, '| isOpen:', isOpenQuestion(thisQuestion));
 
                 let badgeClass;
 
@@ -1233,6 +1385,13 @@
             globalFrameTotal = 0;
             document.getElementById('global-frame-nav').style.display = 'none';
 
+            // skryť CLIP text tlačidlo a panel pri novom súbore
+            document.getElementById('clip-text-btn-box').style.display = 'none';
+            document.getElementById('clip-text-result-panel').style.display = 'none';
+            document.getElementById('clip-text-result-box').textContent = '—';
+            document.getElementById('clip-text-desc-count').textContent = '';
+            window._lastServerData = null;
+
             try {
                 await fetch('/recognizer/clear_frames/', {method: 'POST'});
                 log('Cleared previous frames from server.');
@@ -1326,6 +1485,14 @@
         renderVqaTimelineUI();
         modelSelect.selectedIndex = 0;
         finetunedSelect.selectedIndex = 0;
+
+        // reset CLIP text
+        document.getElementById('clip-text-btn-box').style.display = 'none';
+        document.getElementById('clip-text-result-panel').style.display = 'none';
+        document.getElementById('clip-text-result-box').textContent = '—';
+        document.getElementById('clip-text-desc-count').textContent = '';
+        window._lastServerData = null;
+
         updatePromptOptions();
 
         try {
@@ -1341,6 +1508,12 @@
         // Reset CLIP output
         document.getElementById('clip-result-panel').style.display = 'none';
         document.getElementById('clip-result-box').textContent = '—';
+        // Reset CLIP Text output
+        document.getElementById('clip-text-btn-box').style.display = 'none';
+        document.getElementById('clip-text-result-panel').style.display = 'none';
+        document.getElementById('clip-text-result-box').textContent = '—';
+        document.getElementById('clip-text-desc-count').textContent = '';
+        window._lastServerData = null;
 
         const checkedPrompts = Object.keys(selectedPrompts).filter(key => selectedPrompts[key]);
         const analyzeButton = document.querySelector('button[type="submit"]');
@@ -1378,7 +1551,6 @@
         let fakeProgress = 0;
         let timerDone = false;
 
-        // Fázy: rýchlo do 50%, potom stále pomalšie až do 94% kde sa plazí
         const fakeTimer = setInterval(() => {
             if (timerDone) return;
             let step;
@@ -1409,7 +1581,13 @@
             const data = await response.json();
             log('Response from server received.');
 
-            // Show CLIP result if checked
+            // ── ULOŽENIE ODPOVEDE + zobrazenie CLIP Text tlačidla ─────────────
+            window._lastServerData = data;
+            const hasTextResults = collectDescriptionsFromResults(data).length > 0;
+            document.getElementById('clip-text-btn-box').style.display = hasTextResults ? 'block' : 'none';
+            // ─────────────────────────────────────────────────────────────────
+
+            // Show CLIP image result if checked
             if (data.clip) {
                 document.getElementById('clip-result-panel').style.display = 'block';
                 const top3 = data.clip.top3.map(([label, score]) =>
@@ -1487,7 +1665,7 @@
                             const verdict = classifyAnswer(singleResult);
                             if (verdict === 'yes') {
                                 tl.results[frameIndex] = true;
-                            } else { //verdict can be only true or false
+                            } else {
                                 tl.results[frameIndex] = false;
                             }
                         })
@@ -1598,18 +1776,18 @@
                 log('Server returned error: ' + (data.error || 'unknown error'));
             }
 
-            // ── FILL TO 100% plynulo cez requestAnimationFrame — žiadne blikanie ──
+            // ── FILL TO 100% ──
             timerDone = true;
             clearInterval(fakeTimer);
 
             const startVal = fakeProgress;
             const startTime = performance.now();
-            const FILL_DURATION = 1000; // 1 sekunda na dobehnutie do 100%
+            const FILL_DURATION = 1000;
 
             function fillStep(now) {
                 const elapsed = now - startTime;
                 const t = Math.min(elapsed / FILL_DURATION, 1);
-                const eased = 1 - Math.pow(1 - t, 3); // ease-out cubic
+                const eased = 1 - Math.pow(1 - t, 3);
                 progress.value = startVal + (100 - startVal) * eased;
                 if (t < 1) {
                     requestAnimationFrame(fillStep);

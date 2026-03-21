@@ -76,13 +76,13 @@ def predict(image_path, prompt, model_id=None):
             with torch.cuda.amp.autocast(dtype=cache.dtype):
                 outputs = cache.model.generate(
                     **inputs,
-                    max_new_tokens=128,
+                    max_new_tokens=512,
                     do_sample=False
                 )
         else:
             outputs = cache.model.generate(
                 **inputs,
-                max_new_tokens=128,
+                max_new_tokens=512,
                 do_sample=False
             )
 

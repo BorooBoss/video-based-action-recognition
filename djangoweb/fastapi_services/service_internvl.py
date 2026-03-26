@@ -1,4 +1,4 @@
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, BackgroundTasks
 from fastapi.responses import JSONResponse
 import torch
 import torchvision.transforms as T
@@ -7,6 +7,7 @@ from torchvision.transforms.functional import InterpolationMode
 from PIL import Image
 import io
 import uvicorn
+import os, signal, time
 
 app = FastAPI()
 
@@ -134,11 +135,20 @@ async def predict(
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 
+def kill_server():
+    # Počká pol sekundy, aby FastAPI stihlo odoslať HTTP odpoveď Djangu
+    time.sleep(0.5)
+    os.kill(os.getpid(), signal.SIGTERM)
 
 @app.get("/health")
 async def health():
     return {"status": "ok", "model": "InternVL3.5-2B", "device": device}
 
-
+@app.post("/shutdown")
+async def shutdown(background_tasks: BackgroundTasks):
+    print(f"Ukončujem {device} proces...")
+    # Pridá zabitie servera ako úlohu na pozadí
+    background_tasks.add_task(kill_server)
+    return {"status": "shutting down"}
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8002)

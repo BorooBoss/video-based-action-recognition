@@ -1,10 +1,11 @@
-from fastapi import FastAPI, File, UploadFile, Form
+from fastapi import FastAPI, File, UploadFile, Form, BackgroundTasks
 from fastapi.responses import JSONResponse
 import torch
 from transformers import Qwen3VLForConditionalGeneration, AutoProcessor
 import tempfile
 import os
 import uvicorn
+import signal, time
 
 app = FastAPI()
 
@@ -58,7 +59,7 @@ async def predict(
                 return_tensors="pt"
             ).to(device)
 
-            generated = model.generate(**inputs, max_new_tokens=128)
+            generated = model.generate(**inputs, max_new_tokens=512)
             trimmed = [out[len(inp):] for inp, out in zip(inputs["input_ids"], generated)]
             answer = processor.batch_decode(trimmed, skip_special_tokens=True)[0]
 
@@ -77,10 +78,21 @@ async def predict(
         }, status_code=500)
 
 
+def kill_server():
+    # Počká pol sekundy, aby FastAPI stihlo odoslať HTTP odpoveď Djangu
+    time.sleep(0.5)
+    os.kill(os.getpid(), signal.SIGTERM)
+
 @app.get("/health")
 async def health():
     return {"status": "ok", "model": "Qwen3-VL-2B", "device": device}
 
+@app.post("/shutdown")
+async def shutdown(background_tasks: BackgroundTasks):
+    print(f"Ukončujem {device} proces...")
+    # Pridá zabitie servera ako úlohu na pozadí
+    background_tasks.add_task(kill_server)
+    return {"status": "shutting down"}
 
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8001)

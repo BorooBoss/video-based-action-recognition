@@ -1494,7 +1494,7 @@
             if (data.clip) {
                 document.getElementById('clip-result-panel').style.display = 'block';
                 const top3 = data.clip.top3.map(([label, score]) =>
-                        `${(score * 100).toFixed(1)}%  ${label}`
+                        `${score.toFixed(1)}%  ${label}`
                 ).join('\n');
                 document.getElementById('clip-result-box').textContent = top3;
             }
@@ -1503,7 +1503,7 @@
             if (data.clip_text) {
                 document.getElementById('clip-text-result-panel').style.display = 'block';
                 const top3 = data.clip_text.top3.map(([label, score]) =>
-                        `${(score * 100).toFixed(1)}%  ${label}`
+                        `${score.toFixed(1)}%  ${label}`
                 ).join('\n');
                 document.getElementById('clip-text-result-box').textContent = top3;
                 const frameCount = data.results ? data.results.length : 0;

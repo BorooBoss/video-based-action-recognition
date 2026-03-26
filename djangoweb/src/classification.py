@@ -86,38 +86,35 @@ def classify_frames(image_paths: list):
     }
 
 def classify_text(descriptions: list):
-
     if not descriptions:
         return {"label": "No descriptions", "score": 0.0, "top3": []}
 
-    # filter out empty / None strings
     descriptions = [d for d in descriptions if d and str(d).strip()]
     if not descriptions:
         return {"label": "No descriptions", "score": 0.0, "top3": []}
 
     model, processor = _load_model()
 
-    # ── encode LABELS once ────────────────────────────────────────────────────
+    # Encode labels once
     label_inputs = processor(
         text=LABELS,
         return_tensors="pt",
         padding=True,
         truncation=True,
-        max_length=77,          # CLIP token limit
+        max_length=77,
     )
     with torch.no_grad():
         label_embeds = model.get_text_features(**label_inputs)   # [num_labels, 512]
         label_embeds = F.normalize(label_embeds, dim=-1)
 
-    # ── encode each description and accumulate cosine-similarity scores ───────
+    # Accumulate raw cosine similarities (no softmax)
     accumulated = torch.zeros(len(LABELS))
-    valid_count  = 0
+    valid_count = 0
 
     for desc in descriptions:
         text = str(desc).strip()
         if not text:
             continue
-        # CLIP max 77 tokens — truncate long captions automatically
         desc_inputs = processor(
             text=[text],
             return_tensors="pt",
@@ -129,16 +126,15 @@ def classify_text(descriptions: list):
             desc_embed = model.get_text_features(**desc_inputs)  # [1, 512]
             desc_embed = F.normalize(desc_embed, dim=-1)
 
-        # cosine similarity → softmax → accumulate
-        sims  = (desc_embed @ label_embeds.T).squeeze(0)         # [num_labels]
-        probs = sims.softmax(dim=0)
-        accumulated += probs
-        valid_count  += 1
+        # Raw cosine similarity — no softmax, values in [-1, 1]
+        sims = (desc_embed @ label_embeds.T).squeeze(0)          # [num_labels]
+        accumulated += sims
+        valid_count += 1
 
     if valid_count == 0:
         return {"label": "No valid descriptions", "score": 0.0, "top3": []}
 
-    avg    = accumulated / valid_count
+    avg = accumulated / valid_count
     scores = [(LABELS[i], float(avg[i])) for i in range(len(LABELS))]
     scores.sort(key=lambda x: x[1], reverse=True)
 

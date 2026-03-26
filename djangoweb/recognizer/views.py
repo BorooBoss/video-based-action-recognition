@@ -66,32 +66,6 @@ def clear_frames(request):
         return JsonResponse({"status": "cleared"})
     return JsonResponse({"error": "Invalid request"}, status=400)
 
-"""
-@csrf_exempt
-def classify_text_view(request):
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request"}, status=400)
-
-    try:
-        body = _json.loads(request.body)
-        descriptions = body.get("descriptions", [])
-        print(f"DEBUG classify_text_view: received {len(descriptions)} descriptions")
-        print(f"DEBUG first 2: {descriptions[:2]}")
-    except Exception as e:
-        print(f"DEBUG JSON parse error: {e}")
-        return JsonResponse({"error": "Invalid JSON body"}, status=400)
-
-    if not descriptions:
-        print("DEBUG: descriptions is empty!")
-        return JsonResponse({"error": "No descriptions provided"}, status=400)
-
-    try:
-        result = classify_text(descriptions)
-        return JsonResponse(result)
-    except Exception as e:
-        print(f"DEBUG classify_text error: {e}")
-        return JsonResponse({"error": str(e)}, status=500)
-"""
 @csrf_exempt #convert videos to MP4
 def convert_video(request):
     if request.method != "POST":
@@ -133,6 +107,7 @@ def recognize(request):
         selected_prompts = request.POST.getlist("selected_prompts[]")
         prompt_inputs = {p: request.POST.get(f"prompt_input_{p}", "").strip() for p in selected_prompts}
         run_clip = request.POST.get("run_clip") == "1"
+        run_clip_text = request.POST.get("run_clip_text") == "1"
 
         ui = user_input.UserInput()
         ui.model_name = request.POST.get("model")
@@ -189,7 +164,7 @@ def recognize(request):
                             raw_result = result
 
                         elif "florence" in ui.model_name.lower():
-                            raw_result = florence.predict(current_image_path, ui.full_prompt, model_id=ui.model_name,base_prompt=ui.base_prompt)
+                            raw_result = florence.predict(current_image_path, ui.full_prompt, model_id=ui.model_name, base_prompt=ui.base_prompt)
                             if ui.base_prompt == "detect":
                                 result = normalize_output(raw_result, "florence")
                                 raw_result = result
@@ -216,9 +191,6 @@ def recognize(request):
                             elif ui.full_prompt in raw_result and isinstance(raw_result[ui.full_prompt], dict):
                                 detections_dict = raw_result[ui.full_prompt]
 
-                        # ==============================================================
-                        # OPRAVENÝ FILTER: Aktualizuje aj premenné odosielané do frontendu!
-                        # ==============================================================
                         if detections_dict and "paligemma" in ui.model_name.lower() and ui.base_prompt == "detect":
                             target_labels = [t.strip().lower() for t in sub_input.split(";") if t.strip()]
 
@@ -230,16 +202,15 @@ def recognize(request):
                                         filtered_dict.append(det)
 
                                 detections_dict = filtered_dict
-                                result = filtered_dict      # <-- TOTO TU CHÝBALO (Aktualizuje textový výpis na webe)
-                                raw_result = filtered_dict  # <-- TOTO TU CHÝBALO
+                                result = filtered_dict
+                                raw_result = filtered_dict
 
                             elif isinstance(detections_dict, dict):
                                 det_label = detections_dict.get('label', detections_dict.get('class', detections_dict.get('name', ''))).lower()
                                 if det_label not in target_labels:
                                     detections_dict = None
-                                    result = []             # <-- TOTO TU CHÝBALO
-                                    raw_result = []         # <-- TOTO TU CHÝBALO
-                        # ==============================================================
+                                    result = []
+                                    raw_result = []
 
                         if detections_dict:
                             if isinstance(detections_dict, list):
@@ -247,8 +218,6 @@ def recognize(request):
                             elif isinstance(detections_dict, dict):
                                 all_detections.append(detections_dict)
 
-
-                        #remove florence prompt <OD>/<VQA> from origin output
                         if isinstance(raw_result, dict) and len(raw_result) == 1:
                             result = list(raw_result.values())[0]
                         elif isinstance(raw_result, dict) and ui.full_prompt in raw_result:
@@ -298,12 +267,53 @@ def recognize(request):
                     "analysis": current_frame_results
                 })
 
+            # CLIP image classification
             clip_result = None
             if run_clip:
                 if is_video:
                     clip_result = classify_frames(frames_to_process)
                 else:
                     clip_result = classify_image(frames_to_process[0])
+
+            # CLIP text classification
+            clip_text_result = None
+            if run_clip_text:
+                descriptions = []
+                for frame_data in video_results:
+                    for res in frame_data.get("analysis", []):
+                        prompt_name = res.get("prompt_name", "")
+                        result = res.get("result")
+                        inp = res.get("input", "")
+
+                        if result is None:
+                            continue
+
+                        if "VQA" in prompt_name.upper():
+                            results_list = result if isinstance(result, list) else [result]
+                            if inp:
+                                questions = [q.strip() + "?" for q in inp.split("?") if q.strip()]
+                            else:
+                                questions = []
+                            for i, ans in enumerate(results_list):
+                                question = questions[i] if i < len(questions) else inp
+                                ans_str = str(ans).strip() if ans else ""
+                                if question and ans_str:
+                                    desc = f"{question} {ans_str}"
+                                elif ans_str:
+                                    desc = ans_str
+                                else:
+                                    continue
+                                if desc not in descriptions:
+                                    descriptions.append(desc)
+
+                        elif prompt_name.upper() in ("SIMPLE CAPTION", "STANDARD CAPTION", "DETAILED CAPTION"):
+                            text = str(result).strip() if result else ""
+                            if text and text not in descriptions:
+                                descriptions.append(text)
+
+                if descriptions:
+                    clip_text_result = classify_text(descriptions)
+                    clip_text_result['description_count'] = len(descriptions)
 
             if not is_video and os.path.exists(tmp_path):
                 os.remove(tmp_path)
@@ -313,6 +323,7 @@ def recognize(request):
                 "is_video": is_video,
                 "results": video_results,
                 "clip": clip_result,
+                "clip_text": clip_text_result,
             })
 
         except Exception as e:

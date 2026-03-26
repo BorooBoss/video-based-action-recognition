@@ -12,4 +12,5 @@ urlpatterns = [
     path('video_frames/', views.video_frames, name='video_frames'),
     path('frame/<str:filename>', views.get_frame, name='get_frame'),
     path('clear_frames/', views.clear_frames, name='clear_frames'),
+    #path('classify_text/', views.classify_text_view, name='classify_text'),
 ]

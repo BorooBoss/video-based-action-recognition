@@ -4,6 +4,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.shortcuts import render
 from django.http import JsonResponse, FileResponse, HttpResponse
 
+
 from src.models import florence, run_paligemma2
 from recognizer import subprocess
 from src import draw_objects, user_input
@@ -12,6 +13,7 @@ from src.vision_adapter import normalize_output
 from src.adapters.paligemma_adapter import apply_nms
 from src.video.frames import clear_temp_frames, ensure_temp_frames_dir, video_to_frames, TEMP_FRAMES_DIR
 from src.classification import classify_image, classify_frames, classify_text
+from PIL import Image as PILImage
 
 
 @csrf_exempt #load video and return temp frames
@@ -152,6 +154,11 @@ def recognize(request):
                         ui.prompt_input = sub_input
                         ui.set_base_prompt()
 
+                        print(f"\n=== Processing prompt: {prompt_name} ===")
+                        print(f"Base prompt: {ui.base_prompt}")
+                        print(f"Full prompt: {ui.full_prompt}")
+                        print(f"Model name: {ui.model_name}")
+
                         result = None
                         raw_result = None
 
@@ -174,6 +181,11 @@ def recognize(request):
                         elif "qwen" in ui.model_name.lower():
                             raw_result = subprocess.call_qwen(current_image_path, ui.full_prompt)
                             result = raw_result
+                            #print(result,"\n")
+                            if ui.base_prompt == "detect all":
+                                img = PILImage.open(current_image_path)
+                                result = normalize_output(raw_result, "qwen", img.size[::-1])  # size=(w,h) → (h,w)
+                                raw_result = result
 
                         elif "internvl" in ui.model_name.lower():
                             raw_result = subprocess.call_internvl(current_image_path, ui.full_prompt)
@@ -241,6 +253,8 @@ def recognize(request):
                             draw_objects.draw_boxes_florence(current_image_path, all_detections, out_path)
                         elif "paligemma" in ui.model_name.lower():
                             draw_objects.draw_boxes_paligemma(current_image_path, all_detections, out_path)
+                        elif "qwen" in ui.model_name.lower():
+                            draw_objects.draw_boxes_qwen(current_image_path, all_detections, out_path)
 
                     if out_path and os.path.exists(out_path):
                         if not is_video:

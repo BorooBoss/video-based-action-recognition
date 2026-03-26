@@ -32,3 +32,6 @@ def draw_boxes_paligemma(image_path, coords_and_labels, output_path):
 
     img.save(output_path)
     return img
+
+def draw_boxes_qwen(image_path, detections, output_path):
+    draw_boxes_paligemma(image_path, detections, output_path)

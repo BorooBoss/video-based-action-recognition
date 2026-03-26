@@ -40,7 +40,11 @@ class UserInput:
             "VQA": "<VQA>"
         },
         "Qwen/Qwen3-VL-2B-Instruct": {
-            "VQA": "",
+            "DETECT": "detect all",
+            "SIMPLE CAPTION": "describe in 1 sentence what do you see in the image",
+            "STANDARD CAPTION": "describe in short what do you see in the image",
+            "DETAILED CAPTION": "describe the image",
+            "VQA": ""
         },
         "OpenGVLab/InternVL3_5-2B": {
             "VQA": "",
@@ -67,6 +71,13 @@ class UserInput:
             "STANDARD CAPTION": "caption en",
             "DETAILED CAPTION": "describe en",
             "VQA": "answer en",
+        },
+        "../train/florence2_weapon_finetune": {
+            "DETECT": "<OD>",
+            "SIMPLE CAPTION": "<CAPTION>",
+            "STANDARD CAPTION": "<DETAILED_CAPTION>",
+            "DETAILED CAPTION": "<MORE_DETAILED_CAPTION>",
+            "VQA": "<VQA>"
         }
     }
 

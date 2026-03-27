@@ -3,31 +3,29 @@ import torch
 from transformers import CLIPProcessor, CLIPModel
 import torch.nn.functional as F
 
-
 _model = None
 _processor = None
 
 LABELS = [
-    "a person physically attacking another person",                 #ABUSE / ASSAULT
-    "police officers arresting a suspect",                          #AREST
-    "a building on fire",                                           #ARSON
-    "a burglar breaking into a house",                              #BURGLARY
-    "industrial accident with explosion",                           #EXPLOSION
-    "people punching and kicking each other",                       #FIGHTING
-    "a robbery in a store",                                         #ROBBERY
-    "a traffic accident",                                           #ROAD ACCIDENT
-    "a person shooting with a gun",                                 #SHOOTING
-    "a person stealing items from a shop",                          #SHOPLIFTING / STEALING
-    "a suspect with weapon during a robbery",                       #ROBBERY
-    "a person vandalizing property",                                #VANDALISM
-    "normal everyday scene with no suspicious activity",            #NORMAL
+    "a person physically attacking another person",
+    "police officers arresting a suspect",
+    "a building on fire",
+    "a burglar breaking into a house",
+    "industrial accident with explosion",
+    "a street fight with multiple people",
+    "a robbery in a store",
+    "a traffic accident on road",
+    "a person aiming or shooting with a gun",
+    "a person stealing items from a shop",
+    "person with a weapon threatening others",
+    "a person vandalizing property",
+
+    "people walking on a street",
+    "empty room or corridor"
+    "peaceful place",
 ]
 
-
-def cosine_to_pct(score: float):
-    """Convert cosine similarity [-1, 1] → percentage [0, 100]."""
-    return float((score + 1) / 2)
-
+TEMPERATURE = 50.0  # vyššie = ostrejšie rozdelenie, skús 30-100
 
 def _load_model():
     global _model, _processor
@@ -38,7 +36,6 @@ def _load_model():
 
 
 def _encode_labels(processor, model) -> torch.Tensor:
-    """Encode all labels once → normalized embeddings [num_labels, 512]."""
     inputs = processor(
         text=LABELS,
         return_tensors="pt",
@@ -51,12 +48,10 @@ def _encode_labels(processor, model) -> torch.Tensor:
     return F.normalize(embeds, dim=-1)
 
 
-def _build_result(avg_sims: torch.Tensor) -> dict:
-    """
-    avg_sims: averaged cosine similarities in [-1, 1]
-    Returns sorted dict with confidence in [0, 100].
-    """
-    scores = [(LABELS[i], cosine_to_pct(float(avg_sims[i]))) for i in range(len(LABELS))]
+def _build_result(sims: torch.Tensor) -> dict:
+    # Softmax s temperature — dáva zmysluplné percentá ktoré sa sčítajú na 100%
+    probs = F.softmax(sims * TEMPERATURE, dim=0) * 100.0
+    scores = [(LABELS[i], float(probs[i])) for i in range(len(LABELS))]
     scores.sort(key=lambda x: x[1], reverse=True)
     return {
         "label": scores[0][0],
@@ -65,12 +60,7 @@ def _build_result(avg_sims: torch.Tensor) -> dict:
     }
 
 
-# ─────────────────────────────────────────────────────────────────────────────
-# PUBLIC API
-# ─────────────────────────────────────────────────────────────────────────────
-
 def classify_image(image_path: str) -> dict:
-    """Classify a single image via cosine similarity (no softmax)."""
     model, processor = _load_model()
     label_embeds = _encode_labels(processor, model)
 
@@ -80,15 +70,11 @@ def classify_image(image_path: str) -> dict:
         img_embed = model.get_image_features(**img_inputs)
     img_embed = F.normalize(img_embed, dim=-1)
 
-    sims = (img_embed @ label_embeds.T).squeeze(0)  # [-1, 1]
+    sims = (img_embed @ label_embeds.T).squeeze(0)
     return _build_result(sims)
 
 
 def classify_frames(image_paths: list) -> dict:
-    """
-    Classify a video clip by averaging cosine similarities across frames.
-    No softmax – each label scored independently.
-    """
     if not image_paths:
         return {"label": "No frames", "confidence": 0.0, "top3": []}
 
@@ -106,7 +92,7 @@ def classify_frames(image_paths: list) -> dict:
                 img_embed = model.get_image_features(**img_inputs)
             img_embed = F.normalize(img_embed, dim=-1)
 
-            sims = (img_embed @ label_embeds.T).squeeze(0)  # [-1, 1]
+            sims = (img_embed @ label_embeds.T).squeeze(0)
             accumulated += sims
             valid += 1
         except Exception:
@@ -115,14 +101,11 @@ def classify_frames(image_paths: list) -> dict:
     if valid == 0:
         return {"label": "No valid frames", "confidence": 0.0, "top3": []}
 
-    return _build_result(accumulated / valid)  # average BEFORE converting to %
+    # Priemerujeme similarities, potom softmax
+    return _build_result(accumulated / valid)
 
 
 def classify_text(descriptions: list) -> dict:
-    """
-    Classify from text descriptions via cosine similarity.
-    No softmax – each label scored independently.
-    """
     if not descriptions:
         return {"label": "No descriptions", "confidence": 0.0, "top3": []}
 
@@ -147,7 +130,7 @@ def classify_text(descriptions: list) -> dict:
             desc_embed = model.get_text_features(**desc_inputs)
         desc_embed = F.normalize(desc_embed, dim=-1)
 
-        sims = (desc_embed @ label_embeds.T).squeeze(0)  # [-1, 1], NO softmax
+        sims = (desc_embed @ label_embeds.T).squeeze(0)
         accumulated += sims
 
-    return _build_result(accumulated / len(descriptions))  # average BEFORE converting to %
+    return _build_result(accumulated / len(descriptions))

@@ -282,7 +282,10 @@
         <div class="container">
             <div class="columns is-vcentered">
                 <div class="column is-8">
-                    <h1 class="title is-2">VLM Anomaly Analyzer</h1>
+                    <h1 class="title is-2">
+                        BackTraceScope
+                        <i class="fas fa-crosshairs mr-2"></i>
+                    </h1>
                     <h2 class="subtitle is-5">Video/Image activity analysis and anomaly detection</h2>
                 </div>
                 <div class="column is-4 has-text-right">
@@ -1374,6 +1377,16 @@
                 reader.onload = (event) => {
                     const framePreviewMain = document.getElementById("frame-preview-main");
                     const rightPlaceholder = document.getElementById("right-placeholder");
+                    const rightWrap = document.getElementById("right-preview-wrap");
+
+                    // Zisti skutočný pomer strán
+                    const img = new Image();
+                    img.onload = () => {
+                        const ratio = (img.naturalHeight / img.naturalWidth) * 100;
+                        rightWrap.style.paddingTop = ratio + '%';
+                    };
+                    img.src = event.target.result;
+
                     framePreviewMain.src = event.target.result;
                     framePreviewMain.style.display = 'block';
                     if (rightPlaceholder) rightPlaceholder.style.display = 'none';
@@ -1687,9 +1700,20 @@
                     if (!data.is_video) {
                         const annotatedResult = frameData.analysis.find(a => a.annotated_image);
                         if (annotatedResult) {
-                            previewVideo.style.display = 'none';
-                            preview.style.display = 'block';
-                            preview.src = annotatedResult.annotated_image;
+                            const framePreviewMain = document.getElementById("frame-preview-main");
+                            const rightPlaceholder = document.getElementById("right-placeholder");
+                            const rightWrap = document.getElementById("right-preview-wrap");
+
+                            const img = new Image();
+                            img.onload = () => {
+                                const ratio = (img.naturalHeight / img.naturalWidth) * 100;
+                                rightWrap.style.paddingTop = ratio + '%';
+                            };
+                            img.src = annotatedResult.annotated_image;
+
+                            framePreviewMain.src = annotatedResult.annotated_image;
+                            framePreviewMain.style.display = 'block';
+                            if (rightPlaceholder) rightPlaceholder.style.display = 'none';
                         }
                     }
                 });

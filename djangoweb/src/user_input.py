@@ -47,6 +47,9 @@ class UserInput:
             "VQA": ""
         },
         "OpenGVLab/InternVL3_5-2B": {
+            "SIMPLE CAPTION": "describe in 1 sentence what do you see in the image",
+            "STANDARD CAPTION": "describe in short what do you see in the image",
+            "DETAILED CAPTION": "describe the image",
             "VQA": "",
         },
 

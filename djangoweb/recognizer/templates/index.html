@@ -1482,8 +1482,11 @@
 
         inlineResults = {};
         globalFrameIndex = 0;
+        vqaTimelines = [];
+        renderVqaTimelineUI();
+        updateSliderColors();
         document.getElementById('global-frame-nav').style.display = 'none';
-        document.querySelectorAll('.prompt-result-panel').forEach(p => p.remove());
+        document.querySelectorAll('.prompt-result-panel').forEach(p => p.remove())
 
         try {
             log(`Sending ${checkedPrompts.length} prompts to /recognizer/recognize/`);
@@ -1595,7 +1598,8 @@
                 );
 
                 const modelName = data.model ? data.model.toLowerCase() : '';
-                if (modelName.includes('paligemma') || modelName.includes('florence')) {
+
+                if (modelName.includes('paligemma') || modelName.includes('florence') || modelName.includes('qwen')) {
                     const detectPromptEntries = checkedPrompts
                             .filter(p => p.toUpperCase() === 'DETECT')
                             .map(promptName => {
@@ -1609,9 +1613,11 @@
                     const detectTimelines = [];
                     detectPromptEntries.forEach(entry => {
                         entry.subLabels.forEach(label => {
+                            // ÚPRAVA: Qwen bude mať rovnaké správanie ako PaliGemma (zobrazí názov labelu)
                             const displayLabel = modelName.includes('florence')
                                     ? 'objects'
                                     : `${label}`;
+
                             detectTimelines.push({
                                 question: displayLabel,
                                 promptName: entry.promptName,
@@ -1633,23 +1639,28 @@
                             } else if (Array.isArray(rawResult)) {
                                 subResults = [rawResult];
                             } else {
-                                subResults = [[]];
+                                subResults = [[]]; // Fallback ak by model nevrátil pole
                             }
 
                             detectTimelines.forEach((tl, tlIdx) => {
                                 if (tl.promptName !== res.prompt_name) return;
+
+                                // Qwen a PaliGemma vracajú polia bounding boxov pre každý hľadaný objekt
                                 const subArr = subResults[tlIdx] !== undefined ? subResults[tlIdx] : subResults[0];
                                 tl.results[frameIndex] = Array.isArray(subArr) && subArr.length > 0;
                             });
                         });
                     });
 
+                    // Pridáme len tie timelines, kde sa reálne niečo detegovalo (aspoň v jednom frame) alebo aspoň prešli kontrolou
                     const filledDetect = detectTimelines.filter(t =>
                             Object.values(t.results).some(v => v === true || v === false)
                     );
                     vqaTimelines = vqaTimelines.concat(filledDetect);
                 }
-
+                //console.log("data.results:", JSON.stringify(data.results, null, 2));
+                //console.log("vqaTimelines:", JSON.stringify(vqaTimelines, null, 2));
+                //console.log("modelName:", modelName);
                 renderVqaTimelineUI();
 
                 Object.entries(perPromptFrames).forEach(([promptName, frames]) => {

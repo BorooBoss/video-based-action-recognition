@@ -184,7 +184,8 @@ def recognize(request):
                             #print(result,"\n")
                             if ui.base_prompt == "detect all":
                                 img = PILImage.open(current_image_path)
-                                result = normalize_output(raw_result, "qwen", img.size[::-1])  # size=(w,h) → (h,w)
+                                w, h = img.size   # PIL vracia vždy (width, height)
+                                result = normalize_output(raw_result, "qwen", (h, w))
                                 raw_result = result
 
                         elif "internvl" in ui.model_name.lower():
@@ -229,6 +230,7 @@ def recognize(request):
                                 all_detections.extend(detections_dict)
                             elif isinstance(detections_dict, dict):
                                 all_detections.append(detections_dict)
+                        print(f"all_detections after extend: {all_detections}")
 
                         if isinstance(raw_result, dict) and len(raw_result) == 1:
                             result = list(raw_result.values())[0]

@@ -14,6 +14,7 @@ from src.adapters.paligemma_adapter import apply_nms
 from src.video.frames import clear_temp_frames, ensure_temp_frames_dir, video_to_frames, TEMP_FRAMES_DIR
 from src.classification import classify_image, classify_frames, classify_text
 from PIL import Image as PILImage
+from src.draw_florence_weapon import draw_boxes_florence_weapon
 
 
 @csrf_exempt #load video and return temp frames
@@ -171,10 +172,23 @@ def recognize(request):
                             raw_result = result
 
                         elif "florence" in ui.model_name.lower():
-                            raw_result = florence.predict(current_image_path, ui.full_prompt, model_id=ui.model_name, base_prompt=ui.base_prompt)
-                            if ui.base_prompt == "detect":
+                            raw_result = florence.predict(
+                                current_image_path, ui.full_prompt,
+                                model_id=ui.model_name, base_prompt=ui.base_prompt
+                            )
+
+                            if "weapon" in ui.model_name.lower() and ui.base_prompt == "detect":
+                                # Finetuned weapon model — raw string, konvertuj cez weapon adapter
+                                img_pil = PILImage.open(current_image_path)
+                                w, h = img_pil.size
+                                result = normalize_output(raw_result, "florence_weapon", (h, w))
+                                raw_result = result
+
+                            elif ui.base_prompt == "detect":
+                                # Štandardný Florence s <OD>
                                 result = normalize_output(raw_result, "florence")
                                 raw_result = result
+
                             else:
                                 result = raw_result
 
@@ -252,7 +266,10 @@ def recognize(request):
                             out_path = f"/tmp/out_{prompt_name}_{frame_name}"
 
                         if "florence" in ui.model_name.lower():
-                            draw_objects.draw_boxes_florence(current_image_path, all_detections, out_path)
+                            if "weapon" in ui.model_name.lower():
+                                draw_boxes_florence_weapon(current_image_path, all_detections, out_path)
+                            else:
+                                draw_objects.draw_boxes_florence(current_image_path, all_detections, out_path)
                         elif "paligemma" in ui.model_name.lower():
                             draw_objects.draw_boxes_paligemma(current_image_path, all_detections, out_path)
                         elif "qwen" in ui.model_name.lower():

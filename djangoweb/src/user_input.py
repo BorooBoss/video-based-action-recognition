@@ -77,6 +77,14 @@ class UserInput:
         },
         "../train/florence2_weapon_finetune": {
             "DETECT": "<OD>",
+            "DETECTFT": "detect",
+            "SIMPLE CAPTION": "<CAPTION>",
+            "STANDARD CAPTION": "<DETAILED_CAPTION>",
+            "DETAILED CAPTION": "<MORE_DETAILED_CAPTION>",
+            "VQA": "<VQA>"
+        },
+        "../train/florence2_weapon_finetune_v2": {
+            "DETECT": "detect",
             "SIMPLE CAPTION": "<CAPTION>",
             "STANDARD CAPTION": "<DETAILED_CAPTION>",
             "DETAILED CAPTION": "<MORE_DETAILED_CAPTION>",

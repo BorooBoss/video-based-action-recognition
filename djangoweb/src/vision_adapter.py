@@ -1,10 +1,12 @@
 from src.adapters import florence_adapter
 from src.adapters import paligemma_adapter
 from src.adapters import qwen_adapter
+from src.adapters import florence_weapon_adapter
 
 #open convert/normalize for used model - works with detect prompts
 ADAPTERS = {
     "florence": florence_adapter,
+    "florence_weapon": florence_weapon_adapter,
     "paligemma": paligemma_adapter,
     "qwen": qwen_adapter,
 }

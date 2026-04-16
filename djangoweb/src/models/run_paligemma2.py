@@ -77,12 +77,16 @@ def predict(image_path, prompt, model_id=None):
                 outputs = cache.model.generate(
                     **inputs,
                     max_new_tokens=512,
+                    repetition_penalty=1.15, # penalizacia
+                    no_repeat_ngram_size=4,#neopakuj tie iste
                     do_sample=False
                 )
         else:
             outputs = cache.model.generate(
                 **inputs,
                 max_new_tokens=512,
+                repetition_penalty=1.15, # penalizacia
+                no_repeat_ngram_size=4, #neopakuj tie iste
                 do_sample=False
             )
 

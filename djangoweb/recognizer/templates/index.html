@@ -12,9 +12,9 @@
         .hero.is-brand .hero-body {
             display: flex;
             align-items: flex-end;
-            padding-top: 7rem;
+            padding-top: 3rem;
             padding-bottom: 2.5rem;
-            min-height: 220px;
+            min-height: 160px;
         }
         .prompt-input-row {
             display: flex;
@@ -283,10 +283,10 @@
             <div class="columns is-vcentered">
                 <div class="column is-8">
                     <h1 class="title is-2">
-                        BackTraceScope
+                            CrimeVision
                         <i class="fas fa-crosshairs mr-2"></i>
                     </h1>
-                    <h2 class="subtitle is-5">Video/Image activity analysis and anomaly detection</h2>
+                    <h2 class="subtitle is-5">Crime Activity Detection and Anomaly Analysis</h2>
                 </div>
                 <div class="column is-4 has-text-right">
                     <a class="navbar-instructions" href="/recognizer/instructions/">
@@ -385,7 +385,7 @@
 
                             <!-- VISUAL PREVIEW -->
                             <div id="inline-visual-preview" class="field">
-                                <h3 class="title is-5">Visual Preview</h3>
+                                <h3 class="title is-5">Video Preview</h3>
                                 <div class="preview-wrap">
                                     <img id="preview" alt="Preview image"
                                          src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='800' height='450'><rect width='100%' height='100%' fill='%23f5f9ff'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23094bb7' font-family='Arial' font-size='20'>No image or video selected</text></svg>">
@@ -429,7 +429,7 @@
             <div class="column is-6">
                 <div class="card">
                     <div class="card-content">
-                        <h3 class="title is-5">Frames &amp; Preview</h3>
+                        <h3 class="title is-5">Individual Frames Preview</h3>
 
                         <!-- Veľký náhľad snímky/videa -->
                         <div id="right-preview-wrap">
@@ -446,9 +446,9 @@
                         <div id="thumbnails"
                              style="display:flex; gap:6px; overflow-x:auto; margin-bottom:0.75rem;"></div>
 
-                        <!-- Individual Frames box -->
+                        <!-- Timeline box -->
                         <div id="frames-container" style="display:none;">
-                            <h5 class="title is-6" style="margin-bottom: 0.5rem;">Individual Frames</h5>
+                            <h5 class="title is-6" style="margin-bottom: 0.5rem;">Timeline preview</h5>
 
                             <div id="vqa-timeline-wrapper">
                                 <div class="timeline-nav">

@@ -125,7 +125,7 @@ async def predict(
 
         #set prompt
         question = f"<image>\n{prompt}"
-        generation_config = dict(max_new_tokens=128, do_sample=False)
+        generation_config = dict(max_new_tokens=512, do_sample=False)
 
         #generate response
         response = model.chat(tokenizer, pixel_values, question, generation_config)

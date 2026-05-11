@@ -280,17 +280,23 @@
 <section class="hero is-brand">
     <div class="hero-body">
         <div class="container">
-            <div class="columns is-vcentered">
+            <div class="columns is-vcentered is-mobile">
                 <div class="column is-8">
-                    <h1 class="title is-2">
+                    <div style="display: flex; align-items: flex-end; gap: 0.8rem; margin-bottom: 0.2rem;">
+                        <h1 class="title is-2 mb-0" style="line-height: 1;">
                             CrimeVision
-                        <i class="fas fa-crosshairs mr-2"></i>
-                    </h1>
-                    <h2 class="subtitle is-5">Crime Activity Detection and Anomaly Analysis</h2>
+                        </h1>
+                        <img src="{% static 'images/logo.png' %}" alt="CrimeVision logo" style="height: 45px; width: auto; display: block;">
+                    </div>
+
+                    <h2 class="subtitle is-5 mt-0">
+                        Crime Activity Detection and Anomaly Analysis
+                    </h2>
                 </div>
+
                 <div class="column is-4 has-text-right">
                     <a class="navbar-instructions" href="/recognizer/instructions/">
-                        <i class="fas fa-arrow-right" style="margin-right:0.4rem;"></i>Instructions
+                        Instructions <i class="fas fa-arrow-right" style="margin-left:0.4rem;"></i>
                     </a>
                 </div>
             </div>

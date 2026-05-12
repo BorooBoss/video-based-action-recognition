@@ -1644,12 +1644,14 @@
                             });
 
                     const detectTimelines = [];
+                    const activeModelForDetect = modelSelect.value || finetunedSelect.value;
+                    const availablePromptsForDetect = PROMPT_MAP[activeModelForDetect] || {};
+                    const detectNeedsInput = availablePromptsForDetect['DETECT']?.needsInput === true;
                     detectPromptEntries.forEach(entry => {
                         entry.subLabels.forEach(label => {
-                            // ÚPRAVA: Qwen bude mať rovnaké správanie ako PaliGemma (zobrazí názov labelu)
-                            const displayLabel = modelName.includes('florence')
-                                    ? 'objects'
-                                    : `${label}`;
+                            // Base Florence DETECT (needsInput: false) → 'objects'
+                            // Fine-tuned / PaliGemma / Qwen DETECT (needsInput: true) → konkrétny label
+                            const displayLabel = !detectNeedsInput ? 'objects' : label;
 
                             detectTimelines.push({
                                 question: displayLabel,

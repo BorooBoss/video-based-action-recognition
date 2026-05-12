@@ -52,22 +52,6 @@ class UserInput:
             "DETAILED CAPTION": "describe the image",
             "VQA": "",
         },
-
-        "../train/paligemma2_weapon_detection" : {
-            "DETECT": "detect",
-            "SIMPLE CAPTION": "cap en",
-            "STANDARD CAPTION": "caption en",
-            "DETAILED CAPTION": "describe en",
-            "VQA": "answer en",
-        },
-
-        "../train/paligemma2_weapon_finetune2" : {
-            "DETECT": "detect",
-            "SIMPLE CAPTION": "cap en",
-            "STANDARD CAPTION": "caption en",
-            "DETAILED CAPTION": "describe en",
-            "VQA": "answer en",
-        },
         "../train/paligemma2_weapon_det_suffix_fixed" : {
             "DETECT": "detect",
             "SIMPLE CAPTION": "cap en",
@@ -75,20 +59,11 @@ class UserInput:
             "DETAILED CAPTION": "describe en",
             "VQA": "answer en",
         },
-        "../train/florence2_weapon_finetune": {
-            "DETECT": "<OD>",
-            "DETECTFT": "detect",
-            "SIMPLE CAPTION": "<CAPTION>",
-            "STANDARD CAPTION": "<DETAILED_CAPTION>",
-            "DETAILED CAPTION": "<MORE_DETAILED_CAPTION>",
-            "VQA": "<VQA>"
-        },
         "../train/florence2_weapon_finetune_v2": {
             "DETECT": "detect",
-            "SIMPLE CAPTION": "<CAPTION>",
+            "SIMPLE CAPTION": "<CAPTION>"
             "STANDARD CAPTION": "<DETAILED_CAPTION>",
             "DETAILED CAPTION": "<MORE_DETAILED_CAPTION>",
-            "VQA": "<VQA>"
         }
     }
 

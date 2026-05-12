@@ -339,11 +339,8 @@
                                             <div class="select is-fullwidth">
                                                 <select name="finetuned_model" id="finetuned-model-select">
                                                     <option value="" disabled selected>— Select model —</option>
-                                                    <option value="../train/paligemma2_weapon_detection">../train/paligemma2_weapon_detection</option>
-                                                    <option value="../train/paligemma2_weapon_finetune2">../train/paligemma2_weapon_finetune2</option>
-                                                    <option value="../train/paligemma2_weapon_det_suffix_fixed">../train/paligemma2_weapon_det_suffix_fixed</option>
-                                                    <option value="../train/florence2_weapon_finetune">../train/florence2_weapon_finetune</option>
-                                                    <option value="../train/florence2_weapon_finetune_v2">../train/florence2_weapon_finetune_v2</option>
+                                                    <option value="../train/paligemma2_weapon_det_suffix_fixed">paligemma2_weapon_finetune</option>
+                                                    <option value="../train/florence2_weapon_finetune_v2">florence2_weapon_finetune</option>
                                                 </select>
                                             </div>
                                         </div>
@@ -578,20 +575,6 @@
             "DETAILED CAPTION": {needsInput: false},
             "VQA": {needsInput: true, placeholder: "Ask model anything..."}
         },
-        "../train/paligemma2_weapon_detection": {
-            "SIMPLE CAPTION": {needsInput: false},
-            "STANDARD CAPTION": {needsInput: false},
-            "DETAILED CAPTION": {needsInput: false},
-            "VQA": {needsInput: true, placeholder: "Ask model anything..."},
-            "DETECT": {needsInput: true, placeholder: "example: person; car; tree..."}
-        },
-        "../train/paligemma2_weapon_finetune2": {
-            "SIMPLE CAPTION": {needsInput: false},
-            "STANDARD CAPTION": {needsInput: false},
-            "DETAILED CAPTION": {needsInput: false},
-            "VQA": {needsInput: true, placeholder: "Ask model anything..."},
-            "DETECT": {needsInput: true, placeholder: "example: person; car; tree..."}
-        },
         "../train/paligemma2_weapon_det_suffix_fixed": {
             "SIMPLE CAPTION": {needsInput: false},
             "STANDARD CAPTION": {needsInput: false},
@@ -599,19 +582,10 @@
             "VQA": {needsInput: true, placeholder: "Ask model anything..."},
             "DETECT": {needsInput: true, placeholder: "example: person; car; tree..."}
         },
-        "../train/florence2_weapon_finetune": {
-            "SIMPLE CAPTION": {needsInput: false},
-            "STANDARD CAPTION": {needsInput: false},
-            "DETAILED CAPTION": {needsInput: false},
-            "VQA": {needsInput: true, placeholder: "Ask model anything..."},
-            "DETECT": {needsInput: false},
-            "DETECTFT": {needsInput: true, placeholder: "example: weapon; person;"}
-        },
         "../train/florence2_weapon_finetune_v2": {
             "SIMPLE CAPTION": {needsInput: false},
             "STANDARD CAPTION": {needsInput: false},
             "DETAILED CAPTION": {needsInput: false},
-            "VQA": {needsInput: true, placeholder: "Ask model anything..."},
             "DETECT": {needsInput: true, placeholder: "example: weapon; person;"}
         }
     };

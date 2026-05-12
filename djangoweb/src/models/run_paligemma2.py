@@ -25,7 +25,7 @@ def initialize_model(model_id):
 
     load_dotenv()
     login(token=os.getenv("HF_TOKEN"))
-    LOCAL_LORA_PATH = os.path.join(os.path.dirname(__file__), "../train/paligemma2_weapon_detection")
+    LOCAL_LORA_PATH = os.path.join(os.path.dirname(__file__), "../train/big_vision_repo/paligemma2_weapon_detection")
     print(LOCAL_LORA_PATH)
     BASE_MODEL_ID   = "google/paligemma2-3b-pt-224"
 

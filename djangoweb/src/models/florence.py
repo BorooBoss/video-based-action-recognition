@@ -112,8 +112,17 @@ def predict(image_path, prompt="describe", model_id=None, base_prompt=None):
 
     # Weapon model — vráť raw string, konverzia prebehne cez florence_weapon_adapter
     if _is_weapon_model(model_id or ""):
+        # --- OPRAVA PRE CAPTION ---
+        # Ak výstup neobsahuje <loc_ (teda nie je to detekcia), vyčistíme tokeny
+        if "<loc_" not in generated_text:
+            clean_text = generated_text.replace("</s>", "").replace("<s>", "").replace("<pad>", "").strip()
+            print(f"CLEANED CAPTION: {clean_text}")
+            print("=" * 60)
+            return clean_text
+
+        # Ak ide o detekciu (obsahuje <loc_), vrátime RAW pre tvoj 'convert' v adaptéri
         print("=" * 60)
-        print(f"FLORENCE WEAPON RESULT ({prompt}): {generated_text[:200]}")
+        print(f"FLORENCE WEAPON RESULT (DETECTION): {generated_text[:200]}")
         print("=" * 60)
         return generated_text
 

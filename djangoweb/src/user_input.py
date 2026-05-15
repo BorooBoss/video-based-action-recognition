@@ -44,13 +44,13 @@ class UserInput:
             "SIMPLE CAPTION": "describe in 1 sentence what do you see in the image",
             "STANDARD CAPTION": "describe in short what do you see in the image",
             "DETAILED CAPTION": "describe the image",
-            "VQA": ""
+            "VQA": "Answer this in one sentence."
         },
         "OpenGVLab/InternVL3_5-2B": {
             "SIMPLE CAPTION": "describe in 1 sentence what do you see in the image",
             "STANDARD CAPTION": "describe in short what do you see in the image",
             "DETAILED CAPTION": "describe the image",
-            "VQA": "",
+            "VQA": "Answer in one sentence.",
         },
         "../train/paligemma2_weapon_det_suffix_fixed" : {
             "DETECT": "detect",
@@ -61,7 +61,7 @@ class UserInput:
         },
         "../train/florence2_weapon_finetune_v2": {
             "DETECT": "detect",
-            "SIMPLE CAPTION": "<CAPTION>"
+            "SIMPLE CAPTION": "<CAPTION>",
             "STANDARD CAPTION": "<DETAILED_CAPTION>",
             "DETAILED CAPTION": "<MORE_DETAILED_CAPTION>",
         }

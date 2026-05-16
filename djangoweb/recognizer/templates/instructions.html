@@ -140,7 +140,7 @@
             <div class="columns is-vcentered">
                 <div class="column is-8">
                     <h1 class="title is-2">Instructions</h1>
-                    <h2 class="subtitle is-5">How to use the VLM Anomaly Analyzer</h2>
+                    <h2 class="subtitle is-5">How to use CrimeVision</h2>
                 </div>
                 <div class="column is-4 has-text-right">
                     <a class="navbar-instructions" href="/recognizer/">
@@ -155,7 +155,7 @@
 <main class="section">
     <div class="container">
 
-        <!-- ROW 1: How does this application work? + Supported File Formats (unchanged) -->
+
         <div class="columns is-equal-height" style="align-items: stretch;">
             <div class="column is-8" style="display:flex; flex-direction:column;">
                 <div class="instructions-card" style="flex:1; margin-bottom:0;">
@@ -202,7 +202,7 @@
 
                         </div>
 
-                    </div><!-- end how-it-works-inner -->
+                    </div>
                 </div>
             </div>
 
@@ -230,7 +230,7 @@
             </div>
         </div>
 
-        <!-- ROW 2: How to use — matches width of top row -->
+
         <div class="columns">
             <div class="column is-12 centered-card-col">
                 <div class="instructions-card" style="width:100%;">
@@ -241,26 +241,26 @@
                     <div class="step-image-block">
                         <div class="step-row" style="width:100%;">
                             <span class="step-number">1</span>
-                            <span>We are able to pick from <strong>6 different standard models</strong> and <strong>2 fine-tuned models</strong>, trained on annotated crime dataset.
-                                Each model supports different types of prompts which can be run.</span>
+                            <span><strong>Upload</strong> an image or video using the file picker.</span>
                         </div>
-                        <img src="{% static 'images/preview1.png' %}" alt="Step 1 - Select model">
+                        <img src="{% static 'images/preview1.png' %}" alt="Step 3 - Upload file">
                     </div>
 
                     <div class="step-image-block">
                         <div class="step-row" style="width:100%;">
                             <span class="step-number">2</span>
-                            <span>Check one or more <strong>prompt types</strong> you want to run. You can combine multiple prompts in a single request.</span>
+                            <span>We are able to pick from <strong>6 different standard models</strong> and <strong>2 fine-tuned models</strong>, trained on annotated crime dataset.
+                                Each model supports different types of prompts which can be run.</span>
                         </div>
-                        <img src="{% static 'images/preview2.png' %}" alt="Step 2 - Select prompts">
+                        <img src="{% static 'images/preview2.png' %}" alt="Step 1 - Select model">
                     </div>
 
                     <div class="step-image-block">
                         <div class="step-row" style="width:100%;">
                             <span class="step-number">3</span>
-                            <span><strong>Upload</strong> an image (JPG, PNG) or video (MP4, AVI, MPEG) using the file picker.</span>
+                            <span>Check one or more <strong>prompt types</strong> you want to run. You can combine multiple prompts in a single request.</span>
                         </div>
-                        <img src="{% static 'images/preview3.png' %}" alt="Step 3 - Upload file">
+                        <img src="{% static 'images/preview3.png' %}" alt="Step 2 - Select prompts">
                     </div>
 
                     <div class="step-image-block" style="margin-bottom:1rem;">
@@ -337,7 +337,7 @@
                             </thead>
                             <tbody>
                             <tr>
-                                <td><strong>Paligemma2-3b-pt-224</strong></td>
+                                <td><strong>PaliGemma2-3B-Pt-224</strong></td>
                                 <td><span class="tag is-success is-light">YES</span></td>
                                 <td><span class="tag is-success is-light">YES</span></td>
                                 <td><span class="tag is-success is-light">YES</span></td>
@@ -345,7 +345,7 @@
                                 <td>Pre-trained model</td>
                             </tr>
                             <tr>
-                                <td><strong>Paligemma2-3b-mix-224</strong></td>
+                                <td><strong>PaliGemma2-3B-Mix-224</strong></td>
                                 <td><span class="tag is-success is-light">YES</span></td>
                                 <td><span class="tag is-success is-light">YES</span></td>
                                 <td><span class="tag is-success is-light">YES</span></td>
@@ -370,24 +370,32 @@
                             </tr>
                             <tr>
                                 <td><strong>Qwen3-VL-2B-Instruct</strong></td>
+                                <td><span class="tag is-danger is-light">YES</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-danger is-light">YES</span></td>
                                 <td><span class="tag is-danger is-light">NO</span></td>
+                                <td>Pre-trained model</td>
+                            </tr>
+                            <tr>
+                                <td><strong>InternVL3_5-2B</strong></td>
+                                <td><span class="tag is-danger is-light">YES</span></td>
                                 <td><span class="tag is-success is-light">YES</span></td>
                                 <td><span class="tag is-danger is-light">NO</span></td>
                                 <td><span class="tag is-danger is-light">NO</span></td>
                                 <td>Pre-trained model</td>
                             </tr>
                             <tr>
-                                <td><strong>InternVL3.5-2B</strong></td>
-                                <td><span class="tag is-danger is-light">NO</span></td>
+                                <td><strong>PaliGemma2-weapon-ft</strong></td>
                                 <td><span class="tag is-success is-light">YES</span></td>
-                                <td><span class="tag is-danger is-light">NO</span></td>
-                                <td><span class="tag is-danger is-light">NO</span></td>
-                                <td>Pre-trained model</td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td>Fine-tuned on annotated crime dataset</td>
                             </tr>
                             <tr>
-                                <td><strong>paligemma2_weapon_detection</strong></td>
+                                <td><strong>Florence-2-weapon-ft</strong></td>
                                 <td><span class="tag is-success is-light">YES</span></td>
-                                <td><span class="tag is-success is-light">YES</span></td>
+                                <td><span class="tag is-success is-light">NO</span></td>
                                 <td><span class="tag is-success is-light">YES</span></td>
                                 <td><span class="tag is-success is-light">YES</span></td>
                                 <td>Fine-tuned on annotated crime dataset</td>
@@ -414,7 +422,7 @@
                         Time values are tested on <strong>FULL-HD images and videos </strong>, if we upload files with higher resolution, results might be delayed. Upload limit is <strong> 200MB</strong>.
                     </p>
                     <p style="font-size:0.78rem; color:#888; margin-top:0.4rem; margin-bottom:0.20rem;">
-                        Task represents VQA, DETECT or SIMPLE CAPTION prompts. STANDARD / DETAILED CAPTION can take longer.
+                        Task represents VQA, DETECT or SIMPLE CAPTION prompts. STANDARD / DETAILED CAPTION usually take longer. If there are more objects to detect it can also delay the predicted time.
                     </p>
                     <div class="table-container">
                         <table class="table is-fullwidth is-bordered model-table" style="font-size:0.83rem;">
@@ -446,15 +454,15 @@
                                 <td><strong>Qwen3</strong></td>
                                 <td style="text-align:center;"><span class="perf-seconds">2s</span></td>
                                 <td style="text-align:center;"><span class="perf-seconds">3s</span></td>
-                                <td style="text-align:center;"><span class="perf-seconds">22s</span></td>
-                                <td style="text-align:center;"><span class="perf-seconds">37s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">12s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">32s</span></td>
                             </tr>
                             <tr>
                                 <td><strong>InternVL3.5</strong></td>
                                 <td style="text-align:center;"><span class="perf-seconds">1s</span></td>
                                 <td style="text-align:center;"><span class="perf-seconds">2s</span></td>
-                                <td style="text-align:center;"><span class="perf-seconds">22s</span></td>
-                                <td style="text-align:center;"><span class="perf-seconds">22s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">12s</span></td>
+                                <td style="text-align:center;"><span class="perf-seconds">20s</span></td>
                             </tr>
                             </tbody>
                         </table>
